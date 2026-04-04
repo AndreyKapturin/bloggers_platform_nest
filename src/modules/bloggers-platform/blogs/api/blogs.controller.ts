@@ -17,17 +17,34 @@ import { ViewBlogDto } from '../dto/Blog.view-dto';
 import { BlogsQueryParamsDto } from '../dto/BlogQueryParams.dto';
 import { PaginatedView } from 'src/core/dto/PaginatedView.dto';
 import { InputUpdateBlogDto } from '../dto/Blog.input-update-dto';
+import { PostsQueryParamsDto } from '../../posts/dto/PostQueryParams.dto';
+import { PostsService } from '../../posts/application/posts.service';
+import { PostsQueryRepository } from '../../posts/infrastructure/Post.query-repository';
+import { ViewPostDto } from '../../posts/dto/Post.view-dto';
+import { InputCreatePostDto } from '../../posts/dto/Post.input-create-dto';
+import { BlogPostDtoExtractor } from '../decorators/blog-post-dto-extractor.decorator';
 
 @Controller('blogs')
 export class BlogsController {
   constructor(
     private blogsService: BlogsService,
     private blogsQueryRepository: BlogsQueryRepository,
+    private postsServise: PostsService,
+    private postsQueryRepository: PostsQueryRepository,
   ) {}
 
   @Get(':id')
   async getBlogById(@Param('id') id: string): Promise<ViewBlogDto> {
     return await this.blogsQueryRepository.findById(id);
+  }
+
+  @Get(':id/posts')
+  async getBlogPosts(
+    @Param('id') blogId: string,
+    @Query() postsQueryParamsDto: PostsQueryParamsDto,
+  ): Promise<PaginatedView<ViewPostDto>> {
+    await this.blogsQueryRepository.findById(blogId);
+    return this.postsQueryRepository.findForBlog(blogId, postsQueryParamsDto);
   }
 
   @Get()
@@ -43,6 +60,15 @@ export class BlogsController {
   ): Promise<ViewBlogDto> {
     const blogId = await this.blogsService.createBlog(inputCreateBlogDto);
     return await this.blogsQueryRepository.findById(blogId);
+  }
+
+  @Post(':blogId/posts')
+  async createPostForBlog(
+    @BlogPostDtoExtractor() inputCreatePostDto: InputCreatePostDto,
+  ): Promise<ViewPostDto> {
+    await this.blogsQueryRepository.findById(inputCreatePostDto.blogId);
+    const postId = await this.postsServise.createPost(inputCreatePostDto);
+    return this.postsQueryRepository.findById(postId);
   }
 
   @Put(':id')
