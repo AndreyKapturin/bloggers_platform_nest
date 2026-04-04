@@ -17,21 +17,34 @@ import { PostsQueryRepository } from '../infrastructure/Post.query-repository';
 import { PostsQueryParamsDto } from '../dto/PostQueryParams.dto';
 import { PaginatedView } from 'src/core/dto/PaginatedView.dto';
 import { InputUpdatePostDto } from '../dto/Post.input-update-dto';
+import { CommentsQueryParamsDto } from '../../comments/dto/CommentsQueryParams.dto';
+import { CommentsQueryRepository } from '../../comments/infrastructure/Comments.query-repository';
+import { ViewCommentDto } from '../../comments/dto/Comment.view-dto';
 
 @Controller('posts')
 export class PostsController {
   constructor(
     private postsService: PostsService,
     private postsQueryRepository: PostsQueryRepository,
+    private commentsQueryRepository: CommentsQueryRepository,
   ) {}
 
   @Get(':id')
-  getById(@Param('id') id: string): Promise<ViewPostDto> {
+  async getById(@Param('id') id: string): Promise<ViewPostDto> {
     return this.postsQueryRepository.findById(id);
   }
 
+  @Get(':id/comments')
+  async getPostComments(
+    @Param('id') postId: string,
+    @Query() query: CommentsQueryParamsDto,
+  ): Promise<PaginatedView<ViewCommentDto>> {
+    await this.commentsQueryRepository.findById(postId);
+    return this.commentsQueryRepository.findForPost(postId, query);
+  }
+
   @Get()
-  getPosts(
+  async getPosts(
     @Query() query: PostsQueryParamsDto,
   ): Promise<PaginatedView<ViewPostDto>> {
     return this.postsQueryRepository.find(query);
