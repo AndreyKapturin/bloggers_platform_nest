@@ -14,7 +14,7 @@ export class Blog {
   @Prop({ type: String, required: true })
   websiteUrl: string;
 
-  @Prop({ type: String, required: true, default: false })
+  @Prop({ type: Boolean, required: true, default: false })
   isMembership: boolean;
 
   createdAt: Date;
@@ -40,4 +40,3 @@ export const BlogSchema = SchemaFactory.createForClass(Blog);
 BlogSchema.loadClass(Blog);
 export type TBlogDocument = HydratedDocument<Blog>;
 export type TBlogModel = Model<Blog> & typeof Blog;
-

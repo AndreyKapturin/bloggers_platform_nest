@@ -72,6 +72,7 @@ export class BlogsController {
   }
 
   @Put(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async updateBlog(
     @Param('id') id: string,
     @Body() inputUpdateBlogDto: InputUpdateBlogDto,
@@ -80,8 +81,8 @@ export class BlogsController {
     return await this.blogsQueryRepository.findById(id);
   }
 
-  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteBlog(@Param('id') id: string): Promise<void> {
     await this.blogsService.deleteBlog(id);
   }

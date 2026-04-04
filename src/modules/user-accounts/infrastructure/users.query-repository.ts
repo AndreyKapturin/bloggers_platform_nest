@@ -31,12 +31,14 @@ export class UsersQueryRepository {
 
     const filter: QueryFilter<User> = {};
 
-    if (searchEmailTerm) {
-      filter.email = { $regex: searchEmailTerm, $options: 'i' };
-    }
-
-    if (searchLoginTerm) {
-      filter.login = { $regex: searchLoginTerm, $options: 'i' };
+    if (searchLoginTerm || searchEmailTerm) {
+      filter.$or = [];
+      if (searchLoginTerm) {
+        filter.$or.push({ login: { $regex: searchLoginTerm, $options: 'i' } });
+      }
+      if (searchEmailTerm) {
+        filter.$or.push({ email: { $regex: searchEmailTerm, $options: 'i' } });
+      }
     }
 
     const userDocuments = await this.UserModel.find(filter)
