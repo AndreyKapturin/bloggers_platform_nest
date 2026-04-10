@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { InputRegistrationDto } from '../dto/Registration.input-dto';
+import { InputCreateUserDto } from '../../users/dto/CreateUser.input-dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { type TUserModel, User } from '../../users/domain/user.entity';
-import { UsersRepository } from '../../users/infrastructure/users.repository';
 import {
-  DomainException,
-  DomainExceptionStatus,
-} from '../../../../core/exceptions/DomainException';
+  TUserDocument,
+  type TUserModel,
+  User,
+} from '../../users/domain/user.entity';
+import { UsersRepository } from '../../users/infrastructure/users.repository';
 import { CryptoService } from '../../../../services/CryptoService';
 import { DateUtils } from '../../../../utils/DateUtils';
 import { AccessTokenDto } from '../dto/AccessToken.view-dto';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from '../../../notification/email.service';
+import { UsersService } from '../../users/application/users.service';
 
 // TODO: to env
 const CONFIRMATION_CODE_TTL_DAYS = 2;
@@ -21,64 +22,19 @@ export class AuthService {
   constructor(
     @InjectModel(User.name) private UserModel: TUserModel,
     private usersRepository: UsersRepository,
+    private usersService: UsersService,
     private cryptoService: CryptoService,
     private jwtService: JwtService,
     private emailService: EmailService,
   ) {}
 
   async registration(
-    inputRegistrationDto: InputRegistrationDto,
+    inputCreateUserDto: InputCreateUserDto,
   ): Promise<void> {
-    const { email, login, password } = inputRegistrationDto;
-    const isEmailBusy = await this.usersRepository.findByEmail(email);
-
-    if (isEmailBusy) {
-      throw new DomainException(
-        DomainExceptionStatus.InvalidData,
-        'User already exists',
-        [
-          {
-            field: 'email',
-            message: 'User with passed email already exists',
-          },
-        ],
-      );
-    }
-
-    const isLoginBusy = await this.usersRepository.findByLogin(login);
-
-    if (isLoginBusy) {
-      throw new DomainException(
-        DomainExceptionStatus.InvalidData,
-        'User already exists',
-        [
-          {
-            field: 'login',
-            message: 'User with passed login already exists',
-          },
-        ],
-      );
-    }
-
-    const passwordHash = await this.cryptoService.hash(password);
-    const confirmationCode = crypto.randomUUID();
-    const codeExpirationDate = DateUtils.getDatePlusDays(
-      CONFIRMATION_CODE_TTL_DAYS,
-    );
-
-    const newUserDocument = this.UserModel.makeUnconfirmedInstanse({
-      login,
-      email,
-      passwordHash,
-      confirmationCode,
-      codeExpirationDate,
-    });
-
-    await this.usersRepository.save(newUserDocument);
-
-    this.emailService
-      .sendConfirmationCode(email, confirmationCode)
-      .catch((error) => console.log('Send confirmation code error: ', error));
+    const userId = await this.usersService.createUser(inputCreateUserDto);
+    const userDocument = await this.usersRepository.findById(userId);
+    this._setConfirmationCode(userDocument!);
+    await this.usersRepository.save(userDocument!);
   }
 
   async validateUser(
@@ -104,5 +60,29 @@ export class AuthService {
     const payload = { userId };
     const accessToken = this.jwtService.sign(payload);
     return new AccessTokenDto(accessToken);
+  }
+
+  async resendConfirmationEmail(email: string): Promise<void> {
+    const userDocument = await this.usersRepository.findByEmail(email);
+
+    if (!userDocument) return;
+    if (userDocument.emailConfirmation.isConfirmed) return;
+
+    this._setConfirmationCode(userDocument);
+
+    await this.usersRepository.save(userDocument);
+  }
+
+  private _setConfirmationCode(userDocument: TUserDocument) {
+    const confirmationCode = crypto.randomUUID();
+    const codeExpirationDate = DateUtils.getDatePlusDays(
+      CONFIRMATION_CODE_TTL_DAYS,
+    );
+
+    userDocument.setEmailConfirmationCode(confirmationCode, codeExpirationDate);
+
+    this.emailService
+      .sendConfirmationCode(userDocument.email, confirmationCode)
+      .catch((error) => console.log('Send confirmation code error: ', error));
   }
 }

@@ -6,20 +6,23 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { InputRegistrationDto } from '../dto/Registration.input-dto';
+import { InputCreateUserDto } from '../../users/dto/CreateUser.input-dto';
 import { AuthService } from '../application/auth.service';
 import { LocalAuthGuard } from '../strategies/local/Local.guard';
 import { ExtractUserFromRequest } from '../decorators/extract-userId.decorator';
 import { AccessTokenDto } from '../dto/AccessToken.view-dto';
 import { UserInRequest } from '../dto/UserInRequest.dto';
+import { InputEmailDto } from '../dto/Email.input-dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('registration')
-  async registration(@Body() inputRegistrationDto: InputRegistrationDto) {
-    await this.authService.registration(inputRegistrationDto);
+  async registration(
+    @Body() inputCreateUserDto: InputCreateUserDto,
+  ): Promise<void> {
+    await this.authService.registration(inputCreateUserDto);
   }
 
   @Post('login')
@@ -29,5 +32,13 @@ export class AuthController {
     @ExtractUserFromRequest() user: UserInRequest,
   ): Promise<AccessTokenDto> {
     return await this.authService.login(user.id);
+  }
+
+  @Post('registration-email-resending')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resendConfirmationEmail(
+    @Body() inputEmailDto: InputEmailDto,
+  ): Promise<void> {
+    await this.authService.resendConfirmationEmail(inputEmailDto.email);
   }
 }

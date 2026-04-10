@@ -10,11 +10,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { ViewUserDto } from '../dto/User.view-dto';
-import { InputCreateUserDto } from '../dto/User.input-create-dto';
 import { UsersQueryRepository } from '../infrastructure/users.query-repository';
 import { UsersService } from '../application/users.service';
 import { UserQueryParamsDto } from '../dto/UserQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
+import { InputCreateUserDto } from '../dto/CreateUser.input-dto';
 
 @Controller('users')
 export class UsersController {
@@ -32,9 +32,9 @@ export class UsersController {
 
   @Post()
   async createUser(
-    @Body() createUserDto: InputCreateUserDto,
+    @Body() inputCreateUserDto: InputCreateUserDto,
   ): Promise<ViewUserDto> {
-    const userId = await this.usersService.createUser(createUserDto);
+    const userId = await this.usersService.createUser(inputCreateUserDto);
     const viewUser = await this.usersQueryRepository.findById(userId);
     return viewUser!;
   }

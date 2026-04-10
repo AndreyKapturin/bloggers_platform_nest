@@ -1,17 +1,16 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 import { CreateUserDto } from '../dto/User.create-dto';
-import { CreateUnconfirmedUserDto } from '../dto/User.create-unconfirmed-user-dto';
 
 @Schema({ _id: false })
-class EmailConfirmation {
-  @Prop({ type: 'Boolean', required: true, default: false })
+export class EmailConfirmation {
+  @Prop({ type: 'Boolean', default: false })
   isConfirmed!: boolean;
 
-  @Prop({ type: 'String', required: true })
+  @Prop({ type: 'String', default: '' })
   code!: string;
 
-  @Prop({ type: 'Date', required: true })
+  @Prop({ type: 'Date', default: () => new Date() })
   codeExpirationDate!: Date;
 }
 
@@ -29,34 +28,30 @@ export class User {
   createdAt!: Date;
   updatedAt!: Date;
 
-  @Prop({ type: EmailConfirmation, required: true, default: {} })
+  @Prop({ type: () => EmailConfirmation, required: true, default: () => ({}) })
   emailConfirmation!: EmailConfirmation;
 
-  static makeConfirmedInstanse(createUserDto: CreateUserDto): TUserDocument {
+  static makeInstanse(createUserDto: CreateUserDto): TUserDocument {
     const user = new this();
     user.login = createUserDto.login;
     user.email = createUserDto.email;
     user.passwordHash = createUserDto.passwordHash;
-    user.emailConfirmation.code = '';
-    user.emailConfirmation.codeExpirationDate = new Date();
-    user.emailConfirmation.isConfirmed = true;
     return user as TUserDocument;
   }
 
-  static makeUnconfirmedInstanse(createUnconfirmedUserDto: CreateUnconfirmedUserDto): TUserDocument {
-    const user = new this();
-    user.login = createUnconfirmedUserDto.login;
-    user.email = createUnconfirmedUserDto.email;
-    user.passwordHash = createUnconfirmedUserDto.passwordHash;
-    user.emailConfirmation.code = createUnconfirmedUserDto.confirmationCode;
-    user.emailConfirmation.codeExpirationDate = createUnconfirmedUserDto.codeExpirationDate;
-    user.emailConfirmation.isConfirmed = false;
-    return user as TUserDocument;
+  confirmEmail() {
+    this.emailConfirmation.code = '';
+    this.emailConfirmation.isConfirmed = true;
+    this.emailConfirmation.codeExpirationDate = new Date();
+  }
+
+  setEmailConfirmationCode(code: string, codeExpirationDate: Date) {
+    this.emailConfirmation.code = code;
+    this.emailConfirmation.codeExpirationDate = codeExpirationDate;
   }
 }
 
+export const UserSchema = SchemaFactory.createForClass(User);
+UserSchema.loadClass(User);
 export type TUserDocument = HydratedDocument<User>;
 export type TUserModel = Model<User> & typeof User;
-export const UserSchema = SchemaFactory.createForClass(User);
-
-UserSchema.loadClass(User);
