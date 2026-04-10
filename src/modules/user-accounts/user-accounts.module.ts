@@ -11,6 +11,7 @@ import { AuthService } from './auth/application/auth.service';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './auth/strategies/local/Local.strategy';
 import { JwtModule } from '@nestjs/jwt';
+import { NotificationModule } from '../notification/notification.module';
 
 // TODO: to env
 const JWT_AT_SECRET = 'c785q4nct98';
@@ -22,7 +23,8 @@ const JWT_AT_SECRET = 'c785q4nct98';
     JwtModule.register({
       secret: JWT_AT_SECRET,
       signOptions: { expiresIn: '60s' },
-    })
+    }),
+    NotificationModule,
   ],
   controllers: [UsersController, AuthController],
   providers: [
@@ -31,7 +33,7 @@ const JWT_AT_SECRET = 'c785q4nct98';
     UsersQueryRepository,
     CryptoService,
     AuthService,
-    LocalStrategy
+    LocalStrategy,
   ],
 })
 export class UserAccountsModule {}

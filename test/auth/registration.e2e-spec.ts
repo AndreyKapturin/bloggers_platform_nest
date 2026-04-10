@@ -3,6 +3,7 @@ import request from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
+import { fakeEmailService } from '../utils/mocks/fakeEmailService';
 
 describe('registration', () => {
   let app: INestApplication;
@@ -21,10 +22,20 @@ describe('registration', () => {
   });
 
   it('should register user if data is correct', async () => {
+    const mocksendConfirmationCode = jest.spyOn(
+      fakeEmailService,
+      'sendConfirmationCode',
+    );
+
     await request(app.getHttpServer())
       .post('/auth/registration')
       .send(inputUser)
       .expect(HttpStatus.CREATED);
+
+    expect(mocksendConfirmationCode).toHaveBeenCalledTimes(1);
+    expect(mocksendConfirmationCode).toHaveBeenCalledWith(inputUser.email, expect.any(String));
+    
+    mocksendConfirmationCode.mockRestore()
   });
 
   it(`shouldn't register user if login is busy`, async () => {

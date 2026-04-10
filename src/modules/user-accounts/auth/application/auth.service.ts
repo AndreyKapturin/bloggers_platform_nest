@@ -11,6 +11,7 @@ import { CryptoService } from '../../../../services/CryptoService';
 import { DateUtils } from '../../../../utils/DateUtils';
 import { AccessTokenDto } from '../dto/AccessToken.view-dto';
 import { JwtService } from '@nestjs/jwt';
+import { EmailService } from '../../../notification/email.service';
 
 // TODO: to env
 const CONFIRMATION_CODE_TTL_DAYS = 2;
@@ -22,6 +23,7 @@ export class AuthService {
     private usersRepository: UsersRepository,
     private cryptoService: CryptoService,
     private jwtService: JwtService,
+    private emailService: EmailService,
   ) {}
 
   async registration(
@@ -74,7 +76,9 @@ export class AuthService {
 
     await this.usersRepository.save(newUserDocument);
 
-    // TODO: send email confirmation code
+    this.emailService
+      .sendConfirmationCode(email, confirmationCode)
+      .catch((error) => console.log('Send confirmation code error: ', error));
   }
 
   async validateUser(
