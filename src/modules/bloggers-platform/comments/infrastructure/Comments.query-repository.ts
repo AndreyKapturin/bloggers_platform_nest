@@ -3,7 +3,7 @@ import { Comment, type TCommentModel } from '../domain/comment.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ViewCommentDto } from '../dto/Comment.view-dto';
 import { CommentsQueryParamsDto } from '../dto/CommentsQueryParams.dto';
-import { PaginatedView } from 'src/core/dto/PaginatedView.dto';
+import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { QueryFilter } from 'mongoose';
 
 @Injectable()

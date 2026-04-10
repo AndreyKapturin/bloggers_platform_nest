@@ -1,10 +1,10 @@
 import { TUserDocument } from '../domain/user.entity';
 
 export class ViewUserDto {
-  id: string;
-  login: string;
-  email: string;
-  createdAt: string;
+  id!: string;
+  login!: string;
+  email!: string;
+  createdAt!: string;
 
   static toView(userDocument: TUserDocument): ViewUserDto {
     return {

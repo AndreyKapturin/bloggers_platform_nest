@@ -14,7 +14,7 @@ import { InputCreateUserDto } from '../dto/User.input-create-dto';
 import { UsersQueryRepository } from '../infrastructure/users.query-repository';
 import { UsersService } from '../application/users.service';
 import { UserQueryParamsDto } from '../dto/UserQueryParams.dto';
-import { PaginatedView } from 'src/core/dto/PaginatedView.dto';
+import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 
 @Controller('users')
 export class UsersController {

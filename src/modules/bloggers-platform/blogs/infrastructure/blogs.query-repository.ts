@@ -4,7 +4,7 @@ import type { TBlogModel } from '../domain/blog.entity';
 import { ViewBlogDto } from '../dto/Blog.view-dto';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BlogsQueryParamsDto } from '../dto/BlogQueryParams.dto';
-import { PaginatedView } from 'src/core/dto/PaginatedView.dto';
+import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { QueryFilter } from 'mongoose';
 
 @Injectable()

@@ -11,6 +11,22 @@ export class UsersRepository {
     return this.UserModel.findById(id);
   }
 
+  async findByEmail(email: string): Promise<TUserDocument | null> {
+    return this.UserModel.findOne({ email });
+  }
+
+  async findByLogin(login: string): Promise<TUserDocument | null> {
+    return this.UserModel.findOne({ login });
+  }
+
+  async findByLoginOrEmail(
+    loginOrEmail: string,
+  ): Promise<TUserDocument | null> {
+    return this.UserModel.findOne({
+      $or: [{ login: loginOrEmail }, { email: loginOrEmail }],
+    });
+  }
+
   async save(userDocument: TUserDocument): Promise<void> {
     await userDocument.save();
   }

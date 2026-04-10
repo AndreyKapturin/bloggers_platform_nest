@@ -4,7 +4,7 @@ import { User } from '../domain/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, QueryFilter } from 'mongoose';
 import { UserQueryParamsDto } from '../dto/UserQueryParams.dto';
-import { PaginatedView } from 'src/core/dto/PaginatedView.dto';
+import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 
 @Injectable()
 export class UsersQueryRepository {

@@ -4,7 +4,7 @@ import { User } from '../domain/user.entity';
 import type { TUserModel } from '../domain/user.entity';
 import { InputCreateUserDto } from '../dto/User.input-create-dto';
 import { UsersRepository } from '../infrastructure/users.repository';
-import { CryptoService } from 'src/services/CryptoService';
+import { CryptoService } from '../../../../services/CryptoService';
 
 @Injectable()
 export class UsersService {
@@ -19,7 +19,7 @@ export class UsersService {
 
     const passwordHash = await this.cryptoService.hash(password);
 
-    const user = this.UserModel.makeInstanse({
+    const user = this.UserModel.makeConfirmedInstanse({
       email,
       login,
       passwordHash,
@@ -31,7 +31,7 @@ export class UsersService {
 
   async deleteUser(id: string): Promise<void> {
     const userDocument = await this.usersRepository.findById(id);
-    
+
     if (!userDocument) {
       throw new NotFoundException(`User with id ${id} not exist`);
     }
