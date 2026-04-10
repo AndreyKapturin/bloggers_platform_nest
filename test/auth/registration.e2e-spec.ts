@@ -30,27 +30,19 @@ describe('registration', () => {
   it(`shouldn't register user if login is busy`, async () => {
     const equalLogin = {
       ...inputUser,
-      email: 'user2@mail.ru'
+      email: 'user2@mail.ru',
     };
 
-    const getResponse = await request(app.getHttpServer())
-      .get('/users');
-    console.log(getResponse.body);
-
-
-    const response = await request(app.getHttpServer())
+    await request(app.getHttpServer())
       .post('/auth/registration')
-      .send(equalLogin);
-    // .expect(HttpStatus.BAD_REQUEST);
-    console.log('response', response.body);
-    expect(response.status).toBe(HttpStatus.BAD_REQUEST);
-
+      .send(equalLogin)
+      .expect(HttpStatus.BAD_REQUEST);
   });
 
   it(`shouldn't register user if email is busy`, async () => {
     const equalEmail = {
       ...inputUser,
-      login: 'User_02'
+      login: 'User_02',
     };
 
     await request(app.getHttpServer())

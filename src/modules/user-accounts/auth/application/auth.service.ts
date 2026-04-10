@@ -12,6 +12,7 @@ import { DateUtils } from '../../../../utils/DateUtils';
 import { AccessTokenDto } from '../dto/AccessToken.view-dto';
 import { JwtService } from '@nestjs/jwt';
 
+// TODO: to env
 const CONFIRMATION_CODE_TTL_DAYS = 2;
 
 @Injectable()
@@ -27,14 +28,6 @@ export class AuthService {
     inputRegistrationDto: InputRegistrationDto,
   ): Promise<void> {
     const { email, login, password } = inputRegistrationDto;
-    // {X} check email
-    // {X} check login
-    // {X} create password hash
-    // {X} create email confirmation code
-    // {X} create user document
-    // {X} save user document
-    // { } send email
-
     const isEmailBusy = await this.usersRepository.findByEmail(email);
 
     if (isEmailBusy) {
@@ -80,6 +73,8 @@ export class AuthService {
     });
 
     await this.usersRepository.save(newUserDocument);
+
+    // TODO: send email confirmation code
   }
 
   async validateUser(

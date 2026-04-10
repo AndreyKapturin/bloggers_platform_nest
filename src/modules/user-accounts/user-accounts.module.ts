@@ -12,6 +12,7 @@ import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './auth/strategies/local/Local.strategy';
 import { JwtModule } from '@nestjs/jwt';
 
+// TODO: to env
 const JWT_AT_SECRET = 'c785q4nct98';
 
 @Module({
