@@ -35,6 +35,14 @@ export class UsersRepository {
     });
   }
 
+  async findByRecoveryCode(
+    recoveryCode: string,
+  ): Promise<TUserDocument | null> {
+    return this.UserModel.findOne({
+      'recoveryCode.code': recoveryCode,
+    });
+  }
+
   async save(userDocument: TUserDocument): Promise<void> {
     await userDocument.save();
   }

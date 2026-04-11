@@ -14,6 +14,7 @@ import { AccessTokenDto } from '../dto/AccessToken.view-dto';
 import { UserInRequest } from '../dto/UserInRequest.dto';
 import { InputEmailDto } from '../dto/Email.input-dto';
 import { ConfirmationCodeDto } from '../dto/ConfirmationCode.input-dto';
+import { InputNewPasswordDto } from '../dto/NewPassword.input-dto';
 
 @Controller('auth')
 export class AuthController {
@@ -47,5 +48,17 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async confirmRegistration(@Body() dto: ConfirmationCodeDto): Promise<void> {
     await this.authService.confirmRegistration(dto.code);
+  }
+
+  @Post('password-recovery')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async recoveryPassword(@Body() inputEmailDto: InputEmailDto): Promise<void> {
+    await this.authService.recoveryPassword(inputEmailDto.email);
+  }
+
+  @Post('new-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updatePassword(@Body() newPasswordDto: InputNewPasswordDto): Promise<void> {
+    await this.authService.updatePassword(newPasswordDto);
   }
 }

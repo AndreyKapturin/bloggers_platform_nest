@@ -1,29 +1,10 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import request, { Response } from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
 import { fakeEmailService } from '../utils/mocks/fakeEmailService';
-
-const registerUser = async (
-  app: INestApplication,
-  inputCreateUserDto: InputCreateUserDto,
-): Promise<Response> => {
-  return await request(app.getHttpServer())
-    .post('/auth/registration')
-    .send(inputCreateUserDto)
-    .expect(HttpStatus.CREATED);
-};
-
-const confirmRegistration = async (
-  app: INestApplication,
-  code: string,
-): Promise<Response> => {
-  return await request(app.getHttpServer())
-    .post('/auth/registration-confirmation')
-    .send({ code });
-};
+import { registerUser } from '../utils/registerUser';
+import { confirmRegistration } from '../utils/confirmRegistration';
 
 describe('registration-confirmation', () => {
   let app: INestApplication;
@@ -44,7 +25,7 @@ describe('registration-confirmation', () => {
   });
 
   afterEach(() => {
-    mockSendConfirmationCode.mockReset();
+    mockSendConfirmationCode.mockRestore();
   });
 
   it('should confirm registration', async () => {

@@ -13,4 +13,6 @@ export class EmailService {
     //   text: `confirm registration via link https://some.com?code=${code}`,
     // });
   }
+
+  async sendRecoveryCode(email: string, code: string): Promise<void> {}
 }
