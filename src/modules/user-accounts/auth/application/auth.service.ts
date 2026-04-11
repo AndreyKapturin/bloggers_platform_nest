@@ -13,6 +13,11 @@ import { AccessTokenDto } from '../dto/AccessToken.view-dto';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from '../../../notification/email.service';
 import { UsersService } from '../../users/application/users.service';
+import { ConfirmationCodeDto } from '../dto/ConfirmationCode.input-dto';
+import {
+  DomainException,
+  DomainExceptionStatus,
+} from '../../../../core/exceptions/DomainException';
 
 // TODO: to env
 const CONFIRMATION_CODE_TTL_DAYS = 2;
@@ -28,9 +33,7 @@ export class AuthService {
     private emailService: EmailService,
   ) {}
 
-  async registration(
-    inputCreateUserDto: InputCreateUserDto,
-  ): Promise<void> {
+  async registration(inputCreateUserDto: InputCreateUserDto): Promise<void> {
     const userId = await this.usersService.createUser(inputCreateUserDto);
     const userDocument = await this.usersRepository.findById(userId);
     this._setConfirmationCode(userDocument!);
@@ -70,6 +73,40 @@ export class AuthService {
 
     this._setConfirmationCode(userDocument);
 
+    await this.usersRepository.save(userDocument);
+  }
+
+  async confirmRegistration(confirmationCode: string): Promise<void> {
+    const userDocument =
+      await this.usersRepository.findByConfirmationCode(confirmationCode);
+
+    if (!userDocument) {
+      throw new DomainException(
+        DomainExceptionStatus.InvalidData,
+        'User with passed confirmation code not found',
+        [
+          {
+            field: 'code',
+            message: 'User with passed confirmation code not found',
+          },
+        ],
+      );
+    }
+
+    if (userDocument.emailConfirmation.isConfirmed) {
+       throw new DomainException(
+        DomainExceptionStatus.InvalidData,
+        'User already confirmed',
+        [
+          {
+            field: 'code',
+            message: 'User already confirmed',
+          },
+        ],
+      );
+    }
+
+    userDocument.confirmEmail();
     await this.usersRepository.save(userDocument);
   }
 

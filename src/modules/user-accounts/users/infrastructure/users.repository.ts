@@ -27,6 +27,14 @@ export class UsersRepository {
     });
   }
 
+  async findByConfirmationCode(
+    confirmationCode: string,
+  ): Promise<TUserDocument | null> {
+    return this.UserModel.findOne({
+      'emailConfirmation.code': confirmationCode,
+    });
+  }
+
   async save(userDocument: TUserDocument): Promise<void> {
     await userDocument.save();
   }

@@ -13,6 +13,7 @@ import { ExtractUserFromRequest } from '../decorators/extract-userId.decorator';
 import { AccessTokenDto } from '../dto/AccessToken.view-dto';
 import { UserInRequest } from '../dto/UserInRequest.dto';
 import { InputEmailDto } from '../dto/Email.input-dto';
+import { ConfirmationCodeDto } from '../dto/ConfirmationCode.input-dto';
 
 @Controller('auth')
 export class AuthController {
@@ -40,5 +41,11 @@ export class AuthController {
     @Body() inputEmailDto: InputEmailDto,
   ): Promise<void> {
     await this.authService.resendConfirmationEmail(inputEmailDto.email);
+  }
+
+  @Post('registration-confirmation')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async confirmRegistration(@Body() dto: ConfirmationCodeDto): Promise<void> {
+    await this.authService.confirmRegistration(dto.code);
   }
 }
