@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -15,10 +16,22 @@ import { UserInRequest } from '../dto/UserInRequest.dto';
 import { InputEmailDto } from '../dto/Email.input-dto';
 import { ConfirmationCodeDto } from '../dto/ConfirmationCode.input-dto';
 import { InputNewPasswordDto } from '../dto/NewPassword.input-dto';
+import { ViewMeDto } from '../../users/dto/Me.view-dto';
+import { JwtAuthGuard } from '../strategies/jwt/Jwt.guard';
+import { UsersQueryRepository } from '../../users/infrastructure/users.query-repository';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private usersQueryRepository: UsersQueryRepository
+  ) {}
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async me(@ExtractUserFromRequest() user: UserInRequest): Promise<ViewMeDto> {
+    return this.usersQueryRepository.getMe(user.id);
+  }
 
   @Post('registration')
   async registration(

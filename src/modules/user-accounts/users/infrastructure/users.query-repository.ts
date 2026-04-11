@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, QueryFilter } from 'mongoose';
 import { UserQueryParamsDto } from '../dto/UserQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
+import { ViewMeDto } from '../dto/Me.view-dto';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -56,5 +57,11 @@ export class UsersQueryRepository {
       viewUserDocuments,
     );
     return paginatedViewUserDocuments;
+  }
+
+  async getMe(id: string): Promise<ViewMeDto> {
+    const userDocument = await this.UserModel.findById(id);
+    if (!userDocument) throw new Error('User not found. Check JwtAuthGuard!');
+    return ViewMeDto.toView(userDocument);
   }
 }

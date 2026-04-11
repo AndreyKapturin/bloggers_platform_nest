@@ -18,6 +18,7 @@ import {
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
 import { InputNewPasswordDto } from '../dto/NewPassword.input-dto';
+import { JwtAccessTokenPayload } from '../types';
 
 // TODO: to env
 const CONFIRMATION_CODE_TTL_DAYS = 2;
@@ -61,7 +62,7 @@ export class AuthService {
   }
 
   async login(userId: string): Promise<AccessTokenDto> {
-    const payload = { userId };
+    const payload: JwtAccessTokenPayload = { userId };
     const accessToken = this.jwtService.sign(payload);
     return new AccessTokenDto(accessToken);
   }
@@ -124,7 +125,7 @@ export class AuthService {
     userDocument.setRecoveryCode(recoveryCode, codeExpirationDate);
 
     await this.usersRepository.save(userDocument);
-  
+
     this.emailService
       .sendRecoveryCode(userDocument.email, recoveryCode)
       .catch((error) => console.log('Send recovery code error: ', error));
