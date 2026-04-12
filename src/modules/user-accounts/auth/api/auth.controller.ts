@@ -34,6 +34,7 @@ export class AuthController {
   }
 
   @Post('registration')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async registration(
     @Body() inputCreateUserDto: InputCreateUserDto,
   ): Promise<void> {

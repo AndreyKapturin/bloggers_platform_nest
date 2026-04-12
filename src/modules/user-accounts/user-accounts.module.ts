@@ -13,6 +13,7 @@ import { LocalStrategy } from './auth/strategies/local/Local.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { NotificationModule } from '../notification/notification.module';
 import { JwtStrategy } from './auth/strategies/jwt/Jwt.strategy';
+import { BasicStrategy } from './auth/strategies/basic/Basic.strategy';
 
 // TODO: to env
 const JWT_AT_SECRET = 'c785q4nct98';
@@ -23,7 +24,7 @@ const JWT_AT_SECRET = 'c785q4nct98';
     PassportModule,
     JwtModule.register({
       secret: JWT_AT_SECRET,
-      signOptions: { expiresIn: '60s' },
+      signOptions: { expiresIn: '5m' },
     }),
     NotificationModule,
   ],
@@ -36,6 +37,7 @@ const JWT_AT_SECRET = 'c785q4nct98';
     AuthService,
     LocalStrategy,
     JwtStrategy,
+    BasicStrategy,
   ],
 })
 export class UserAccountsModule {}

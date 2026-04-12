@@ -3,16 +3,19 @@ import request from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { fakeEmailService } from '../utils/mocks/fakeEmailService';
+import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
 
-describe('registration', () => {
-  let app: INestApplication;
+describe('create user', () => {
+  const ADMIN_LOGIN = 'admin';
+  const ADMIN_PASSWORD = 'qwerty';
 
-  const inputUser = {
+  const inputUser: InputCreateUserDto = {
     login: 'User_01',
     email: 'user1@mail.ru',
-    password: 'strong_password',
+    password: 'Strong_password',
   };
+
+  let app: INestApplication;
 
   beforeAll(async () => {
     app = await initApp();
@@ -21,43 +24,47 @@ describe('registration', () => {
     await cleanDatabase(app);
   });
 
-  it('should register user if data is correct', async () => {
-    const mocksendConfirmationCode = jest.spyOn(
-      fakeEmailService,
-      'sendConfirmationCode',
-    );
-
-    await request(app.getHttpServer())
-      .post('/auth/registration')
-      .send(inputUser)
-      .expect(HttpStatus.NO_CONTENT);
-
-    expect(mocksendConfirmationCode).toHaveBeenCalledTimes(1);
-    expect(mocksendConfirmationCode).toHaveBeenCalledWith(inputUser.email, expect.any(String));
-    
-    mocksendConfirmationCode.mockRestore()
+  afterAll(async () => {
+    await app.close();
   });
 
-  it(`shouldn't register user if login is busy`, async () => {
-    const equalLogin = {
+  it('should create and return user', async () => {
+    const createUserResponse = await request(app.getHttpServer())
+      .post('/users')
+      .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
+      .send(inputUser);
+
+    expect(createUserResponse.status).toBe(HttpStatus.CREATED);
+    expect(createUserResponse.body).toEqual({
+      id: expect.any(String),
+      login: inputUser.login,
+      email: inputUser.email,
+      createdAt: expect.any(String),
+    });
+  });
+
+  it(`shouldn't create user if login is busy`, async () => {
+    const equalLogin: InputCreateUserDto = {
       ...inputUser,
-      email: 'user2@mail.ru',
+      email: 'unique@mail.ru',
     };
 
     await request(app.getHttpServer())
-      .post('/auth/registration')
+      .post('/users')
+      .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
       .send(equalLogin)
       .expect(HttpStatus.BAD_REQUEST);
   });
 
-  it(`shouldn't register user if email is busy`, async () => {
-    const equalEmail = {
+  it(`shouldn't create user if email is busy`, async () => {
+    const equalEmail: InputCreateUserDto = {
       ...inputUser,
-      login: 'User_02',
+      login: 'unique',
     };
 
     await request(app.getHttpServer())
-      .post('/auth/registration')
+      .post('/users')
+      .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
       .send(equalEmail)
       .expect(HttpStatus.BAD_REQUEST);
   });
@@ -132,14 +139,20 @@ describe('registration', () => {
         email: 'user_3@mail.ru',
       },
     },
-  ])(`shouldn't register user if $testDesc`, async ({ inputUser }) => {
-    await request(app.getHttpServer())
-      .post('/auth/registration')
-      .send(inputUser)
-      .expect(HttpStatus.BAD_REQUEST);
+  ])(`shouldn't create user if $testDesc`, async ({ inputUser }) => {
+    {
+      await request(app.getHttpServer())
+        .post('/users')
+        .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
+        .send(inputUser)
+        .expect(HttpStatus.BAD_REQUEST);
+    }
   });
 
-  afterAll(async () => {
-    await app.close();
+  it(`shouldn't create user if not admin auth`, async () => {
+    await request(app.getHttpServer())
+      .post('/users')
+      .send(inputUser)
+      .expect(HttpStatus.UNAUTHORIZED);
   });
 });

@@ -3,11 +3,13 @@ import request from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
+import { registerUser } from '../utils/registerUser';
+import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
 
 describe('login', () => {
   let app: INestApplication;
 
-  const inputUser = {
+  const inputUser: InputCreateUserDto = {
     login: 'User_01',
     email: 'user1@mail.ru',
     password: 'strong_password',
@@ -19,10 +21,7 @@ describe('login', () => {
     await app.init();
     await cleanDatabase(app);
 
-    await request(app.getHttpServer())
-      .post('/auth/registration')
-      .send(inputUser)
-      .expect(HttpStatus.CREATED);
+    await registerUser(app, inputUser);
   });
 
   it('should login user via email', async () => {

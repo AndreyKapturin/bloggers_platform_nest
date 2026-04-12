@@ -9,5 +9,5 @@ export const registerUser = async (
   return await request(app.getHttpServer())
     .post('/auth/registration')
     .send(inputCreateUserDto)
-    .expect(HttpStatus.CREATED);
+    .expect(HttpStatus.NO_CONTENT);
 };

@@ -70,8 +70,31 @@ export class AuthService {
   async resendConfirmationEmail(email: string): Promise<void> {
     const userDocument = await this.usersRepository.findByEmail(email);
 
-    if (!userDocument) return;
-    if (userDocument.emailConfirmation.isConfirmed) return;
+    if (!userDocument) {
+      throw new DomainException(
+        DomainExceptionStatus.InvalidData,
+        'User with passed email not found',
+        [
+          {
+            field: 'email',
+            message: 'User with passed email not found',
+          },
+        ],
+      );
+    }
+
+    if (userDocument.emailConfirmation.isConfirmed) {
+      throw new DomainException(
+        DomainExceptionStatus.InvalidData,
+        'Email already confirmed',
+        [
+          {
+            field: 'email',
+            message: 'Email already confirmed',
+          },
+        ],
+      );
+    }
 
     this._setConfirmationCode(userDocument);
 
