@@ -1,9 +1,9 @@
 export class PaginatedView<T> {
-  pagesCount: number;
-  page: number;
-  pageSize: number;
-  totalCount: number;
-  items: T[];
+  pagesCount!: number;
+  page!: number;
+  pageSize!: number;
+  totalCount!: number;
+  items!: T[];
 
   static toView<T>(
     page: number,
