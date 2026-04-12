@@ -2,9 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post, type TPostModel } from '../domain/Post.entity';
 import { ViewPostDto } from '../dto/Post.view-dto';
-import { PaginatedView } from 'src/core/dto/PaginatedView.dto';
 import { PostsQueryParamsDto } from '../dto/PostQueryParams.dto';
 import { QueryFilter } from 'mongoose';
+import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 
 @Injectable()
 export class PostsQueryRepository {

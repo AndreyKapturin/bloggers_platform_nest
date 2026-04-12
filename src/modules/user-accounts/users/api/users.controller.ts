@@ -1,0 +1,50 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { ViewUserDto } from '../dto/User.view-dto';
+import { UsersQueryRepository } from '../infrastructure/users.query-repository';
+import { UsersService } from '../application/users.service';
+import { UserQueryParamsDto } from '../dto/UserQueryParams.dto';
+import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
+import { InputCreateUserDto } from '../dto/CreateUser.input-dto';
+import { BasicAuthGuard } from '../../auth/strategies/basic/Basic.guard';
+
+@Controller('users')
+@UseGuards(BasicAuthGuard)
+export class UsersController {
+  constructor(
+    private usersQueryRepository: UsersQueryRepository,
+    private usersService: UsersService,
+  ) {}
+
+  @Get()
+  async getAll(
+    @Query() query: UserQueryParamsDto,
+  ): Promise<PaginatedView<ViewUserDto>> {
+    return this.usersQueryRepository.find(query);
+  }
+
+  @Post()
+  async createUser(
+    @Body() inputCreateUserDto: InputCreateUserDto,
+  ): Promise<ViewUserDto> {
+    const userId = await this.usersService.createUser(inputCreateUserDto);
+    const viewUser = await this.usersQueryRepository.findById(userId);
+    return viewUser!;
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteUser(@Param('id') id: string): Promise<void> {
+    await this.usersService.deleteUser(id);
+  }
+}
