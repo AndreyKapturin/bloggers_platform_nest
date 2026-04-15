@@ -4,8 +4,8 @@ import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
-import { createUser } from '../utils/createUser';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
+import { UsersTestHelper } from '../utils/UsersTestHelper';
 
 describe('delete user', () => {
   const inputUser: InputCreateUserDto = {
@@ -15,6 +15,7 @@ describe('delete user', () => {
   };
 
   let app: INestApplication;
+  let usersTestHelper: UsersTestHelper;
   let userId: string;
 
   beforeAll(async () => {
@@ -23,7 +24,9 @@ describe('delete user', () => {
     await app.init();
     await cleanDatabase(app);
 
-    const createUserResponse = await createUser(app, inputUser);
+    usersTestHelper = new UsersTestHelper(app);
+
+    const createUserResponse = await usersTestHelper.createUser(inputUser);
     userId = createUserResponse.body.id;
   });
 

@@ -4,7 +4,7 @@ import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
-import { createUser } from '../utils/createUser';
+import { UsersTestHelper } from '../utils/UsersTestHelper';
 
 describe('create user', () => {
   const inputUser: InputCreateUserDto = {
@@ -14,12 +14,14 @@ describe('create user', () => {
   };
 
   let app: INestApplication;
+  let usersTestHelper: UsersTestHelper;
 
   beforeAll(async () => {
     app = await initApp();
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
+    usersTestHelper = new UsersTestHelper(app);
   });
 
   afterAll(async () => {
@@ -27,7 +29,7 @@ describe('create user', () => {
   });
 
   it('should create and return user', async () => {
-    const createUserResponse = await createUser(app, inputUser);
+    const createUserResponse = await usersTestHelper.createUser(inputUser);
 
     expect(createUserResponse.body).toEqual({
       id: expect.any(String),
@@ -43,7 +45,9 @@ describe('create user', () => {
       email: 'unique@mail.ru',
     };
 
-    await createUser(app, equalLogin, { status: HttpStatus.BAD_REQUEST });
+    await usersTestHelper.createUser(equalLogin, {
+      status: HttpStatus.BAD_REQUEST,
+    });
   });
 
   it(`shouldn't create user if email is busy`, async () => {
@@ -52,7 +56,9 @@ describe('create user', () => {
       login: 'unique',
     };
 
-    await createUser(app, equalEmail, { status: HttpStatus.BAD_REQUEST });
+    await usersTestHelper.createUser(equalEmail, {
+      status: HttpStatus.BAD_REQUEST,
+    });
   });
 
   it.each([
@@ -127,7 +133,7 @@ describe('create user', () => {
     },
   ])(`shouldn't create user if $testDesc`, async ({ inputUser }) => {
     {
-      await createUser(app, inputUser as InputCreateUserDto, {
+      await usersTestHelper.createUser(inputUser as InputCreateUserDto, {
         status: HttpStatus.BAD_REQUEST,
       });
     }
