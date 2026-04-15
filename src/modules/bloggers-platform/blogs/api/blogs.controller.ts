@@ -76,6 +76,7 @@ export class BlogsController {
   }
 
   @Put(':id')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateBlog(
     @Param('id') id: string,
