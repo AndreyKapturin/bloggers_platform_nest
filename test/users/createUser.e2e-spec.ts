@@ -4,11 +4,9 @@ import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
+import { createUser } from '../utils/createUser';
 
 describe('create user', () => {
-  const ADMIN_LOGIN = 'admin';
-  const ADMIN_PASSWORD = 'qwerty';
-
   const inputUser: InputCreateUserDto = {
     login: 'User_01',
     email: 'user1@mail.ru',
@@ -29,12 +27,8 @@ describe('create user', () => {
   });
 
   it('should create and return user', async () => {
-    const createUserResponse = await request(app.getHttpServer())
-      .post('/users')
-      .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
-      .send(inputUser);
+    const createUserResponse = await createUser(app, inputUser);
 
-    expect(createUserResponse.status).toBe(HttpStatus.CREATED);
     expect(createUserResponse.body).toEqual({
       id: expect.any(String),
       login: inputUser.login,
@@ -49,11 +43,7 @@ describe('create user', () => {
       email: 'unique@mail.ru',
     };
 
-    await request(app.getHttpServer())
-      .post('/users')
-      .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
-      .send(equalLogin)
-      .expect(HttpStatus.BAD_REQUEST);
+    await createUser(app, equalLogin, { status: HttpStatus.BAD_REQUEST });
   });
 
   it(`shouldn't create user if email is busy`, async () => {
@@ -62,11 +52,7 @@ describe('create user', () => {
       login: 'unique',
     };
 
-    await request(app.getHttpServer())
-      .post('/users')
-      .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
-      .send(equalEmail)
-      .expect(HttpStatus.BAD_REQUEST);
+    await createUser(app, equalEmail, { status: HttpStatus.BAD_REQUEST });
   });
 
   it.each([
@@ -141,11 +127,9 @@ describe('create user', () => {
     },
   ])(`shouldn't create user if $testDesc`, async ({ inputUser }) => {
     {
-      await request(app.getHttpServer())
-        .post('/users')
-        .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
-        .send(inputUser)
-        .expect(HttpStatus.BAD_REQUEST);
+      await createUser(app, inputUser as InputCreateUserDto, {
+        status: HttpStatus.BAD_REQUEST,
+      });
     }
   });
 
