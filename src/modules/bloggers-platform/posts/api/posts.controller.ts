@@ -9,6 +9,7 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { InputCreatePostDto } from '../dto/Post.input-create-dto';
 import { ViewPostDto } from '../dto/Post.view-dto';
@@ -20,6 +21,7 @@ import { InputUpdatePostDto } from '../dto/Post.input-update-dto';
 import { CommentsQueryParamsDto } from '../../comments/dto/CommentsQueryParams.dto';
 import { CommentsQueryRepository } from '../../comments/infrastructure/Comments.query-repository';
 import { ViewCommentDto } from '../../comments/dto/Comment.view-dto';
+import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
 
 @Controller('posts')
 export class PostsController {
@@ -51,6 +53,7 @@ export class PostsController {
   }
 
   @Post()
+  @UseGuards(BasicAuthGuard)
   async createPost(
     @Body() inputCreatePostDto: InputCreatePostDto,
   ): Promise<ViewPostDto> {
@@ -59,6 +62,7 @@ export class PostsController {
   }
 
   @Put(':id')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updatePost(
     @Param('id') id: string,
@@ -68,6 +72,7 @@ export class PostsController {
   }
 
   @Delete(':id')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePost(@Param('id') id: string): Promise<void> {
     await this.postsService.deletePost(id);
