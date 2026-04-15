@@ -4,11 +4,9 @@ import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { InputCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.input-create-dto';
 import request from 'supertest';
+import { createBlog } from '../utils/createBlog';
 
-describe('create user', () => {
-  const ADMIN_LOGIN = 'admin';
-  const ADMIN_PASSWORD = 'qwerty';
-
+describe('create blog', () => {
   const inputBlog: InputCreateBlogDto = {
     name: 'Blog name',
     description: 'Blog description',
@@ -29,11 +27,7 @@ describe('create user', () => {
   });
 
   it(`should create blog if input data is correct and admin auth`, async () => {
-    await request(app.getHttpServer())
-      .post('/blogs')
-      .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
-      .send(inputBlog)
-      .expect(HttpStatus.CREATED);
+    await createBlog(app, inputBlog);
   });
 
   it(`shouldn't create blog if not admin auth`, async () => {

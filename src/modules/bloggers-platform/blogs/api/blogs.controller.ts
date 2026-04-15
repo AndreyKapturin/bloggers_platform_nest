@@ -66,6 +66,7 @@ export class BlogsController {
   }
 
   @Post(':blogId/posts')
+  @UseGuards(BasicAuthGuard)
   async createPostForBlog(
     @BlogPostDtoExtractor() inputCreatePostDto: InputCreatePostDto,
   ): Promise<ViewPostDto> {
