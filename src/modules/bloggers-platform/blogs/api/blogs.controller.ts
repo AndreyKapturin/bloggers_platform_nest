@@ -9,6 +9,7 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { BlogsService } from '../application/blogs.service';
 import { InputCreateBlogDto } from '../dto/Blog.input-create-dto';
@@ -23,6 +24,7 @@ import { PostsQueryRepository } from '../../posts/infrastructure/Post.query-repo
 import { ViewPostDto } from '../../posts/dto/Post.view-dto';
 import { InputCreatePostDto } from '../../posts/dto/Post.input-create-dto';
 import { BlogPostDtoExtractor } from '../decorators/blog-post-dto-extractor.decorator';
+import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
 
 @Controller('blogs')
 export class BlogsController {
@@ -55,6 +57,7 @@ export class BlogsController {
   }
 
   @Post()
+  @UseGuards(BasicAuthGuard)
   async createBlog(
     @Body() inputCreateBlogDto: InputCreateBlogDto,
   ): Promise<ViewBlogDto> {
