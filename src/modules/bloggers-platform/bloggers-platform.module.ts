@@ -15,6 +15,8 @@ import { CommentsController } from './comments/api/comments.controller';
 import { Comment, CommentSchema } from './comments/domain/comment.entity';
 import { CommentsRepository } from './comments/infrastructure/Comments.repository';
 import { CommentsQueryRepository } from './comments/infrastructure/Comments.query-repository';
+import { UserAccountsModule } from '../user-accounts/user-accounts.module';
+import { CreateCommentUseCase } from './comments/application/useCases/create-comment.use-case';
 
 @Module({
   imports: [
@@ -23,6 +25,7 @@ import { CommentsQueryRepository } from './comments/infrastructure/Comments.quer
       { name: Post.name, schema: PostSchema },
       { name: Comment.name, schema: CommentSchema },
     ]),
+    UserAccountsModule,
   ],
   controllers: [BlogsController, PostsController, CommentsController],
   providers: [
@@ -35,6 +38,7 @@ import { CommentsQueryRepository } from './comments/infrastructure/Comments.quer
     CommentsService,
     CommentsRepository,
     CommentsQueryRepository,
+    CreateCommentUseCase,
   ],
 })
 export class BloggersPlatformModule {}

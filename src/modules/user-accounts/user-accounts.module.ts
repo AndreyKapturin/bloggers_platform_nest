@@ -39,5 +39,6 @@ const JWT_AT_SECRET = 'c785q4nct98';
     JwtStrategy,
     BasicStrategy,
   ],
+  exports: [UsersRepository],
 })
 export class UserAccountsModule {}

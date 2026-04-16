@@ -1,7 +1,7 @@
-import { BaseQueryParamsDto } from "../../../../core/dto/BaseQueryParams.dto";
+import { BaseQueryParamsDto } from '../../../../../core/dto/BaseQueryParams.dto';
 
 export enum CommentsSortBy {
-  CreatedAt = 'createdAt'
+  CreatedAt = 'createdAt',
 }
 
 export class CommentsQueryParamsDto extends BaseQueryParamsDto {
