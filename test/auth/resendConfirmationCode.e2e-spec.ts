@@ -3,9 +3,9 @@ import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { fakeEmailService } from '../utils/mocks/fakeEmailService';
-import { registerUser } from '../utils/registerUser';
 import { confirmRegistration } from '../utils/confirmRegistration';
 import request from 'supertest';
+import { AuthTestHelper } from '../utils/AuthTestHelper';
 
 describe('registration-confirmation', () => {
   const inputUser = {
@@ -15,6 +15,7 @@ describe('registration-confirmation', () => {
   };
 
   let app: INestApplication;
+  let authTestHelper: AuthTestHelper;
   let mockSendConfirmationCode: jest.SpyInstance;
 
   beforeAll(async () => {
@@ -22,7 +23,8 @@ describe('registration-confirmation', () => {
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
-    await registerUser(app, inputUser);
+    authTestHelper = new AuthTestHelper(app);
+    await authTestHelper.registerUser(inputUser);
 
     mockSendConfirmationCode = jest.spyOn(
       fakeEmailService,

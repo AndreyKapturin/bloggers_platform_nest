@@ -3,11 +3,12 @@ import request from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { registerUser } from '../utils/registerUser';
 import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
+import { AuthTestHelper } from '../utils/AuthTestHelper';
 
 describe('login', () => {
   let app: INestApplication;
+  let authTestHelper: AuthTestHelper;
 
   const inputUser: InputCreateUserDto = {
     login: 'User_01',
@@ -20,8 +21,8 @@ describe('login', () => {
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
-
-    await registerUser(app, inputUser);
+    authTestHelper = new AuthTestHelper(app);
+    await authTestHelper.registerUser(inputUser);
   });
 
   it('should login user via email', async () => {

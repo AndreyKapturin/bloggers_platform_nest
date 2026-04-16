@@ -3,11 +3,12 @@ import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { fakeEmailService } from '../utils/mocks/fakeEmailService';
-import { registerUser } from '../utils/registerUser';
 import { confirmRegistration } from '../utils/confirmRegistration';
+import { AuthTestHelper } from '../utils/AuthTestHelper';
 
 describe('registration-confirmation', () => {
   let app: INestApplication;
+  let authTestHelper: AuthTestHelper;
   let mockSendConfirmationCode: jest.SpyInstance;
 
   beforeAll(async () => {
@@ -15,6 +16,7 @@ describe('registration-confirmation', () => {
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
+    authTestHelper = new AuthTestHelper(app);
   });
 
   beforeEach(() => {
@@ -35,7 +37,7 @@ describe('registration-confirmation', () => {
       password: 'strong_password',
     };
 
-    await registerUser(app, inputUser);
+    await authTestHelper.registerUser(inputUser);
 
     const confirmationCode = mockSendConfirmationCode.mock.calls[0][1];
 
@@ -54,7 +56,7 @@ describe('registration-confirmation', () => {
       password: 'strong_password',
     };
 
-    await registerUser(app, inputUser);
+    await authTestHelper.registerUser(inputUser);
 
     const confirmationCode = mockSendConfirmationCode.mock.calls[0][1];
 

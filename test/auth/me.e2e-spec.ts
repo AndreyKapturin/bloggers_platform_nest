@@ -3,9 +3,9 @@ import request, { Response } from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { registerUser } from '../utils/registerUser';
 import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
 import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
+import { AuthTestHelper } from '../utils/AuthTestHelper';
 
 const loginUser = async (
   app: INestApplication,
@@ -16,6 +16,7 @@ const loginUser = async (
 
 describe('get me', () => {
   let app: INestApplication;
+  let authTestHelper: AuthTestHelper;
   let accessToken: string;
 
   const inputUser: InputCreateUserDto = {
@@ -34,8 +35,8 @@ describe('get me', () => {
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
-
-    await registerUser(app, inputUser);
+    authTestHelper = new AuthTestHelper(app);
+    await authTestHelper.registerUser(inputUser);
 
     const loginResponse = await loginUser(app, inputLogin);
     accessToken = loginResponse.body.accessToken;
