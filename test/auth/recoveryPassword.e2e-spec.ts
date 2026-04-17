@@ -65,20 +65,16 @@ describe('recovery password', () => {
       password: inputUser.password,
     };
 
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(inputLoginViaOldPassword)
-      .expect(HttpStatus.UNAUTHORIZED);
+    await authTestHelper.loginUser(inputLoginViaOldPassword, {
+      status: HttpStatus.UNAUTHORIZED,
+    });
 
     const inputLoginViaNewPassword: InputLoginDto = {
       loginOrEmail: inputUser.login,
       password: inputNewPassword.newPassword,
     };
 
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(inputLoginViaNewPassword)
-      .expect(HttpStatus.OK);
+    await authTestHelper.loginUser(inputLoginViaNewPassword);
   });
 
   it('should return NO CONTENT status if user not exist', async () => {

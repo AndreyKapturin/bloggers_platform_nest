@@ -3,7 +3,6 @@ import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { InputCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.input-create-dto';
-import request, { Response } from 'supertest';
 import { createBlog } from '../utils/createBlog';
 import { InputCreatePostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.input-create-dto';
 import { createPost } from '../utils/createPost';
@@ -12,16 +11,7 @@ import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.in
 import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
 import { faker } from '@faker-js/faker';
 import { CommentsTestHelper } from '../utils/CommentsTestHelper';
-
-const loginUser = async (
-  app: INestApplication,
-  dto: InputLoginDto,
-): Promise<Response> => {
-  return await request(app.getHttpServer())
-    .post('/auth/login')
-    .send(dto)
-    .expect(HttpStatus.OK);
-};
+import { AuthTestHelper } from '../utils/AuthTestHelper';
 
 describe('create comment', () => {
   const inputBlog: InputCreateBlogDto = {
@@ -46,6 +36,7 @@ describe('create comment', () => {
   let app: INestApplication;
   let usersTestHelper: UsersTestHelper;
   let commentsTestHelper: CommentsTestHelper;
+  let authTestHelper: AuthTestHelper;
 
   let blogId: string;
   let postId: string;
@@ -58,6 +49,7 @@ describe('create comment', () => {
     await cleanDatabase(app);
 
     usersTestHelper = new UsersTestHelper(app);
+    authTestHelper = new AuthTestHelper(app);
     commentsTestHelper = new CommentsTestHelper(app);
 
     const createBlogResponse = await createBlog(app, inputBlog);
@@ -73,7 +65,7 @@ describe('create comment', () => {
     postId = createPostResponse.body.id;
 
     await usersTestHelper.createUser(inputUser);
-    const loginUserResponse = await loginUser(app, inputLogin);
+    const loginUserResponse = await authTestHelper.loginUser(inputLogin);
     accessToken = loginUserResponse.body.accessToken;
   });
 
