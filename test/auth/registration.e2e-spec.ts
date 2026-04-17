@@ -1,12 +1,13 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import request from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { fakeEmailService } from '../utils/mocks/fakeEmailService';
+import { AuthTestHelper } from '../utils/AuthTestHelper';
 
 describe('registration', () => {
   let app: INestApplication;
+  let authTestHelper: AuthTestHelper;
 
   const inputUser = {
     login: 'User_01',
@@ -19,6 +20,7 @@ describe('registration', () => {
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
+    authTestHelper = new AuthTestHelper(app);
   });
 
   it('should register user if data is correct', async () => {
@@ -27,15 +29,15 @@ describe('registration', () => {
       'sendConfirmationCode',
     );
 
-    await request(app.getHttpServer())
-      .post('/auth/registration')
-      .send(inputUser)
-      .expect(HttpStatus.NO_CONTENT);
+    await authTestHelper.registerUser(inputUser);
 
     expect(mocksendConfirmationCode).toHaveBeenCalledTimes(1);
-    expect(mocksendConfirmationCode).toHaveBeenCalledWith(inputUser.email, expect.any(String));
-    
-    mocksendConfirmationCode.mockRestore()
+    expect(mocksendConfirmationCode).toHaveBeenCalledWith(
+      inputUser.email,
+      expect.any(String),
+    );
+
+    mocksendConfirmationCode.mockRestore();
   });
 
   it(`shouldn't register user if login is busy`, async () => {
@@ -44,10 +46,9 @@ describe('registration', () => {
       email: 'user2@mail.ru',
     };
 
-    await request(app.getHttpServer())
-      .post('/auth/registration')
-      .send(equalLogin)
-      .expect(HttpStatus.BAD_REQUEST);
+    await authTestHelper.registerUser(equalLogin, {
+      status: HttpStatus.BAD_REQUEST,
+    });
   });
 
   it(`shouldn't register user if email is busy`, async () => {
@@ -56,10 +57,9 @@ describe('registration', () => {
       login: 'User_02',
     };
 
-    await request(app.getHttpServer())
-      .post('/auth/registration')
-      .send(equalEmail)
-      .expect(HttpStatus.BAD_REQUEST);
+    await authTestHelper.registerUser(equalEmail, {
+      status: HttpStatus.BAD_REQUEST,
+    });
   });
 
   it.each([
@@ -133,10 +133,9 @@ describe('registration', () => {
       },
     },
   ])(`shouldn't register user if $testDesc`, async ({ inputUser }) => {
-    await request(app.getHttpServer())
-      .post('/auth/registration')
-      .send(inputUser)
-      .expect(HttpStatus.BAD_REQUEST);
+    await authTestHelper.registerUser(inputUser, {
+      status: HttpStatus.BAD_REQUEST,
+    });
   });
 
   afterAll(async () => {
