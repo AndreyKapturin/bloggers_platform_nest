@@ -5,7 +5,7 @@ export const COMMENT_CONTENT_CONSTRAINTS = {
   MAX_LENGTH: 300,
 };
 
-export class HttpCreateCommentDto {
+export class HttpCommentDto {
   @Length(
     COMMENT_CONTENT_CONSTRAINTS.MIN_LENGTH,
     COMMENT_CONTENT_CONSTRAINTS.MAX_LENGTH,

@@ -17,6 +17,7 @@ import { CommentsRepository } from './comments/infrastructure/Comments.repositor
 import { CommentsQueryRepository } from './comments/infrastructure/Comments.query-repository';
 import { UserAccountsModule } from '../user-accounts/user-accounts.module';
 import { CreateCommentUseCase } from './comments/application/useCases/create-comment.use-case';
+import { UpdateCommentUseCase } from './comments/application/useCases/update-comment.use-case';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { CreateCommentUseCase } from './comments/application/useCases/create-com
     CommentsRepository,
     CommentsQueryRepository,
     CreateCommentUseCase,
+    UpdateCommentUseCase,
   ],
 })
 export class BloggersPlatformModule {}

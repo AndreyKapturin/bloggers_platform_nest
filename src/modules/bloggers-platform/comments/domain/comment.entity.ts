@@ -2,6 +2,15 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 import { DomainCreateCommentDto } from './dto/DomainCreateComment.dto';
 
+@Schema({ _id: false })
+class CommentatorInfo {
+  @Prop({ type: String, required: true })
+  userId!: string;
+
+  @Prop({ type: String, required: true })
+  userLogin!: string;
+}
+
 @Schema({ timestamps: true })
 export class Comment {
   @Prop({ type: String, required: true })
@@ -10,10 +19,8 @@ export class Comment {
   @Prop({ type: String, required: true })
   postId!: string;
 
-  commentatorInfo!: {
-    userId: string;
-    userLogin: string;
-  };
+  @Prop({ type: () => CommentatorInfo, required: true })
+  commentatorInfo!: CommentatorInfo;
 
   likesInfo!: {
     likesCount: 0;
@@ -33,6 +40,10 @@ export class Comment {
       userLogin: dto.userLogin,
     };
     return comment as TCommentDocument;
+  }
+
+  setContent(newContent: string) {
+    this.content = newContent;
   }
 }
 

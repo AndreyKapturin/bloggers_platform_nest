@@ -25,7 +25,7 @@ import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Bas
 import { JwtAuthGuard } from '../../../user-accounts/auth/strategies/jwt/Jwt.guard';
 import { CommandBus } from '@nestjs/cqrs';
 import { CreateCommentCommand } from '../../comments/application/useCases/create-comment.use-case';
-import { HttpCreateCommentDto } from '../../comments/api/dto/HttpCreateComment.dto';
+import { HttpCommentDto } from '../../comments/api/dto/HttpComment.dto';
 import { ExtractUserFromRequest } from '../../../user-accounts/auth/decorators/extract-userId.decorator';
 import { UserInRequest } from '../../../user-accounts/auth/dto/UserInRequest.dto';
 
@@ -56,7 +56,7 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   async createPostComment(
     @Param('postId') postId: string,
-    @Body() dto: HttpCreateCommentDto,
+    @Body() dto: HttpCommentDto,
     @ExtractUserFromRequest() user: UserInRequest,
   ): Promise<ViewCommentDto> {
     const command = new CreateCommentCommand(postId, dto.content, user.id);
