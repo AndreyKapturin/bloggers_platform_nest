@@ -115,6 +115,15 @@ describe('update comment', () => {
     expect(getAfterUpdateResponse.body.content).toBe(newContent);
   });
 
+  it(`shouldn't update comment. Return UNAUTHORIZED status if passed invalid access token`, async () => {
+    const invalidAccessToken = faker.internet.jwt();
+    await requset(app.getHttpServer())
+      .put(`/comments/${comment.id}`)
+      .auth(invalidAccessToken, { type: 'bearer' })
+      .send({ content: newContent })
+      .expect(HttpStatus.UNAUTHORIZED);
+  });
+
   it(`shouldn't update comment. Return BAD REQUEST status if data is invalid`, async () => {
     const badContent = 'small content';
     await requset(app.getHttpServer())
@@ -138,7 +147,7 @@ describe('update comment', () => {
       .expect(HttpStatus.FORBIDDEN);
   });
 
-  it(`shouldn't update comment. Return NOF FOUND status if comment not belong to user`, async () => {
+  it(`shouldn't update comment. Return NOF FOUND status if comment not exist`, async () => {
     const notExistCommentId = faker.database.mongodbObjectId().toString();
 
     await requset(app.getHttpServer())
