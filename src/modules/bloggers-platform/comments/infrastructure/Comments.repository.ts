@@ -38,4 +38,8 @@ export class CommentsRepository {
   async save(commentDocument: TCommentDocument): Promise<void> {
     await commentDocument.save();
   }
+
+  async delete(commentDocument: TCommentDocument): Promise<void> {
+    await commentDocument.deleteOne();
+  }
 }

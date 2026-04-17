@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -15,6 +16,7 @@ import { UserInRequest } from '../../../user-accounts/auth/dto/UserInRequest.dto
 import { UpdateCommentCommand } from '../application/useCases/update-comment.use-case';
 import { CommandBus } from '@nestjs/cqrs';
 import { JwtAuthGuard } from '../../../user-accounts/auth/strategies/jwt/Jwt.guard';
+import { DeleteCommentCommand } from '../application/useCases/delete-comment.use-case';
 
 @Controller('comments')
 export class CommentsController {
@@ -37,6 +39,17 @@ export class CommentsController {
     @ExtractUserFromRequest() user: UserInRequest,
   ) {
     const command = new UpdateCommentCommand(commentId, dto.content, user.id);
+    await this.commandBus.execute(command);
+  }
+
+  @Delete(':commentId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  async deleteComment(
+    @Param('commentId') commentId: string,
+    @ExtractUserFromRequest() user: UserInRequest,
+  ) {
+    const command = new DeleteCommentCommand(commentId, user.id);
     await this.commandBus.execute(command);
   }
 }
