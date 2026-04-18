@@ -21,7 +21,11 @@ export class ViewCommentDto {
       commentDocument.id,
       commentDocument.content,
       commentDocument.commentatorInfo,
-      commentDocument.likesInfo,
+      {
+        likesCount: commentDocument.likesInfo.likesCount,
+        dislikesCount: commentDocument.likesInfo.dislikesCount,
+        myStatus: 'None',
+      },
       commentDocument.createdAt.toISOString(),
     );
   }

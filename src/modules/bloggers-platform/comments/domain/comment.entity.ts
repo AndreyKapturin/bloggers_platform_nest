@@ -3,6 +3,15 @@ import { HydratedDocument, Model } from 'mongoose';
 import { DomainCreateCommentDto } from './dto/DomainCreateComment.dto';
 
 @Schema({ _id: false })
+class LikesInfo {
+  @Prop({ type: Number, default: 0 })
+  likesCount!: number;
+
+  @Prop({ type: Number, default: 0 })
+  dislikesCount!: number;
+}
+
+@Schema({ _id: false })
 class CommentatorInfo {
   @Prop({ type: String, required: true })
   userId!: string;
@@ -22,11 +31,8 @@ export class Comment {
   @Prop({ type: () => CommentatorInfo, required: true })
   commentatorInfo!: CommentatorInfo;
 
-  likesInfo!: {
-    likesCount: 0;
-    dislikesCount: 0;
-    myStatus: 'None';
-  };
+  @Prop({ type: () => LikesInfo, default: () => ({}) })
+  likesInfo!: LikesInfo;
 
   createdAt!: Date;
   updatedAt!: Date;

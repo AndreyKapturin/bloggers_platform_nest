@@ -16,4 +16,13 @@ export class CommentsTestHelper {
       .send(dto)
       .expect(options?.status ?? HttpStatus.CREATED);
   }
+
+  async getCommentById(
+    id: string,
+    options?: { status: HttpStatus },
+  ): Promise<Response> {
+    return request(this.app.getHttpServer())
+      .get(`/comments/${id}`)
+      .expect(options?.status ?? HttpStatus.OK);
+  }
 }
