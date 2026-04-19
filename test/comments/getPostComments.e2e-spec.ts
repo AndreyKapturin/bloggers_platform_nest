@@ -13,7 +13,7 @@ import { faker } from '@faker-js/faker';
 import { CommentsTestHelper } from '../utils/CommentsTestHelper';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 
-describe('get comment by id', () => {
+describe('get post comments', () => {
   const inputBlog: InputCreateBlogDto = {
     name: 'Blog name',
     description: 'Blog description',
@@ -44,7 +44,6 @@ describe('get comment by id', () => {
 
   let blogId: string;
   let postId: string;
-  let commentId: string;
   let accessToken: string;
 
   beforeAll(async () => {
@@ -73,30 +72,23 @@ describe('get comment by id', () => {
     const loginUserResponse = await authTestHelper.loginUser(inputLogin);
     accessToken = loginUserResponse.body.accessToken;
 
-    const createCommentResponse = await commentsTestHelper.createComment(
-      postId,
-      accessToken,
-      inputComment,
-    );
-    commentId = createCommentResponse.body.id;
+    await commentsTestHelper.createComment(postId, accessToken, inputComment);
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('should return view comment if comment exist', async () => {
-    const expectedComment = commentsTestHelper.createExpectedComment({
-      content: inputComment.content,
-    });
-    const getCommentResponse =
-      await commentsTestHelper.getCommentById(commentId);
-    expect(getCommentResponse.body).toEqual(expectedComment);
+  it('should return paginated view comments for post if post exist', async () => {
+    const expectedComments = commentsTestHelper.createExpectedComments();
+    const getPostCommentsResponse =
+      await commentsTestHelper.getPostComments(postId);
+    expect(getPostCommentsResponse.body).toEqual(expectedComments);
   });
 
-  it(`should return NOT FOUND status if comment not exist`, async () => {
+  it(`should return NOT FOUND status if post not exist`, async () => {
     const unexistedCommentId = faker.database.mongodbObjectId().toString();
-    await commentsTestHelper.getCommentById(unexistedCommentId, {
+    await commentsTestHelper.getPostComments(unexistedCommentId, {
       status: HttpStatus.NOT_FOUND,
     });
   });

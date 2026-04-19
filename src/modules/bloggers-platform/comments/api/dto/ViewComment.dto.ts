@@ -17,7 +17,7 @@ export class ViewCommentDto {
     public createdAt: string,
   ) {}
 
-  static toView(commentDocument: TCommentDocument, myStatus = LikeStatus.None): ViewCommentDto {
+  static toView(commentDocument: TCommentDocument): ViewCommentDto {
     return new this(
       commentDocument.id,
       commentDocument.content,
@@ -25,7 +25,7 @@ export class ViewCommentDto {
       {
         likesCount: commentDocument.likesInfo.likesCount,
         dislikesCount: commentDocument.likesInfo.dislikesCount,
-        myStatus,
+        myStatus: LikeStatus.None
       },
       commentDocument.createdAt.toISOString(),
     );

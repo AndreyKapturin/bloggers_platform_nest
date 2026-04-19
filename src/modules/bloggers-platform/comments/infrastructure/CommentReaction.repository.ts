@@ -23,4 +23,14 @@ export class CommentReactionRepository {
   ): Promise<TCommentReactionDocument | null> {
     return this.CommentReactionModel.findOne({ commentId, userId });
   }
+
+  async findUserReactionsForManyComments(
+    userId: string,
+    commentIds: string[],
+  ): Promise<TCommentReactionDocument[]> {
+    return this.CommentReactionModel.find({
+      userId,
+      commentId: { $in: commentIds },
+    });
+  }
 }

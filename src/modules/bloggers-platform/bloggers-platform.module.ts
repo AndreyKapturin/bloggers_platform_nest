@@ -26,6 +26,7 @@ import {
 } from './comments/domain/comment-reaction.entity';
 import { CommentReactionRepository } from './comments/infrastructure/CommentReaction.repository';
 import { GetCommentQueryHandler } from './comments/application/queries/get-comment-by-id.query';
+import { GetPostCommentsQueryHandler } from './comments/application/queries/get-comments-for-post.query';
 
 const useCases = [
   CreateCommentUseCase,
@@ -36,6 +37,7 @@ const useCases = [
 
 const queries = [
   GetCommentQueryHandler,
+  GetPostCommentsQueryHandler,
 ];
 
 @Module({
