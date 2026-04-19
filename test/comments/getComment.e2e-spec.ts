@@ -13,6 +13,7 @@ import { faker } from '@faker-js/faker';
 import { CommentsTestHelper } from '../utils/CommentsTestHelper';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/ViewComment.dto';
+import { LikeStatus } from '../../src/modules/bloggers-platform/comments/api/dto/HttpLikeComment.dto';
 
 describe('get comment by id', () => {
   const inputBlog: InputCreateBlogDto = {
@@ -47,7 +48,7 @@ describe('get comment by id', () => {
     likesInfo: {
       likesCount: 0,
       dislikesCount: 0,
-      myStatus: 'None',
+      myStatus: LikeStatus.None,
     },
   };
 

@@ -48,7 +48,7 @@ export class PostsController {
     @Param('id') postId: string,
     @Query() query: CommentsQueryParamsDto,
   ): Promise<PaginatedView<ViewCommentDto>> {
-    await this.commentsQueryRepository.findById(postId);
+    await this.commentsQueryRepository.findByIdOrThrow(postId);
     return this.commentsQueryRepository.findForPost(postId, query);
   }
 
@@ -61,7 +61,7 @@ export class PostsController {
   ): Promise<ViewCommentDto> {
     const command = new CreateCommentCommand(postId, dto.content, user.id);
     const commentId = await this.commandBus.execute(command);
-    return this.commentsQueryRepository.findById(commentId);
+    return this.commentsQueryRepository.findByIdOrThrow(commentId);
   }
 
   @Get()

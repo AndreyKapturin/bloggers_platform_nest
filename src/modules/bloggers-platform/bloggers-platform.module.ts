@@ -25,12 +25,17 @@ import {
   CommentReactionSchema,
 } from './comments/domain/comment-reaction.entity';
 import { CommentReactionRepository } from './comments/infrastructure/CommentReaction.repository';
+import { GetCommentQueryHandler } from './comments/application/queries/get-comment-by-id.query';
 
 const useCases = [
   CreateCommentUseCase,
   UpdateCommentUseCase,
   DeleteCommentUseCase,
   LikeCommentUseCase,
+];
+
+const queries = [
+  GetCommentQueryHandler,
 ];
 
 @Module({
@@ -56,6 +61,7 @@ const useCases = [
     CommentsQueryRepository,
     CommentReactionRepository,
     ...useCases,
+    ...queries,
   ],
 })
 export class BloggersPlatformModule {}

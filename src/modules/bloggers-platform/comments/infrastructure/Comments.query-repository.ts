@@ -13,7 +13,7 @@ export class CommentsQueryRepository {
     private CommentModel: TCommentModel,
   ) {}
 
-  async findById(id: string): Promise<ViewCommentDto> {
+  async findByIdOrThrow(id: string): Promise<ViewCommentDto> {
     const commentDocument = await this.CommentModel.findById(id);
     if (!commentDocument) {
       throw new NotFoundException(`Comment with id ${id} not found`);

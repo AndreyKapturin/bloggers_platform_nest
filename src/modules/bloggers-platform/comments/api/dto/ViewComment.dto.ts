@@ -1,4 +1,5 @@
 import { TCommentDocument } from '../../domain/comment.entity';
+import { LikeStatus } from './HttpLikeComment.dto';
 
 export class ViewCommentDto {
   constructor(
@@ -11,12 +12,12 @@ export class ViewCommentDto {
     public likesInfo: {
       likesCount: number;
       dislikesCount: number;
-      myStatus: 'None';
+      myStatus: LikeStatus;
     },
     public createdAt: string,
   ) {}
 
-  static toView(commentDocument: TCommentDocument): ViewCommentDto {
+  static toView(commentDocument: TCommentDocument, myStatus = LikeStatus.None): ViewCommentDto {
     return new this(
       commentDocument.id,
       commentDocument.content,
@@ -24,7 +25,7 @@ export class ViewCommentDto {
       {
         likesCount: commentDocument.likesInfo.likesCount,
         dislikesCount: commentDocument.likesInfo.dislikesCount,
-        myStatus: 'None',
+        myStatus,
       },
       commentDocument.createdAt.toISOString(),
     );

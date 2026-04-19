@@ -57,8 +57,8 @@ describe('like comment', () => {
 
   let blogId: string;
   let postId: string;
-  let accessToken: string;
-  let accessToken2: string;
+  let user1AccessToken: string;
+  let user2AccessToken: string;
   let commentId: string;
 
   beforeAll(async () => {
@@ -85,15 +85,15 @@ describe('like comment', () => {
 
     await usersTestHelper.createUser(inputUser);
     const loginUserResponse = await authTestHelper.loginUser(inputLogin);
-    accessToken = loginUserResponse.body.accessToken;
+    user1AccessToken = loginUserResponse.body.accessToken;
 
     await usersTestHelper.createUser(inputUser2);
     const loginUserResponse2 = await authTestHelper.loginUser(inputLogin2);
-    accessToken2 = loginUserResponse2.body.accessToken;
+    user2AccessToken = loginUserResponse2.body.accessToken;
 
     const createCommentResponse = await commentsTestHelper.createComment(
       postId,
-      accessToken,
+      user1AccessToken,
       { content: 'Post 1 comment text text text' },
     );
     commentId = createCommentResponse.body.id;
@@ -104,26 +104,63 @@ describe('like comment', () => {
   });
 
   it('should add like to comment return NO CONTENT status if data is valid, comment exist, access token valid', async () => {
-    await commentsTestHelper.setLikeStatus(commentId, inputLike, accessToken);
-    const getAfterLikeResponse =
-      await commentsTestHelper.getCommentById(commentId);
+    await commentsTestHelper.setLikeStatus(
+      commentId,
+      inputLike,
+      user1AccessToken,
+    );
+    const getAfterLikeResponse = await commentsTestHelper.getCommentById(
+      commentId,
+      { accessToken: user1AccessToken },
+    );
     expect(getAfterLikeResponse.body.likesInfo.likesCount).toBe(1);
+    expect(getAfterLikeResponse.body.likesInfo.myStatus).toBe(LikeStatus.Like);
+  });
+
+  it(`myStatus should be ${LikeStatus.None} if like was added another user`, async () => {
+    const getForAnotherUserResponse = await commentsTestHelper.getCommentById(
+      commentId,
+      { accessToken: user2AccessToken },
+    );
+    expect(getForAnotherUserResponse.body.likesInfo.myStatus).toBe(
+      LikeStatus.None,
+    );
+  });
+
+  it(`myStatus should be ${LikeStatus.None} if get request was send from anonymous user`, async () => {
+    const getForAnonymousUserResponse =
+      await commentsTestHelper.getCommentById(commentId);
+    expect(getForAnonymousUserResponse.body.likesInfo.myStatus).toBe(
+      LikeStatus.None,
+    );
   });
 
   it('should change like status. Return NO CONTENT status if data is valid, comment exist, access token valid', async () => {
-    await commentsTestHelper.setLikeStatus(commentId, inputLike, accessToken);
+    await commentsTestHelper.setLikeStatus(
+      commentId,
+      inputLike,
+      user1AccessToken,
+    );
     const getAfterLikeResponse =
       await commentsTestHelper.getCommentById(commentId);
     expect(getAfterLikeResponse.body.likesInfo.likesCount).toBe(1);
     expect(getAfterLikeResponse.body.likesInfo.dislikesCount).toBe(0);
 
-    await commentsTestHelper.setLikeStatus(commentId, inputDislike, accessToken);
+    await commentsTestHelper.setLikeStatus(
+      commentId,
+      inputDislike,
+      user1AccessToken,
+    );
     const getAfterDislikeResponse =
       await commentsTestHelper.getCommentById(commentId);
     expect(getAfterDislikeResponse.body.likesInfo.likesCount).toBe(0);
     expect(getAfterDislikeResponse.body.likesInfo.dislikesCount).toBe(1);
 
-    await commentsTestHelper.setLikeStatus(commentId, inputNone, accessToken);
+    await commentsTestHelper.setLikeStatus(
+      commentId,
+      inputNone,
+      user1AccessToken,
+    );
     const getAfterNoneResponse =
       await commentsTestHelper.getCommentById(commentId);
     expect(getAfterNoneResponse.body.likesInfo.likesCount).toBe(0);
@@ -144,7 +181,7 @@ describe('like comment', () => {
     await commentsTestHelper.setLikeStatus(
       commentId,
       inputWrongStatus,
-      accessToken,
+      user1AccessToken,
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -155,7 +192,7 @@ describe('like comment', () => {
     await commentsTestHelper.setLikeStatus(
       notExistCommentId,
       inputLike,
-      accessToken,
+      user1AccessToken,
       { status: HttpStatus.NOT_FOUND },
     );
   });

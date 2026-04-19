@@ -20,11 +20,17 @@ export class CommentsTestHelper {
 
   async getCommentById(
     id: string,
-    options?: { status: HttpStatus },
+    options?: { status?: HttpStatus; accessToken?: string },
   ): Promise<Response> {
-    return request(this.app.getHttpServer())
+    const getRequest = request(this.app.getHttpServer())
       .get(`/comments/${id}`)
       .expect(options?.status ?? HttpStatus.OK);
+
+    if (options?.accessToken) {
+      getRequest.auth(options.accessToken, { type: 'bearer' });
+    }
+
+    return getRequest;
   }
 
   async setLikeStatus(

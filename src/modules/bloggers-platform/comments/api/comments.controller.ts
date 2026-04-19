@@ -9,27 +9,34 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
-import { CommentsQueryRepository } from '../infrastructure/Comments.query-repository';
 import { HttpCommentDto } from './dto/HttpComment.dto';
 import { ExtractUserFromRequest } from '../../../user-accounts/auth/decorators/extract-userId.decorator';
 import { UserInRequest } from '../../../user-accounts/auth/dto/UserInRequest.dto';
 import { UpdateCommentCommand } from '../application/useCases/update-comment.use-case';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { JwtAuthGuard } from '../../../user-accounts/auth/strategies/jwt/Jwt.guard';
 import { DeleteCommentCommand } from '../application/useCases/delete-comment.use-case';
 import { HttpLikeCommentDto } from './dto/HttpLikeComment.dto';
 import { LikeCommentCommand } from '../application/useCases/like-comment.use-case';
+import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/strategies/jwt/JwtOptional.guard';
+import { GetCommentQuery } from '../application/queries/get-comment-by-id.query';
+import { OptionalUserFromRequest } from '../../../user-accounts/auth/decorators/optional-user-in-request.decorator';
 
 @Controller('comments')
 export class CommentsController {
   constructor(
-    private commentsQueryRepository: CommentsQueryRepository,
     private commandBus: CommandBus,
+    private queryBus: QueryBus,
   ) {}
 
   @Get(':id')
-  async getById(@Param('id') id: string) {
-    return this.commentsQueryRepository.findById(id);
+  @UseGuards(JwtOptionalAuthGuard)
+  async getById(
+    @Param('id') id: string,
+    @OptionalUserFromRequest() user: UserInRequest | null,
+  ) {
+    const query = new GetCommentQuery(id, user?.id ?? null);
+    return this.queryBus.execute(query);
   }
 
   @Put(':commentId')
