@@ -1,4 +1,5 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
+import requset from 'supertest';
 import request, { Response } from 'supertest';
 
 export class CommentsTestHelper {
@@ -24,5 +25,18 @@ export class CommentsTestHelper {
     return request(this.app.getHttpServer())
       .get(`/comments/${id}`)
       .expect(options?.status ?? HttpStatus.OK);
+  }
+
+  async setLikeStatus(
+    id: string,
+    inputStatus: { likeStatus: string },
+    accessToken: string,
+    options?: { status: HttpStatus },
+  ) {
+    await requset(this.app.getHttpServer())
+      .put(`/comments/${id}/like-status`)
+      .auth(accessToken, { type: 'bearer' })
+      .send(inputStatus)
+      .expect(options?.status ?? HttpStatus.NO_CONTENT);
   }
 }

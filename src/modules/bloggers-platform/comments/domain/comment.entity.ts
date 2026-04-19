@@ -51,6 +51,32 @@ export class Comment {
   setContent(newContent: string) {
     this.content = newContent;
   }
+
+  addLike() {
+    this.likesInfo.likesCount += 1;
+  }
+
+  addDislike() {
+    this.likesInfo.dislikesCount += 1;
+  }
+
+  removeLike() {
+    this.likesInfo.likesCount -= 1;
+  }
+
+  removeDislike() {
+    this.likesInfo.dislikesCount -= 1;
+  }
+
+  likeToDislike() {
+    this.removeLike();
+    this.addDislike();
+  }
+
+  dislikeToLike() {
+    this.removeDislike();
+    this.addLike();
+  }
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);

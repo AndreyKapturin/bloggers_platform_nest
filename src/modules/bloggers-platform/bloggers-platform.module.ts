@@ -19,11 +19,18 @@ import { UserAccountsModule } from '../user-accounts/user-accounts.module';
 import { CreateCommentUseCase } from './comments/application/useCases/create-comment.use-case';
 import { UpdateCommentUseCase } from './comments/application/useCases/update-comment.use-case';
 import { DeleteCommentUseCase } from './comments/application/useCases/delete-comment.use-case';
+import { LikeCommentUseCase } from './comments/application/useCases/like-comment.use-case';
+import {
+  CommentReaction,
+  CommentReactionSchema,
+} from './comments/domain/comment-reaction.entity';
+import { CommentReactionRepository } from './comments/infrastructure/CommentReaction.repository';
 
 const useCases = [
   CreateCommentUseCase,
   UpdateCommentUseCase,
   DeleteCommentUseCase,
+  LikeCommentUseCase,
 ];
 
 @Module({
@@ -32,6 +39,7 @@ const useCases = [
       { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostSchema },
       { name: Comment.name, schema: CommentSchema },
+      { name: CommentReaction.name, schema: CommentReactionSchema },
     ]),
     UserAccountsModule,
   ],
@@ -46,6 +54,7 @@ const useCases = [
     CommentsService,
     CommentsRepository,
     CommentsQueryRepository,
+    CommentReactionRepository,
     ...useCases,
   ],
 })

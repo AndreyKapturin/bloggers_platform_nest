@@ -17,6 +17,8 @@ import { UpdateCommentCommand } from '../application/useCases/update-comment.use
 import { CommandBus } from '@nestjs/cqrs';
 import { JwtAuthGuard } from '../../../user-accounts/auth/strategies/jwt/Jwt.guard';
 import { DeleteCommentCommand } from '../application/useCases/delete-comment.use-case';
+import { HttpLikeCommentDto } from './dto/HttpLikeComment.dto';
+import { LikeCommentCommand } from '../application/useCases/like-comment.use-case';
 
 @Controller('comments')
 export class CommentsController {
@@ -39,6 +41,18 @@ export class CommentsController {
     @ExtractUserFromRequest() user: UserInRequest,
   ) {
     const command = new UpdateCommentCommand(commentId, dto.content, user.id);
+    await this.commandBus.execute(command);
+  }
+
+  @Put(':commentId/like-status')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  async changeLikeStatus(
+    @Param('commentId') commentId: string,
+    @Body() dto: HttpLikeCommentDto,
+    @ExtractUserFromRequest() user: UserInRequest,
+  ) {
+    const command = new LikeCommentCommand(commentId, dto.likeStatus, user.id);
     await this.commandBus.execute(command);
   }
 
