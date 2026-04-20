@@ -2,18 +2,15 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { InputCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.input-create-dto';
 import request from 'supertest';
 import { InputCreatePostForBlogDto } from '../../src/modules/bloggers-platform/posts/dto/PostForBlog.input-create-dto';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
-import { createBlog } from '../utils/createBlog';
+import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 
 describe('create post for blog', () => {
-  const inputBlog: InputCreateBlogDto = {
-    name: 'Blog name',
-    description: 'Blog description',
-    websiteUrl: 'https://blog1.io',
-  };
+  let app: INestApplication;
+
+  let blogsTestHelper: BlogsTestHelper;
 
   let blogId: string;
 
@@ -23,16 +20,15 @@ describe('create post for blog', () => {
     content: 'Post 1 content bla bla bla bla bla bla bla bla',
   };
 
-  let app: INestApplication;
-
   beforeAll(async () => {
     app = await initApp();
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
 
-    const createBlogResponse = await createBlog(app, inputBlog);
-    blogId = createBlogResponse.body.id;
+    blogsTestHelper = new BlogsTestHelper(app);
+    const blog = await blogsTestHelper.createRandomBlog();
+    blogId = blog.id;
   });
 
   afterAll(async () => {

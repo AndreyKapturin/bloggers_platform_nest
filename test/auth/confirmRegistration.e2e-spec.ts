@@ -3,11 +3,13 @@ import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { fakeEmailService } from '../utils/mocks/fakeEmailService';
-import { registerUser } from '../utils/registerUser';
-import { confirmRegistration } from '../utils/confirmRegistration';
+import { AuthTestHelper } from '../utils/AuthTestHelper';
+import { UsersTestHelper } from '../utils/UsersTestHelper';
 
 describe('registration-confirmation', () => {
   let app: INestApplication;
+  let usersTestHelper: UsersTestHelper;
+  let authTestHelper: AuthTestHelper;
   let mockSendConfirmationCode: jest.SpyInstance;
 
   beforeAll(async () => {
@@ -15,6 +17,9 @@ describe('registration-confirmation', () => {
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
+
+    usersTestHelper = new UsersTestHelper(app);
+    authTestHelper = new AuthTestHelper(app, usersTestHelper);
   });
 
   beforeEach(() => {
@@ -29,57 +34,28 @@ describe('registration-confirmation', () => {
   });
 
   it('should confirm registration', async () => {
-    const inputUser = {
-      login: 'User_01',
-      email: 'user1@mail.ru',
-      password: 'strong_password',
-    };
-
-    await registerUser(app, inputUser);
-
+    const inputUser = usersTestHelper.createInputDto();
+    await authTestHelper.registerUser(inputUser);
     const confirmationCode = mockSendConfirmationCode.mock.calls[0][1];
-
-    const confirmRegistrationResponse = await confirmRegistration(
-      app,
-      confirmationCode,
-    );
-
-    expect(confirmRegistrationResponse.status).toBe(HttpStatus.NO_CONTENT);
+    await authTestHelper.confirmRegistration(confirmationCode);
   });
 
   it('should return bad request if user already confirmed', async () => {
-    const inputUser = {
-      login: 'User_02',
-      email: 'user2@mail.ru',
-      password: 'strong_password',
-    };
-
-    await registerUser(app, inputUser);
-
+    const inputUser = usersTestHelper.createInputDto();
+    await authTestHelper.registerUser(inputUser);
     const confirmationCode = mockSendConfirmationCode.mock.calls[0][1];
 
-    const confirmRegistrationResponse1 = await confirmRegistration(
-      app,
-      confirmationCode,
-    );
+    await authTestHelper.confirmRegistration(confirmationCode);
 
-    expect(confirmRegistrationResponse1.status).toBe(HttpStatus.NO_CONTENT);
-
-    const confirmRegistrationResponse2 = await confirmRegistration(
-      app,
-      confirmationCode,
-    );
-
-    expect(confirmRegistrationResponse2.status).toBe(HttpStatus.BAD_REQUEST);
+    await authTestHelper.confirmRegistration(confirmationCode, {
+      status: HttpStatus.BAD_REQUEST,
+    });
   });
 
   it('should return bad request if confirmation code is incorrect', async () => {
-    const confirmRegistrationResponse = await confirmRegistration(
-      app,
-      'incorrect code',
-    );
-
-    expect(confirmRegistrationResponse.status).toBe(HttpStatus.BAD_REQUEST);
+    await authTestHelper.confirmRegistration('incorrect code', {
+      status: HttpStatus.BAD_REQUEST,
+    });
   });
 
   afterAll(async () => {

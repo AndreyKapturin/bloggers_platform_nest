@@ -5,12 +5,13 @@ import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { fakeEmailService } from '../utils/mocks/fakeEmailService';
 import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
-import { registerUser } from '../utils/registerUser';
 import { InputNewPasswordDto } from '../../src/modules/user-accounts/auth/dto/NewPassword.input-dto';
 import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
+import { AuthTestHelper } from '../utils/AuthTestHelper';
 
 describe('recovery password', () => {
   let app: INestApplication;
+  let authTestHelper: AuthTestHelper;
   let mockSendRecoveryCode: jest.SpyInstance;
 
   const inputUser: InputCreateUserDto = {
@@ -24,7 +25,8 @@ describe('recovery password', () => {
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
-    await registerUser(app, inputUser);
+    authTestHelper = new AuthTestHelper(app);
+    await authTestHelper.registerUser(inputUser);
   });
 
   afterAll(async () => {
@@ -63,20 +65,16 @@ describe('recovery password', () => {
       password: inputUser.password,
     };
 
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(inputLoginViaOldPassword)
-      .expect(HttpStatus.UNAUTHORIZED);
+    await authTestHelper.loginUser(inputLoginViaOldPassword, {
+      status: HttpStatus.UNAUTHORIZED,
+    });
 
     const inputLoginViaNewPassword: InputLoginDto = {
       loginOrEmail: inputUser.login,
       password: inputNewPassword.newPassword,
     };
 
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(inputLoginViaNewPassword)
-      .expect(HttpStatus.OK);
+    await authTestHelper.loginUser(inputLoginViaNewPassword);
   });
 
   it('should return NO CONTENT status if user not exist', async () => {

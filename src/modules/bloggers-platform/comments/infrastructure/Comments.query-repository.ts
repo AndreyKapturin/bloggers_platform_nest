@@ -1,8 +1,8 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Comment, type TCommentModel } from '../domain/comment.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { ViewCommentDto } from '../dto/Comment.view-dto';
-import { CommentsQueryParamsDto } from '../dto/CommentsQueryParams.dto';
+import { ViewCommentDto } from '../api/dto/ViewComment.dto';
+import { CommentsQueryParamsDto } from '../api/dto/CommentsQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { QueryFilter } from 'mongoose';
 
@@ -13,7 +13,7 @@ export class CommentsQueryRepository {
     private CommentModel: TCommentModel,
   ) {}
 
-  async findById(id: string): Promise<ViewCommentDto> {
+  async findByIdOrThrow(id: string): Promise<ViewCommentDto> {
     const commentDocument = await this.CommentModel.findById(id);
     if (!commentDocument) {
       throw new NotFoundException(`Comment with id ${id} not found`);

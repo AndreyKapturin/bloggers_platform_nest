@@ -1,13 +1,13 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import request from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { registerUser } from '../utils/registerUser';
 import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
+import { AuthTestHelper } from '../utils/AuthTestHelper';
 
 describe('login', () => {
   let app: INestApplication;
+  let authTestHelper: AuthTestHelper;
 
   const inputUser: InputCreateUserDto = {
     login: 'User_01',
@@ -20,8 +20,8 @@ describe('login', () => {
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
-
-    await registerUser(app, inputUser);
+    authTestHelper = new AuthTestHelper(app);
+    await authTestHelper.registerUser(inputUser);
   });
 
   it('should login user via email', async () => {
@@ -30,10 +30,8 @@ describe('login', () => {
       password: inputUser.password,
     };
 
-    const loginWithEmailResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(loginViaEmail)
-      .expect(HttpStatus.OK);
+    const loginWithEmailResponse =
+      await authTestHelper.loginUser(loginViaEmail);
 
     expect(loginWithEmailResponse.body).toEqual({
       accessToken: expect.any(String),
@@ -46,10 +44,7 @@ describe('login', () => {
       password: inputUser.password,
     };
 
-    const loginViaLoginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(loginViaLogin)
-      .expect(HttpStatus.OK);
+    const loginViaLoginResponse = await authTestHelper.loginUser(loginViaLogin);
 
     expect(loginViaLoginResponse.body).toEqual({
       accessToken: expect.any(String),
@@ -62,10 +57,9 @@ describe('login', () => {
       password: 'wrong password',
     };
 
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(loginViaLogin)
-      .expect(HttpStatus.UNAUTHORIZED);
+    await authTestHelper.loginUser(loginViaLogin, {
+      status: HttpStatus.UNAUTHORIZED,
+    });
   });
 
   it(`shouldn't login user if user not exist`, async () => {
@@ -74,10 +68,9 @@ describe('login', () => {
       password: 'wrong password',
     };
 
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(notExistLogin)
-      .expect(HttpStatus.UNAUTHORIZED);
+    await authTestHelper.loginUser(notExistLogin, {
+      status: HttpStatus.UNAUTHORIZED,
+    });
   });
 
   afterAll(async () => {

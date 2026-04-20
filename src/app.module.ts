@@ -4,11 +4,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { BloggersPlatformModule } from './modules/bloggers-platform/bloggers-platform.module';
 import { TestingController } from './modules/testing/testing.controller';
 import { TestingModule } from './modules/testing/testing.module';
+import { CqrsModule } from '@nestjs/cqrs';
 const MONGO_URI = 'mongodb://0.0.0.0:27017/bloggers_platform';
 
 @Module({
   imports: [
     MongooseModule.forRoot(MONGO_URI),
+    CqrsModule.forRoot(),
     UserAccountsModule,
     BloggersPlatformModule,
     TestingModule,

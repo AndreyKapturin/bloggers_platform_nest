@@ -2,20 +2,17 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { InputCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.input-create-dto';
 import request from 'supertest';
-import { createBlog } from '../utils/createBlog';
 import { InputCreatePostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.input-create-dto';
-import { createPost } from '../utils/createPost';
+import { BlogsTestHelper } from '../utils/BlogsTestHelper';
+import { PostsTestHelper } from '../utils/PostsTestHelper';
 
 describe('create post', () => {
-  const inputBlog: InputCreateBlogDto = {
-    name: 'Blog name',
-    description: 'Blog description',
-    websiteUrl: 'https://blog1.io',
-  };
-
   let app: INestApplication;
+
+  let blogsTestHelper: BlogsTestHelper;
+  let postsTestHelper: PostsTestHelper;
+
   let blogId: string;
 
   beforeAll(async () => {
@@ -24,8 +21,11 @@ describe('create post', () => {
     await app.init();
     await cleanDatabase(app);
 
-    const createBlogResponse = await createBlog(app, inputBlog);
-    blogId = createBlogResponse.body.id;
+    blogsTestHelper = new BlogsTestHelper(app);
+    postsTestHelper = new PostsTestHelper(app);
+
+    const blog = await blogsTestHelper.createRandomBlog();
+    blogId = blog.id;
   });
 
   afterAll(async () => {
@@ -33,14 +33,7 @@ describe('create post', () => {
   });
 
   it(`should create post if input data is correct, blog exist, admin auth passed`, async () => {
-    const inputPost: InputCreatePostDto = {
-      title: 'Post 1 title',
-      shortDescription: 'Post 1 short description',
-      content: 'Post 1 content bla bla bla bla bla bla bla bla',
-      blogId,
-    };
-
-    await createPost(app, inputPost);
+    await postsTestHelper.createRandomPost(blogId);
   });
 
   it(`shouldn't create post if not admin auth`, async () => {
