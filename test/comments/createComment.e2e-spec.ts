@@ -2,45 +2,24 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { InputCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.input-create-dto';
-import { createBlog } from '../utils/createBlog';
-import { InputCreatePostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.input-create-dto';
-import { createPost } from '../utils/createPost';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
-import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
-import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
 import { faker } from '@faker-js/faker';
 import { CommentsTestHelper } from '../utils/CommentsTestHelper';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
+import { BlogsTestHelper } from '../utils/BlogsTestHelper';
+import { PostsTestHelper } from '../utils/PostsTestHelper';
 
 describe('create comment', () => {
-  const inputBlog: InputCreateBlogDto = {
-    name: 'Blog name',
-    description: 'Blog description',
-    websiteUrl: 'https://blog1.io',
-  };
-
-  const inputUser: InputCreateUserDto = {
-    login: 'User_01',
-    email: 'user1@mail.ru',
-    password: 'Strong_password123',
-  };
-
-  const inputLogin: InputLoginDto = {
-    loginOrEmail: inputUser.login,
-    password: inputUser.password,
-  };
-
-  let inputCreatePostDto: InputCreatePostDto;
-
   let app: INestApplication;
-  let usersTestHelper: UsersTestHelper;
-  let commentsTestHelper: CommentsTestHelper;
-  let authTestHelper: AuthTestHelper;
 
-  let blogId: string;
-  let postId: string;
+  let blogsTestHelper: BlogsTestHelper;
+  let postsTestHelper: PostsTestHelper;
+  let usersTestHelper: UsersTestHelper;
+  let authTestHelper: AuthTestHelper;
+  let commentsTestHelper: CommentsTestHelper;
+
   let accessToken: string;
+  let postId: string;
 
   beforeAll(async () => {
     app = await initApp();
@@ -48,25 +27,16 @@ describe('create comment', () => {
     await app.init();
     await cleanDatabase(app);
 
+    blogsTestHelper = new BlogsTestHelper(app);
+    postsTestHelper = new PostsTestHelper(app);
     usersTestHelper = new UsersTestHelper(app);
-    authTestHelper = new AuthTestHelper(app);
+    authTestHelper = new AuthTestHelper(app, usersTestHelper);
     commentsTestHelper = new CommentsTestHelper(app);
 
-    const createBlogResponse = await createBlog(app, inputBlog);
-    blogId = createBlogResponse.body.id;
-    inputCreatePostDto = {
-      title: 'Post 1 title',
-      shortDescription: 'Post 1 short description',
-      content: 'Post 1 content content content',
-      blogId,
-    };
-
-    const createPostResponse = await createPost(app, inputCreatePostDto);
-    postId = createPostResponse.body.id;
-
-    await usersTestHelper.createUser(inputUser);
-    const loginUserResponse = await authTestHelper.loginUser(inputLogin);
-    accessToken = loginUserResponse.body.accessToken;
+    const blog = await blogsTestHelper.createRandomBlog();
+    const post = await postsTestHelper.createRandomPost(blog.id);
+    postId = post.id;
+    accessToken = await authTestHelper.createUserAndGetAccessToken();
   });
 
   afterAll(async () => {

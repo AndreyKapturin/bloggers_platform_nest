@@ -2,60 +2,28 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { InputCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.input-create-dto';
-import { createBlog } from '../utils/createBlog';
-import { InputCreatePostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.input-create-dto';
-import { createPost } from '../utils/createPost';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
-import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
-import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
 import { faker } from '@faker-js/faker';
 import { CommentsTestHelper } from '../utils/CommentsTestHelper';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
-import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/ViewComment.dto';
 import requset from 'supertest';
+import { BlogsTestHelper } from '../utils/BlogsTestHelper';
+import { PostsTestHelper } from '../utils/PostsTestHelper';
 
 describe('delete comment', () => {
-  const inputBlog: InputCreateBlogDto = {
-    name: 'Blog name',
-    description: 'Blog description',
-    websiteUrl: 'https://blog1.io',
-  };
-
-  const inputUser: InputCreateUserDto = {
-    login: 'User_01',
-    email: 'user1@mail.ru',
-    password: 'Strong_password123',
-  };
-
-  const inputUser2: InputCreateUserDto = {
-    login: 'User_02',
-    email: 'user2@mail.ru',
-    password: 'Strong_password123',
-  };
-
-  const inputLogin: InputLoginDto = {
-    loginOrEmail: inputUser.login,
-    password: inputUser.password,
-  };
-
-  const inputLogin2: InputLoginDto = {
-    loginOrEmail: inputUser2.login,
-    password: inputUser2.password,
-  };
-
-  let inputCreatePostDto: InputCreatePostDto;
-
   let app: INestApplication;
-  let usersTestHelper: UsersTestHelper;
-  let commentsTestHelper: CommentsTestHelper;
-  let authTestHelper: AuthTestHelper;
 
-  let blogId: string;
+  let blogsTestHelper: BlogsTestHelper;
+  let postsTestHelper: PostsTestHelper;
+  let usersTestHelper: UsersTestHelper;
+  let authTestHelper: AuthTestHelper;
+  let commentsTestHelper: CommentsTestHelper;
+
   let postId: string;
+  let commentId: string;
+
   let accessToken: string;
   let accessToken2: string;
-  let comment: ViewCommentDto;
 
   beforeAll(async () => {
     app = await initApp();
@@ -63,37 +31,24 @@ describe('delete comment', () => {
     await app.init();
     await cleanDatabase(app);
 
+    blogsTestHelper = new BlogsTestHelper(app);
+    postsTestHelper = new PostsTestHelper(app);
     usersTestHelper = new UsersTestHelper(app);
-    authTestHelper = new AuthTestHelper(app);
+    authTestHelper = new AuthTestHelper(app, usersTestHelper);
     commentsTestHelper = new CommentsTestHelper(app);
 
-    const createBlogResponse = await createBlog(app, inputBlog);
-    blogId = createBlogResponse.body.id;
+    const blog = await blogsTestHelper.createRandomBlog();
+    const post = await postsTestHelper.createRandomPost(blog.id);
+    postId = post.id;
 
-    inputCreatePostDto = {
-      title: 'Post 1 title',
-      shortDescription: 'Post 1 short description',
-      content: 'Post 1 content content content',
-      blogId,
-    };
+    accessToken = await authTestHelper.createUserAndGetAccessToken();
+    accessToken2 = await authTestHelper.createUserAndGetAccessToken();
 
-    const createPostResponse = await createPost(app, inputCreatePostDto);
-    postId = createPostResponse.body.id;
-
-    await usersTestHelper.createUser(inputUser);
-    const loginUserResponse = await authTestHelper.loginUser(inputLogin);
-    accessToken = loginUserResponse.body.accessToken;
-
-    await usersTestHelper.createUser(inputUser2);
-    const loginUserResponse2 = await authTestHelper.loginUser(inputLogin2);
-    accessToken2 = loginUserResponse2.body.accessToken;
-
-    const createCommentResponse = await commentsTestHelper.createComment(
+    const comment = await commentsTestHelper.createRandomComment(
       postId,
       accessToken,
-      { content: 'Post 1 comment text text text' },
     );
-    comment = createCommentResponse.body;
+    commentId = comment.id;
   });
 
   afterAll(async () => {
@@ -103,14 +58,14 @@ describe('delete comment', () => {
   it(`shouldn't delete comment. Return UNAUTHORIZED status if passed invalid access token`, async () => {
     const invalidAccessToken = faker.internet.jwt();
     await requset(app.getHttpServer())
-      .delete(`/comments/${comment.id}`)
+      .delete(`/comments/${commentId}`)
       .auth(invalidAccessToken, { type: 'bearer' })
       .expect(HttpStatus.UNAUTHORIZED);
   });
 
   it(`shouldn't delete comment. Return FORBIDDEN status if comment not belong to user`, async () => {
     await requset(app.getHttpServer())
-      .delete(`/comments/${comment.id}`)
+      .delete(`/comments/${commentId}`)
       .auth(accessToken2, { type: 'bearer' })
       .expect(HttpStatus.FORBIDDEN);
   });
@@ -125,12 +80,12 @@ describe('delete comment', () => {
 
   it('should delete comment return NO CONTENT status if comment exist, access token valid, comment belong to user', async () => {
     await requset(app.getHttpServer())
-      .delete(`/comments/${comment.id}`)
+      .delete(`/comments/${commentId}`)
       .auth(accessToken, { type: 'bearer' })
       .expect(HttpStatus.NO_CONTENT);
 
     await requset(app.getHttpServer())
-      .get(`/comments/${comment.id}`)
+      .get(`/comments/${commentId}`)
       .expect(HttpStatus.NOT_FOUND);
   });
 });

@@ -4,20 +4,17 @@ import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { InputCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.input-create-dto';
 import request from 'supertest';
-import { createBlog } from '../utils/createBlog';
 import { InputUpdateBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.input-update-dto';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
+import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 
 describe('update blog', () => {
-  const inputCreateBlog: InputCreateBlogDto = {
-    name: 'Blog name',
-    description: 'Blog description',
-    websiteUrl: 'https://blog1.io',
-  };
-
-  let blogId: string;
-
   let app: INestApplication;
+
+  let blogsTestHelper: BlogsTestHelper;
+
+  let inputCreateBlog: InputCreateBlogDto;
+  let blogId: string;
 
   beforeAll(async () => {
     app = await initApp();
@@ -25,7 +22,10 @@ describe('update blog', () => {
     await app.init();
     await cleanDatabase(app);
 
-    const createBlogResponse = await createBlog(app, inputCreateBlog);
+    blogsTestHelper = new BlogsTestHelper(app);
+    inputCreateBlog = blogsTestHelper.createInputDto();
+    const createBlogResponse =
+      await blogsTestHelper.createBlog(inputCreateBlog);
     blogId = createBlogResponse.body.id;
   });
 

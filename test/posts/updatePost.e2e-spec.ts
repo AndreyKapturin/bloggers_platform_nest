@@ -2,24 +2,21 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { InputCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.input-create-dto';
 import request from 'supertest';
-import { createBlog } from '../utils/createBlog';
 import { InputCreatePostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.input-create-dto';
-import { createPost } from '../utils/createPost';
 import { InputUpdatePostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.input-update-dto';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
+import { BlogsTestHelper } from '../utils/BlogsTestHelper';
+import { PostsTestHelper } from '../utils/PostsTestHelper';
 
 describe('update post', () => {
-  const inputBlog: InputCreateBlogDto = {
-    name: 'Blog name',
-    description: 'Blog description',
-    websiteUrl: 'https://blog1.io',
-  };
+  let app: INestApplication;
+
+  let blogsTestHelper: BlogsTestHelper;
+  let postsTestHelper: PostsTestHelper;
 
   let inputCreatePost: InputCreatePostDto;
 
-  let app: INestApplication;
   let blogId: string;
   let postId: string;
 
@@ -29,8 +26,11 @@ describe('update post', () => {
     await app.init();
     await cleanDatabase(app);
 
-    const createBlogResponse = await createBlog(app, inputBlog);
-    blogId = createBlogResponse.body.id;
+    blogsTestHelper = new BlogsTestHelper(app);
+    postsTestHelper = new PostsTestHelper(app);
+
+    const blog = await blogsTestHelper.createRandomBlog();
+    blogId = blog.id;
 
     inputCreatePost = {
       title: 'Post 1 title',
@@ -39,7 +39,8 @@ describe('update post', () => {
       blogId,
     };
 
-    const createPostResponse = await createPost(app, inputCreatePost);
+    const createPostResponse =
+      await postsTestHelper.createPost(inputCreatePost);
     postId = createPostResponse.body.id;
   });
 

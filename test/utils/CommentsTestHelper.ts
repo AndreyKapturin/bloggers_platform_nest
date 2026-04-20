@@ -1,9 +1,10 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import requset from 'supertest';
 import request, { Response } from 'supertest';
 import { LikeStatus } from '../../src/modules/bloggers-platform/comments/api/dto/HttpLikeComment.dto';
 import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/ViewComment.dto';
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
+import { HttpCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/HttpComment.dto';
+import { faker } from '@faker-js/faker';
 
 const LIKE_STATUSES_REG_EXP = new RegExp(Object.values(LikeStatus).join('|'));
 
@@ -21,6 +22,30 @@ export class CommentsTestHelper {
       .auth(accessToken, { type: 'bearer' })
       .send(dto)
       .expect(options?.status ?? HttpStatus.CREATED);
+  }
+
+  async createRandomComment(
+    postId: string,
+    accessToken: string,
+  ): Promise<ViewCommentDto> {
+    const content = faker.lorem.sentence({ min: 10, max: 30 });
+    const dto: HttpCommentDto = { content };
+    const response = await this.createComment(postId, accessToken, dto);
+    return response.body;
+  }
+
+  async createRandomComments(
+    count: number,
+    postId: string,
+    accessToken: string,
+  ): Promise<ViewCommentDto[]> {
+    const responses = new Array(count);
+
+    for (let i = 0; i < count; i++) {
+      responses[i] = await this.createRandomComment(postId, accessToken);
+    }
+
+    return responses;
   }
 
   async getCommentById(
@@ -44,7 +69,7 @@ export class CommentsTestHelper {
     accessToken: string,
     options?: { status: HttpStatus },
   ) {
-    await requset(this.app.getHttpServer())
+    await request(this.app.getHttpServer())
       .put(`/comments/${id}/like-status`)
       .auth(accessToken, { type: 'bearer' })
       .send(inputStatus)
@@ -88,7 +113,7 @@ export class CommentsTestHelper {
   createExpectedComments(
     overrideFields: Partial<PaginatedView<ViewCommentDto>> = {},
   ) {
-    const expectedPaginatedComments: PaginatedView<ViewCommentDto> = {
+    return {
       page: expect.any(Number),
       pagesCount: expect.any(Number),
       pageSize: expect.any(Number),
@@ -96,6 +121,5 @@ export class CommentsTestHelper {
       items: expect.arrayContaining([this.createExpectedComment()]),
       ...overrideFields,
     };
-    return expectedPaginatedComments;
   }
 }

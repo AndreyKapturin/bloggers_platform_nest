@@ -3,27 +3,30 @@ import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { fakeEmailService } from '../utils/mocks/fakeEmailService';
-import { confirmRegistration } from '../utils/confirmRegistration';
 import request from 'supertest';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
+import { UsersTestHelper } from '../utils/UsersTestHelper';
+import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
 
 describe('registration-confirmation', () => {
-  const inputUser = {
-    login: 'User_01',
-    email: 'user1@mail.ru',
-    password: 'strong_password',
-  };
-
   let app: INestApplication;
+
+  let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
   let mockSendConfirmationCode: jest.SpyInstance;
+
+  let inputUser: InputCreateUserDto;
 
   beforeAll(async () => {
     app = await initApp();
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
-    authTestHelper = new AuthTestHelper(app);
+
+    usersTestHelper = new UsersTestHelper(app);
+    authTestHelper = new AuthTestHelper(app, usersTestHelper);
+
+    inputUser = usersTestHelper.createInputDto();
     await authTestHelper.registerUser(inputUser);
 
     mockSendConfirmationCode = jest.spyOn(
@@ -60,7 +63,7 @@ describe('registration-confirmation', () => {
       .expect(HttpStatus.NO_CONTENT);
 
     const confirmationCode = mockSendConfirmationCode.mock.calls[0][1];
-    await confirmRegistration(app, confirmationCode);
+    await authTestHelper.confirmRegistration(confirmationCode);
 
     await request(app.getHttpServer())
       .post('/auth/registration-email-resending')

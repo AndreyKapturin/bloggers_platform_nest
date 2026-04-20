@@ -20,7 +20,7 @@ export class UsersTestHelper {
       .expect(options?.status ?? HttpStatus.CREATED);
   }
 
-  async createRandomUser(): Promise<ViewUserDto> {
+  createInputDto(): InputCreateUserDto {
     const login = faker.string.alphanumeric({
       length: {
         min: LOGIN_CONSTRAINTS.MIN_LENGTH,
@@ -31,14 +31,26 @@ export class UsersTestHelper {
     const email = faker.internet.email();
     const password = faker.internet.password();
 
-    const inputUser: InputCreateUserDto = {
+    return {
       login,
       email,
       password,
     };
+  }
 
-    const createUserResponse = await this.createUser(inputUser);
-
+  async createRandomUser(): Promise<ViewUserDto> {
+    const dto = this.createInputDto();
+    const createUserResponse = await this.createUser(dto);
     return createUserResponse.body;
+  }
+
+  async createRandomUsers(count: number): Promise<ViewUserDto[]> {
+    const responses = new Array(count);
+
+    for (let i = 0; i < count; i++) {
+      responses[i] = await this.createRandomUser();
+    }
+
+    return responses;
   }
 }

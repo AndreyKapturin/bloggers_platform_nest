@@ -2,19 +2,15 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { InputCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.input-create-dto';
 import request from 'supertest';
-import { createBlog } from '../utils/createBlog';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
+import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 
 describe('delete blog', () => {
-  const inputCreateBlog: InputCreateBlogDto = {
-    name: 'Blog name',
-    description: 'Blog description',
-    websiteUrl: 'https://blog1.io',
-  };
-
   let app: INestApplication;
+
+  let blogsTestHelper: BlogsTestHelper;
+
   let blogId: string;
 
   beforeAll(async () => {
@@ -22,11 +18,13 @@ describe('delete blog', () => {
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
+
+    blogsTestHelper = new BlogsTestHelper(app);
   });
 
   beforeEach(async () => {
-    const createBlogResponse = await createBlog(app, inputCreateBlog);
-    blogId = createBlogResponse.body.id;
+    const blog = await blogsTestHelper.createRandomBlog();
+    blogId = blog.id;
   });
 
   afterAll(async () => {
