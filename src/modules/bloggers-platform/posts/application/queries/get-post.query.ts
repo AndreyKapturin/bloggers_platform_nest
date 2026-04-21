@@ -14,7 +14,7 @@ export class GetPostQuery extends Query<ViewPostDto> {
 }
 
 @QueryHandler(GetPostQuery)
-export class GetPostsQueryHandler implements IQueryHandler<
+export class GetPostQueryHandler implements IQueryHandler<
   GetPostQuery,
   ViewPostDto
 > {

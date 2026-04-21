@@ -34,6 +34,7 @@ import { GetPostCommentsQuery } from '../../comments/application/queries/get-com
 import { HttpLikeStatusDto } from '../../dto/HttpLikeStatus.dto';
 import { LikePostCommand } from '../application/useCases/like-post.use-case';
 import { GetPostQuery } from '../application/queries/get-post.query';
+import { GetPostsQuery } from '../application/queries/get-posts.query';
 
 @Controller('posts')
 export class PostsController {
@@ -95,10 +96,13 @@ export class PostsController {
   }
 
   @Get()
+  @UseGuards(JwtOptionalAuthGuard)
   async getPosts(
-    @Query() query: PostsQueryParamsDto,
+    @Query() queryParams: PostsQueryParamsDto,
+    @OptionalUserFromRequest() user: UserInRequest | null,
   ): Promise<PaginatedView<ViewPostDto>> {
-    return this.postsQueryRepository.find(query);
+    const query = new GetPostsQuery(queryParams, user?.id ?? null);
+    return this.queryBus.execute(query);
   }
 
   @Post()

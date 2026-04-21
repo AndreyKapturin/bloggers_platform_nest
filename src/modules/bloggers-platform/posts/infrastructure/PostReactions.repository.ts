@@ -18,17 +18,26 @@ export class PostReactionsRepository {
     await postReactionDocument.save();
   }
 
-  async findByUserIdAndPostId(userId: string, postId: string): Promise<TPostReactionDocument | null> {
+  async findByUserIdAndPostId(
+    userId: string,
+    postId: string,
+  ): Promise<TPostReactionDocument | null> {
     return this.PostReactionModel.findOne({ userId, postId });
   }
 
-  async getNewestLikes(postId: string, limit: number): Promise<TPostReactionDocument[]> {
+  async getNewestLikes(
+    postId: string,
+    limit: number,
+  ): Promise<TPostReactionDocument[]> {
     return this.PostReactionModel.find({ postId, status: LikeStatus.Like })
-      .sort({ createdAt: 'desc' })
+      .sort({ addedAt: 'desc' })
       .limit(limit);
   }
 
-  async getUserReactions(userId: string, postIds: string[]): Promise<TPostReactionDocument[]> {
+  async getUserReactions(
+    userId: string,
+    postIds: string[],
+  ): Promise<TPostReactionDocument[]> {
     return this.PostReactionModel.find({ userId, postId: { $in: postIds } });
   }
 }
