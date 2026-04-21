@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
-import { LikeStatus } from '../api/dto/HttpLikeComment.dto';
+import { LikeStatus } from '../../dto/HttpLikeStatus.dto';
 import { DomainCreateCommentReactionDto } from './dto/DomainCreateCommentReaction.dto';
 
 @Schema({ timestamps: { createdAt: true } })

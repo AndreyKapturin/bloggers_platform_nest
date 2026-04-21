@@ -1,6 +1,6 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
 import request, { Response } from 'supertest';
-import { LikeStatus } from '../../src/modules/bloggers-platform/comments/api/dto/HttpLikeComment.dto';
+import { LikeStatus } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
 import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/ViewComment.dto';
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
 import { HttpCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/HttpComment.dto';

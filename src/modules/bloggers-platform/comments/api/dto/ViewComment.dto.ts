@@ -1,5 +1,5 @@
 import { TCommentDocument } from '../../domain/comment.entity';
-import { LikeStatus } from './HttpLikeComment.dto';
+import { LikeStatus } from '../../../dto/HttpLikeStatus.dto';
 
 export class ViewCommentDto {
   constructor(
