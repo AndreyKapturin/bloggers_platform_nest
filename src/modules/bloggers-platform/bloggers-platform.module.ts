@@ -33,6 +33,7 @@ import {
   PostReaction,
   PostReactionSchema,
 } from './posts/domain/post-reaction.entity';
+import { GetPostsQueryHandler } from './posts/application/queries/get-post.query';
 
 const useCases = [
   CreateCommentUseCase,
@@ -42,7 +43,11 @@ const useCases = [
   LikePostUseCase,
 ];
 
-const queries = [GetCommentQueryHandler, GetPostCommentsQueryHandler];
+const queries = [
+  GetCommentQueryHandler,
+  GetPostCommentsQueryHandler,
+  GetPostsQueryHandler,
+];
 
 @Module({
   imports: [

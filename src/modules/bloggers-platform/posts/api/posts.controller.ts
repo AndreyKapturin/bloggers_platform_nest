@@ -33,6 +33,7 @@ import { OptionalUserFromRequest } from '../../../user-accounts/auth/decorators/
 import { GetPostCommentsQuery } from '../../comments/application/queries/get-comments-for-post.query';
 import { HttpLikeStatusDto } from '../../dto/HttpLikeStatus.dto';
 import { LikePostCommand } from '../application/useCases/like-post.use-case';
+import { GetPostQuery } from '../application/queries/get-post.query';
 
 @Controller('posts')
 export class PostsController {
@@ -45,8 +46,13 @@ export class PostsController {
   ) {}
 
   @Get(':id')
-  async getById(@Param('id') id: string): Promise<ViewPostDto> {
-    return this.postsQueryRepository.findById(id);
+  @UseGuards(JwtOptionalAuthGuard)
+  async getById(
+    @Param('id') id: string,
+    @OptionalUserFromRequest() user: UserInRequest | null,
+  ): Promise<ViewPostDto> {
+    const query = new GetPostQuery(id, user?.id ?? null);
+    return this.queryBus.execute(query);
   }
 
   @Get(':id/comments')

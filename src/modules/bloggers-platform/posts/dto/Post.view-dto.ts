@@ -18,7 +18,6 @@ export class ViewPostDto {
 
   static toView(
     postDocument: TPostDocument,
-    newestLikes: NewestLike[] = [],
     myStatus = LikeStatus.None,
   ): ViewPostDto {
     return {
@@ -33,7 +32,7 @@ export class ViewPostDto {
         likesCount: postDocument.extendedLikesInfo.likesCount,
         dislikesCount: postDocument.extendedLikesInfo.dislikesCount,
         myStatus,
-        newestLikes,
+        newestLikes: postDocument.extendedLikesInfo.newestLikes,
       },
     };
   }

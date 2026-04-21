@@ -27,6 +27,12 @@ describe('like post', () => {
     likeStatus: 'Wrong status',
   } as unknown as HttpLikeStatusDto;
 
+  const expectedNewestLike = {
+    userId: expect.any(String),
+    login: expect.any(String),
+    addedAt: expect.any(String),
+  };
+
   let postId: string;
   let accessToken1: string;
   let accessToken2: string;
@@ -62,16 +68,113 @@ describe('like post', () => {
       accessToken: accessToken1,
     });
     expect(postAfterLikeResponse.body.extendedLikesInfo.likesCount).toBe(1);
-    expect(postAfterLikeResponse.body.extendedLikesInfo.newestLikes).toEqual(
-      [],
-    ); // TODO  now return emty array if not relesed query handler
+    expect(postAfterLikeResponse.body.extendedLikesInfo.dislikesCount).toBe(0);
+    expect(postAfterLikeResponse.body.extendedLikesInfo.myStatus).toBe(
+      LikeStatus.Like,
+    );
+    expect(postAfterLikeResponse.body.extendedLikesInfo.newestLikes).toEqual([
+      expectedNewestLike,
+    ]);
   });
 
-  // TODO it(`myStatus should be ${LikeStatus.None} if like was added another user`, async () => {})
+  it(`myStatus should be ${LikeStatus.None} if like was added by another user`, async () => {
+    const getResponseForAnotherUser = await postsTestHelper.getPost(postId, {
+      accessToken: accessToken2,
+    });
+    expect(getResponseForAnotherUser.body.extendedLikesInfo.myStatus).toBe(
+      LikeStatus.None,
+    );
+    expect(getResponseForAnotherUser.body.extendedLikesInfo.likesCount).toBe(1);
+  });
 
-  // TODO it(`myStatus should be ${LikeStatus.None} if get request was send from anonymous user`, async () => {})
+  it(`myStatus should be ${LikeStatus.None} if get request was sent from anonymous user`, async () => {
+    const postResponse = await postsTestHelper.getPost(postId);
+    expect(postResponse.body.extendedLikesInfo.myStatus).toBe(LikeStatus.None);
+    expect(postResponse.body.extendedLikesInfo.likesCount).toBe(1);
+  });
 
-  // TODO it('should change like status. Return NO CONTENT status if data is valid, post exist, access token valid', async () => {})
+  it('should change status', async () => {
+    await postsTestHelper.setLikeStatus(postId, inputDislike, {
+      accessToken: accessToken1,
+    });
+
+    const postAfterDislike = await postsTestHelper.getPost(postId, {
+      accessToken: accessToken1,
+    });
+    expect(postAfterDislike.body.extendedLikesInfo.likesCount).toBe(0);
+    expect(postAfterDislike.body.extendedLikesInfo.dislikesCount).toBe(1);
+    expect(postAfterDislike.body.extendedLikesInfo.myStatus).toBe(
+      LikeStatus.Dislike,
+    );
+
+    await postsTestHelper.setLikeStatus(postId, inputNone, {
+      accessToken: accessToken1,
+    });
+
+    const postAfterNone = await postsTestHelper.getPost(postId, {
+      accessToken: accessToken1,
+    });
+    expect(postAfterNone.body.extendedLikesInfo.likesCount).toBe(0);
+    expect(postAfterNone.body.extendedLikesInfo.dislikesCount).toBe(0);
+    expect(postAfterNone.body.extendedLikesInfo.myStatus).toBe(LikeStatus.None);
+  });
+
+  it('should track multiple users reactions independently', async () => {
+    const blog = await blogsTestHelper.createRandomBlog();
+    const post = await postsTestHelper.createRandomPost(blog.id);
+
+    await postsTestHelper.setLikeStatus(post.id, inputLike, {
+      accessToken: accessToken1,
+    });
+
+    await postsTestHelper.setLikeStatus(post.id, inputDislike, {
+      accessToken: accessToken2,
+    });
+
+    let postResponse = await postsTestHelper.getPost(post.id, {
+      accessToken: accessToken1,
+    });
+    expect(postResponse.body.extendedLikesInfo.likesCount).toBe(1);
+    expect(postResponse.body.extendedLikesInfo.dislikesCount).toBe(1);
+    expect(postResponse.body.extendedLikesInfo.myStatus).toBe(LikeStatus.Like);
+
+    postResponse = await postsTestHelper.getPost(post.id, {
+      accessToken: accessToken2,
+    });
+    expect(postResponse.body.extendedLikesInfo.likesCount).toBe(1);
+    expect(postResponse.body.extendedLikesInfo.dislikesCount).toBe(1);
+    expect(postResponse.body.extendedLikesInfo.myStatus).toBe(
+      LikeStatus.Dislike,
+    );
+
+    postResponse = await postsTestHelper.getPost(post.id);
+    expect(postResponse.body.extendedLikesInfo.likesCount).toBe(1);
+    expect(postResponse.body.extendedLikesInfo.dislikesCount).toBe(1);
+    expect(postResponse.body.extendedLikesInfo.myStatus).toBe(LikeStatus.None);
+  });
+
+  it('should correctly count likes when user removes reaction', async () => {
+    const blog = await blogsTestHelper.createRandomBlog();
+    const post = await postsTestHelper.createRandomPost(blog.id);
+
+    await postsTestHelper.setLikeStatus(post.id, inputLike, {
+      accessToken: accessToken1,
+    });
+
+    await postsTestHelper.setLikeStatus(post.id, inputLike, {
+      accessToken: accessToken2,
+    });
+
+    let postResponse = await postsTestHelper.getPost(post.id);
+    expect(postResponse.body.extendedLikesInfo.likesCount).toBe(2);
+
+    await postsTestHelper.setLikeStatus(post.id, inputNone, {
+      accessToken: accessToken1,
+    });
+
+    postResponse = await postsTestHelper.getPost(post.id);
+    expect(postResponse.body.extendedLikesInfo.likesCount).toBe(1);
+  });
 
   it(`shouldn't set like to post. Return UNAUTHORIZED status if passed invalid access token`, async () => {
     const invalidAccessToken = faker.internet.jwt();
@@ -90,9 +193,9 @@ describe('like post', () => {
 
   it(`shouldn't set like to post. Return NOT FOUND status if post not exist`, async () => {
     const notExistPostId = faker.database.mongodbObjectId().toString();
-     await postsTestHelper.setLikeStatus(notExistPostId, inputLike, {
+    await postsTestHelper.setLikeStatus(notExistPostId, inputLike, {
       accessToken: accessToken1,
       status: HttpStatus.NOT_FOUND,
     });
-  })
+  });
 });
