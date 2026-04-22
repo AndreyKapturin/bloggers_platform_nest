@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { InputCreateUserDto } from '../../users/dto/CreateUser.input-dto';
@@ -19,12 +20,13 @@ import { InputNewPasswordDto } from '../dto/NewPassword.input-dto';
 import { ViewMeDto } from '../../users/dto/Me.view-dto';
 import { JwtAuthGuard } from '../strategies/jwt/Jwt.guard';
 import { UsersQueryRepository } from '../../users/infrastructure/users.query-repository';
+import { type Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private usersQueryRepository: UsersQueryRepository
+    private usersQueryRepository: UsersQueryRepository,
   ) {}
 
   @Get('me')
@@ -45,9 +47,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
   async login(
+    @Res({ passthrough: true }) response: Response<AccessTokenDto>,
     @ExtractUserFromRequest() user: UserInRequest,
   ): Promise<AccessTokenDto> {
-    return await this.authService.login(user.id);
+    const tokensPair = await this.authService.login(user.id);
+    response.cookie('refreshToken', tokensPair.refreshToken);
+    return new AccessTokenDto(tokensPair.accessToken);
   }
 
   @Post('registration-email-resending')
@@ -72,7 +77,9 @@ export class AuthController {
 
   @Post('new-password')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async updatePassword(@Body() newPasswordDto: InputNewPasswordDto): Promise<void> {
+  async updatePassword(
+    @Body() newPasswordDto: InputNewPasswordDto,
+  ): Promise<void> {
     await this.authService.updatePassword(newPasswordDto);
   }
 }

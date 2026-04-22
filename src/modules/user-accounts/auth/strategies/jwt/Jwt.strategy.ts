@@ -3,9 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserInRequest } from '../../dto/UserInRequest.dto';
 import { JwtAccessTokenPayload } from '../../types';
-
-// TODO: to env
-const JWT_AT_SECRET = 'c785q4nct98';
+import { JWT_AT_SECRET } from './jwt-config';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

@@ -6,6 +6,7 @@ import {
 } from './exceptions/DomainException';
 import { FieldErrorDto } from './dto/ApiErrorResult.dto';
 import { ValidationError } from 'class-validator';
+import cookieParser from 'cookie-parser';
 
 const _formatError = (validetionError: ValidationError): FieldErrorDto => {
   let message = '';
@@ -19,6 +20,8 @@ const _formatError = (validetionError: ValidationError): FieldErrorDto => {
 };
 
 export function setupApp(app: INestApplication) {
+  app.use(cookieParser());
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

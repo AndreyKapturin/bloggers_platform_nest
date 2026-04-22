@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InputCreateUserDto } from '../../users/dto/CreateUser.input-dto';
 import { InjectModel } from '@nestjs/mongoose';
 import {
@@ -18,7 +18,8 @@ import {
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
 import { InputNewPasswordDto } from '../dto/NewPassword.input-dto';
-import { JwtAccessTokenPayload } from '../types';
+import { JwtAccessTokenPayload, JwtRegreshTokenPayload } from '../types';
+import { JWT_AT_SERVICE, JWT_RT_SERVICE } from '../strategies/jwt/jwt-config';
 
 // TODO: to env
 const CONFIRMATION_CODE_TTL_DAYS = 2;
@@ -31,7 +32,10 @@ export class AuthService {
     private usersRepository: UsersRepository,
     private usersService: UsersService,
     private cryptoService: CryptoService,
-    private jwtService: JwtService,
+    @Inject(JWT_AT_SERVICE)
+    private jwtAccessTokenService: JwtService,
+    @Inject(JWT_RT_SERVICE)
+    private jwtRefreshTokenService: JwtService,
     private emailService: EmailService,
   ) {}
 
@@ -61,10 +65,19 @@ export class AuthService {
     return null;
   }
 
-  async login(userId: string): Promise<AccessTokenDto> {
-    const payload: JwtAccessTokenPayload = { userId };
-    const accessToken = this.jwtService.sign(payload);
-    return new AccessTokenDto(accessToken);
+  async login(
+    userId: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const accessTokenPayload: JwtAccessTokenPayload = { userId };
+    const refreshTokenPayload: JwtRegreshTokenPayload = {
+      userId,
+      deviceId: crypto.randomUUID(),
+    };
+    const accessToken =
+      await this.jwtAccessTokenService.signAsync(accessTokenPayload);
+    const refreshToken =
+      await this.jwtRefreshTokenService.signAsync(refreshTokenPayload);
+    return { accessToken, refreshToken };
   }
 
   async resendConfirmationEmail(email: string): Promise<void> {

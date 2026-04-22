@@ -4,24 +4,28 @@ import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
+import { UsersTestHelper } from '../utils/UsersTestHelper';
 
 describe('login', () => {
   let app: INestApplication;
+  let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
 
-  const inputUser: InputCreateUserDto = {
-    login: 'User_01',
-    email: 'user1@mail.ru',
-    password: 'strong_password',
-  };
+  let inputUser: InputCreateUserDto;
 
   beforeAll(async () => {
     app = await initApp();
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
-    authTestHelper = new AuthTestHelper(app);
+    usersTestHelper = new UsersTestHelper(app);
+    authTestHelper = new AuthTestHelper(app, usersTestHelper);
+    inputUser = usersTestHelper.createInputDto();
     await authTestHelper.registerUser(inputUser);
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   it('should login user via email', async () => {
@@ -32,6 +36,10 @@ describe('login', () => {
 
     const loginWithEmailResponse =
       await authTestHelper.loginUser(loginViaEmail);
+
+    expect(loginWithEmailResponse.header['set-cookie']).toEqual(
+      expect.arrayContaining([expect.stringMatching('refreshToken=')]),
+    );
 
     expect(loginWithEmailResponse.body).toEqual({
       accessToken: expect.any(String),
@@ -71,9 +79,5 @@ describe('login', () => {
     await authTestHelper.loginUser(notExistLogin, {
       status: HttpStatus.UNAUTHORIZED,
     });
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 });
