@@ -465,4 +465,88 @@ describe('like post', () => {
       expect.arrayContaining([accessTokens[0]]),
     );
   });
+
+  it('should return paginated posts with correct likes', async () => {
+    const blog = await blogsTestHelper.createRandomBlog();
+    const posts = await postsTestHelper.createRandomPosts(blog.id, 3);
+
+    const postIds = posts.map((post) => post.id);
+
+    const usersDtos = [
+      usersTestHelper.createInputDto(),
+      usersTestHelper.createInputDto(),
+      usersTestHelper.createInputDto(),
+      usersTestHelper.createInputDto(),
+    ];
+
+    for (const inputUser of usersDtos) {
+      await usersTestHelper.createUser(inputUser);
+    }
+
+    const accessTokens: string[] = [];
+
+    for (const userDto of usersDtos) {
+      const token = await authTestHelper.loginAndGetAccessToken({
+        loginOrEmail: userDto.email,
+        password: userDto.password,
+      });
+      accessTokens.push(token);
+    }
+
+    await postsTestHelper.setLikeStatus(postIds[0], inputLike, {
+      accessToken: accessTokens[0],
+    });
+
+    await postsTestHelper.setLikeStatus(postIds[0], inputLike, {
+      accessToken: accessTokens[1],
+    });
+
+    await postsTestHelper.setLikeStatus(postIds[0], inputDislike, {
+      accessToken: accessTokens[2],
+    });
+
+    await postsTestHelper.setLikeStatus(postIds[1], inputDislike, {
+      accessToken: accessTokens[0],
+    });
+
+    await postsTestHelper.setLikeStatus(postIds[1], inputDislike, {
+      accessToken: accessTokens[1],
+    });
+
+    await postsTestHelper.setLikeStatus(postIds[1], inputLike, {
+      accessToken: accessTokens[2],
+    });
+
+    await postsTestHelper.setLikeStatus(postIds[2], inputDislike, {
+      accessToken: accessTokens[3],
+    });
+
+    await postsTestHelper.setLikeStatus(postIds[2], inputLike, {
+      accessToken: accessTokens[2],
+    });
+
+    await postsTestHelper.setLikeStatus(postIds[2], inputLike, {
+      accessToken: accessTokens[1],
+    });
+
+    const getPostsUser1Response = await postsTestHelper.getPosts({
+      accessToken: accessTokens[0],
+    });
+
+    const postsUser1ExtendedLikes = getPostsUser1Response.body.items.map(
+      (post) => post.extendedLikesInfo,
+    );
+
+    expect(postsUser1ExtendedLikes[2].likesCount).toBe(2);
+    expect(postsUser1ExtendedLikes[2].dislikesCount).toBe(1);
+    expect(postsUser1ExtendedLikes[2].myStatus).toBe(LikeStatus.Like);
+
+    expect(postsUser1ExtendedLikes[1].likesCount).toBe(1);
+    expect(postsUser1ExtendedLikes[1].dislikesCount).toBe(2);
+    expect(postsUser1ExtendedLikes[1].myStatus).toBe(LikeStatus.Dislike);
+
+    expect(postsUser1ExtendedLikes[0].likesCount).toBe(2);
+    expect(postsUser1ExtendedLikes[0].dislikesCount).toBe(1);
+    expect(postsUser1ExtendedLikes[0].myStatus).toBe(LikeStatus.None);
+  });
 });

@@ -6,6 +6,9 @@ import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.
 import { InputCreatePostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.input-create-dto';
 import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.view-dto';
 import { HttpLikeStatusDto } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
+import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
+
+type ResponseWithBody<T> = Omit<Response, 'body'> & { body: T };
 
 export const POST_CONSTRAINTS = {
   TITLE_MAX_LENGTH: 30,
@@ -46,6 +49,21 @@ export class PostsTestHelper {
     }
 
     return getRequest;
+  }
+
+  async getPosts(options?: {
+    accessToken?: string;
+  }): Promise<ResponseWithBody<PaginatedView<ViewPostDto>>> {
+    const getRequest = request(this.app.getHttpServer())
+      .get('/posts')
+      .expect(HttpStatus.OK);
+
+    if (options?.accessToken) {
+      getRequest.auth(options.accessToken, { type: 'bearer' });
+    }
+
+    const response = await getRequest;
+    return response;
   }
 
   async createPost(
