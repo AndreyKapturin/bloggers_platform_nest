@@ -25,6 +25,11 @@ import { ViewPostDto } from '../../posts/dto/Post.view-dto';
 import { InputCreatePostDto } from '../../posts/dto/Post.input-create-dto';
 import { BlogPostDtoExtractor } from '../decorators/blog-post-dto-extractor.decorator';
 import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
+import { QueryBus } from '@nestjs/cqrs';
+import { GetPostsQuery } from '../../posts/application/queries/get-posts.query';
+import { OptionalUserFromRequest } from '../../../user-accounts/auth/decorators/optional-user-in-request.decorator';
+import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/strategies/jwt/JwtOptional.guard';
+import { UserInRequest } from '../../../user-accounts/auth/dto/UserInRequest.dto';
 
 @Controller('blogs')
 export class BlogsController {
@@ -33,6 +38,7 @@ export class BlogsController {
     private blogsQueryRepository: BlogsQueryRepository,
     private postsServise: PostsService,
     private postsQueryRepository: PostsQueryRepository,
+    private queryBus: QueryBus,
   ) {}
 
   @Get(':id')
@@ -41,12 +47,19 @@ export class BlogsController {
   }
 
   @Get(':id/posts')
+  @UseGuards(JwtOptionalAuthGuard)
   async getBlogPosts(
     @Param('id') blogId: string,
     @Query() postsQueryParamsDto: PostsQueryParamsDto,
+    @OptionalUserFromRequest() user: UserInRequest | null,
   ): Promise<PaginatedView<ViewPostDto>> {
-    await this.blogsQueryRepository.findById(blogId);
-    return this.postsQueryRepository.findForBlog(blogId, postsQueryParamsDto);
+    const query = new GetPostsQuery(
+      postsQueryParamsDto,
+      user?.id ?? null,
+      blogId,
+    );
+    
+    return this.queryBus.execute(query);
   }
 
   @Get()

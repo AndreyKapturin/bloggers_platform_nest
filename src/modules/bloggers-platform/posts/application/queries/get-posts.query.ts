@@ -5,11 +5,13 @@ import { PostReactionsRepository } from '../../infrastructure/PostReactions.repo
 import { LikeStatus } from '../../../dto/HttpLikeStatus.dto';
 import { PostsQueryParamsDto } from '../../dto/PostQueryParams.dto';
 import { PaginatedView } from '../../../../../core/dto/PaginatedView.dto';
+import { BlogsQueryRepository } from '../../../blogs/infrastructure/blogs.query-repository';
 
 export class GetPostsQuery extends Query<PaginatedView<ViewPostDto>> {
   constructor(
     public queryParams: PostsQueryParamsDto,
     public userId: string | null,
+    public blogId: string | null = null,
   ) {
     super();
   }
@@ -21,14 +23,26 @@ export class GetPostsQueryHandler implements IQueryHandler<
   PaginatedView<ViewPostDto>
 > {
   constructor(
+    private blogsQueryRepository: BlogsQueryRepository,
     private postsQueryRepository: PostsQueryRepository,
     private postsReactionRepository: PostReactionsRepository,
   ) {}
 
   async execute(query: GetPostsQuery) {
-    const { queryParams, userId } = query;
-    const paginatedViewPosts =
-      await this.postsQueryRepository.find(queryParams);
+    const { queryParams, userId, blogId } = query;
+    let paginatedViewPosts: PaginatedView<ViewPostDto>;
+
+    if (blogId) {
+      await this.blogsQueryRepository.findById(blogId);
+      paginatedViewPosts = await this.postsQueryRepository.findForBlog(
+        blogId,
+        queryParams,
+      );
+    } else {
+      paginatedViewPosts = await this.postsQueryRepository.find(queryParams);
+    }
+
+    await this.postsQueryRepository.find(queryParams);
 
     if (userId) {
       await this._setUserReactions(paginatedViewPosts, userId);
