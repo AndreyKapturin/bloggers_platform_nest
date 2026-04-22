@@ -2,32 +2,52 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 import { UpdatePostDto } from '../dto/Post.update-dto';
 
+@Schema({ _id: false })
+export class NewestLike {
+  @Prop({ type: Date, required: true })
+  addedAt!: Date;
+
+  @Prop({ type: String, required: true })
+  userId!: string;
+
+  @Prop({ type: String, required: true })
+  login!: string;
+}
+
+@Schema({ _id: false })
+export class ExtendedLikesInfo {
+  @Prop({ type: Number, default: 0 })
+  likesCount!: number;
+
+  @Prop({ type: Number, default: 0 })
+  dislikesCount!: number;
+
+  @Prop({ type: () => [NewestLike], default: [] })
+  newestLikes!: NewestLike[];
+}
+
 @Schema({ timestamps: true })
 export class Post {
   @Prop({ type: String, required: true })
-  title: string;
+  title!: string;
 
   @Prop({ type: String, required: true })
-  shortDescription: string;
+  shortDescription!: string;
 
   @Prop({ type: String, required: true })
-  content: string;
+  content!: string;
 
   @Prop({ type: String, required: true })
-  blogId: string;
+  blogId!: string;
 
   @Prop({ type: String, required: true })
-  blogName: string;
+  blogName!: string;
 
-  extendedLikesInfo: {
-    likesCount: 0;
-    dislikesCount: 0;
-    myStatus: 'None';
-    newestLikes: [];
-  };
+  @Prop({ type: () => ExtendedLikesInfo, default: {} })
+  extendedLikesInfo!: ExtendedLikesInfo;
 
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt!: Date;
+  updatedAt!: Date;
 
   static makeInstance(
     title: string,
@@ -45,7 +65,6 @@ export class Post {
     postDocument.extendedLikesInfo = {
       likesCount: 0,
       dislikesCount: 0,
-      myStatus: 'None',
       newestLikes: [],
     };
 
@@ -58,6 +77,36 @@ export class Post {
     this.content = updatePostDto.content;
     this.blogId = updatePostDto.blogId;
     this.blogName = updatePostDto.blogName;
+  }
+
+  addLike() {
+    this.extendedLikesInfo.likesCount += 1;
+  }
+
+  addDislike() {
+    this.extendedLikesInfo.dislikesCount += 1;
+  }
+
+  removeLike() {
+    this.extendedLikesInfo.likesCount -= 1;
+  }
+
+  removeDislike() {
+    this.extendedLikesInfo.dislikesCount -= 1;
+  }
+
+  likeToDislike() {
+    this.removeLike();
+    this.addDislike();
+  }
+
+  dislikeToLike() {
+    this.removeDislike();
+    this.addLike();
+  }
+
+  setNewestLikes(newestLikes: NewestLike[]) {
+    this.extendedLikesInfo.newestLikes = newestLikes;
   }
 }
 

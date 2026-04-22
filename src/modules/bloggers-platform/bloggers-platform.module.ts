@@ -27,17 +27,28 @@ import {
 import { CommentReactionRepository } from './comments/infrastructure/CommentReaction.repository';
 import { GetCommentQueryHandler } from './comments/application/queries/get-comment-by-id.query';
 import { GetPostCommentsQueryHandler } from './comments/application/queries/get-comments-for-post.query';
+import { LikePostUseCase } from './posts/application/useCases/like-post.use-case';
+import { PostReactionsRepository } from './posts/infrastructure/PostReactions.repository';
+import {
+  PostReaction,
+  PostReactionSchema,
+} from './posts/domain/post-reaction.entity';
+import { GetPostQueryHandler } from './posts/application/queries/get-post.query';
+import { GetPostsQueryHandler } from './posts/application/queries/get-posts.query';
 
 const useCases = [
   CreateCommentUseCase,
   UpdateCommentUseCase,
   DeleteCommentUseCase,
   LikeCommentUseCase,
+  LikePostUseCase,
 ];
 
 const queries = [
   GetCommentQueryHandler,
   GetPostCommentsQueryHandler,
+  GetPostQueryHandler,
+  GetPostsQueryHandler,
 ];
 
 @Module({
@@ -47,6 +58,7 @@ const queries = [
       { name: Post.name, schema: PostSchema },
       { name: Comment.name, schema: CommentSchema },
       { name: CommentReaction.name, schema: CommentReactionSchema },
+      { name: PostReaction.name, schema: PostReactionSchema },
     ]),
     UserAccountsModule,
   ],
@@ -56,6 +68,7 @@ const queries = [
     BlogsRepository,
     BlogsQueryRepository,
     PostsService,
+    PostReactionsRepository,
     PostsRepository,
     PostsQueryRepository,
     CommentsService,

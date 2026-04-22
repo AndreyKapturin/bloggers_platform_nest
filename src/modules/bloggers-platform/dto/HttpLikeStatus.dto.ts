@@ -6,7 +6,7 @@ export enum LikeStatus {
   None = 'None',
 }
 
-export class HttpLikeCommentDto {
+export class HttpLikeStatusDto {
   @IsEnum(LikeStatus)
   @IsString()
   @IsNotEmpty()

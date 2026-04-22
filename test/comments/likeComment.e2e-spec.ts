@@ -6,7 +6,7 @@ import { UsersTestHelper } from '../utils/UsersTestHelper';
 import { faker } from '@faker-js/faker';
 import { CommentsTestHelper } from '../utils/CommentsTestHelper';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
-import { LikeStatus } from '../../src/modules/bloggers-platform/comments/api/dto/HttpLikeComment.dto';
+import { LikeStatus } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
 import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 import { PostsTestHelper } from '../utils/PostsTestHelper';
 

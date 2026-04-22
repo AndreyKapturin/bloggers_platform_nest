@@ -31,6 +31,10 @@ import { UserInRequest } from '../../../user-accounts/auth/dto/UserInRequest.dto
 import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/strategies/jwt/JwtOptional.guard';
 import { OptionalUserFromRequest } from '../../../user-accounts/auth/decorators/optional-user-in-request.decorator';
 import { GetPostCommentsQuery } from '../../comments/application/queries/get-comments-for-post.query';
+import { HttpLikeStatusDto } from '../../dto/HttpLikeStatus.dto';
+import { LikePostCommand } from '../application/useCases/like-post.use-case';
+import { GetPostQuery } from '../application/queries/get-post.query';
+import { GetPostsQuery } from '../application/queries/get-posts.query';
 
 @Controller('posts')
 export class PostsController {
@@ -43,8 +47,13 @@ export class PostsController {
   ) {}
 
   @Get(':id')
-  async getById(@Param('id') id: string): Promise<ViewPostDto> {
-    return this.postsQueryRepository.findById(id);
+  @UseGuards(JwtOptionalAuthGuard)
+  async getById(
+    @Param('id') id: string,
+    @OptionalUserFromRequest() user: UserInRequest | null,
+  ): Promise<ViewPostDto> {
+    const query = new GetPostQuery(id, user?.id ?? null);
+    return this.queryBus.execute(query);
   }
 
   @Get(':id/comments')
@@ -74,11 +83,26 @@ export class PostsController {
     return this.commentsQueryRepository.findByIdOrThrow(commentId);
   }
 
+  @Put(':postId/like-status')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async changeLikeStatus(
+    @Param('postId') postId: string,
+    @Body() dto: HttpLikeStatusDto,
+    @ExtractUserFromRequest() user: UserInRequest,
+  ): Promise<void> {
+    const command = new LikePostCommand(user.id, postId, dto.likeStatus);
+    await this.commandBus.execute(command);
+  }
+
   @Get()
+  @UseGuards(JwtOptionalAuthGuard)
   async getPosts(
-    @Query() query: PostsQueryParamsDto,
+    @Query() queryParams: PostsQueryParamsDto,
+    @OptionalUserFromRequest() user: UserInRequest | null,
   ): Promise<PaginatedView<ViewPostDto>> {
-    return this.postsQueryRepository.find(query);
+    const query = new GetPostsQuery(queryParams, user?.id ?? null);
+    return this.queryBus.execute(query);
   }
 
   @Post()

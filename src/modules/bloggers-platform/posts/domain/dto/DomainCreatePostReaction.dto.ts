@@ -1,9 +1,10 @@
 import { LikeStatus } from '../../../dto/HttpLikeStatus.dto';
 
-export class DomainCreateCommentReactionDto {
+export class DomainCreatePostReaction {
   constructor(
-    public commentId: string,
+    public postId: string,
     public userId: string,
+    public login: string,
     public status: LikeStatus,
   ) {}
 }

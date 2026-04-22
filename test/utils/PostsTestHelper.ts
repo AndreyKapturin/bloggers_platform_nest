@@ -5,6 +5,10 @@ import { faker } from '@faker-js/faker';
 import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.view-dto';
 import { InputCreatePostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.input-create-dto';
 import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.view-dto';
+import { HttpLikeStatusDto } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
+import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
+
+type ResponseWithBody<T> = Omit<Response, 'body'> & { body: T };
 
 export const POST_CONSTRAINTS = {
   TITLE_MAX_LENGTH: 30,
@@ -14,6 +18,53 @@ export const POST_CONSTRAINTS = {
 
 export class PostsTestHelper {
   constructor(private app: INestApplication) {}
+
+  async setLikeStatus(
+    id: string,
+    dto: HttpLikeStatusDto,
+    options?: { status?: HttpStatus; accessToken?: string },
+  ) {
+    const likeRequest = request(this.app.getHttpServer())
+      .put(`/posts/${id}/like-status`)
+      .send(dto)
+      .expect(options?.status ?? HttpStatus.NO_CONTENT);
+
+    if (options?.accessToken) {
+      likeRequest.auth(options.accessToken, { type: 'bearer' });
+    }
+
+    return likeRequest;
+  }
+
+  async getPost(
+    id: string,
+    options?: { status?: HttpStatus; accessToken?: string },
+  ): Promise<Response> {
+    const getRequest = request(this.app.getHttpServer())
+      .get(`/posts/${id}`)
+      .expect(options?.status ?? HttpStatus.OK);
+
+    if (options?.accessToken) {
+      getRequest.auth(options.accessToken, { type: 'bearer' });
+    }
+
+    return getRequest;
+  }
+
+  async getPosts(options?: {
+    accessToken?: string;
+  }): Promise<ResponseWithBody<PaginatedView<ViewPostDto>>> {
+    const getRequest = request(this.app.getHttpServer())
+      .get('/posts')
+      .expect(HttpStatus.OK);
+
+    if (options?.accessToken) {
+      getRequest.auth(options.accessToken, { type: 'bearer' });
+    }
+
+    const response = await getRequest;
+    return response;
+  }
 
   async createPost(
     dto: InputCreatePostDto,
@@ -39,7 +90,6 @@ export class PostsTestHelper {
     };
 
     const createPostResponse = await this.createPost(dto);
-
     return createPostResponse.body;
   }
 

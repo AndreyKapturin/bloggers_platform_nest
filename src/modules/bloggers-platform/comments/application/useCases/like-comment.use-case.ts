@@ -1,7 +1,7 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CommentsRepository } from '../../infrastructure/Comments.repository';
 import { CommentReactionRepository } from '../../infrastructure/CommentReaction.repository';
-import { LikeStatus } from '../../api/dto/HttpLikeComment.dto';
+import { LikeStatus } from '../../../dto/HttpLikeStatus.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   CommentReaction,
