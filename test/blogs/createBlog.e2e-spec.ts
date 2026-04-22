@@ -23,8 +23,17 @@ describe('create blog', () => {
     await app.close();
   });
 
-  it(`should create blog if input data is correct and admin auth`, async () => {
-    await blogsTestHelper.createRandomBlog();
+  it(`should create blog. Return view blog. if input data is correct and admin auth`, async () => {
+    const inputBlog = blogsTestHelper.createInputDto();
+    const creacteBlogResponse = await blogsTestHelper.createBlog(inputBlog);
+
+    const expectedBlog = blogsTestHelper.createExpectedBlog({
+      name: inputBlog.name,
+      description: inputBlog.description,
+      websiteUrl: inputBlog.websiteUrl,
+    });
+
+    expect(creacteBlogResponse.body).toEqual(expectedBlog);
   });
 
   it(`shouldn't create blog if not admin auth`, async () => {

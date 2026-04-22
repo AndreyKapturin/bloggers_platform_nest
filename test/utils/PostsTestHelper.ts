@@ -2,11 +2,11 @@ import { INestApplication, HttpStatus } from '@nestjs/common';
 import request, { Response } from 'supertest';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
 import { faker } from '@faker-js/faker';
-import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.view-dto';
 import { InputCreatePostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.input-create-dto';
 import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.view-dto';
 import { HttpLikeStatusDto } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
+import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
 
 type ResponseWithBody<T> = Omit<Response, 'body'> & { body: T };
 

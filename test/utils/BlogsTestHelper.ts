@@ -2,23 +2,18 @@ import { INestApplication, HttpStatus } from '@nestjs/common';
 import request, { Response } from 'supertest';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
 import { faker } from '@faker-js/faker';
-import { InputCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.input-create-dto';
-import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/dto/Blog.view-dto';
-
-const BLOG_CONSTRAINTS = {
-  NAME_MAX_LENGTH: 15,
-  DESCRIPTION_MAX_LENGTH: 500,
-  WEBSITE_MAX_LENGTH: 100,
-};
+import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
+import { HttpCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/HttpCreateBlog.dto';
+import { DB_BLOG_CONSTRAINTS } from '../../src/modules/bloggers-platform/blogs/domain/blog.entity';
 
 export class BlogsTestHelper {
   constructor(private app: INestApplication) {}
 
-  createInputDto() {
+  createInputDto(): HttpCreateBlogDto {
     const name = faker.string.alphanumeric({
       length: {
         min: 1,
-        max: BLOG_CONSTRAINTS.NAME_MAX_LENGTH,
+        max: DB_BLOG_CONSTRAINTS.NAME_MAX_LENGTH,
       },
       casing: 'mixed',
     });
@@ -32,8 +27,20 @@ export class BlogsTestHelper {
     };
   }
 
+  createExpectedBlog(overrideFields: Partial<ViewBlogDto> = {}): ViewBlogDto {
+    return {
+      id: expect.any(String),
+      name: expect.any(String),
+      description: expect.any(String),
+      websiteUrl: expect.any(String),
+      isMembership: false, // by default
+      createdAt: expect.any(String),
+      ...overrideFields,
+    };
+  }
+
   async createBlog(
-    dto: InputCreateBlogDto,
+    dto: HttpCreateBlogDto,
     options?: { status: HttpStatus },
   ): Promise<Response> {
     return request(this.app.getHttpServer())
