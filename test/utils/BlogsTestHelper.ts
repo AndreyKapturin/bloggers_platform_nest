@@ -7,6 +7,8 @@ import { HttpCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/api
 import { DB_BLOG_CONSTRAINTS } from '../../src/modules/bloggers-platform/blogs/domain/blog.entity';
 import { ResponseWithBody } from './generics';
 import { HttpUpdateBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/HttpUpdateBlog.dto';
+import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
+import { BlogsQueryParamsDto } from '../../src/modules/bloggers-platform/blogs/api/dto/BlogQueryParams.dto';
 
 export class BlogsTestHelper {
   constructor(private app: INestApplication) {}
@@ -48,6 +50,18 @@ export class BlogsTestHelper {
     return request(this.app.getHttpServer())
       .get(`/blogs/${id}`)
       .expect(options?.status ?? HttpStatus.OK);
+  }
+
+  async getBlogsWithQuery(
+    filter?: Partial<BlogsQueryParamsDto>,
+  ): Promise<ResponseWithBody<PaginatedView<ViewBlogDto>>> {
+    const query = request(this.app.getHttpServer()).get('/blogs');
+
+    if (filter) {
+      query.query(filter);
+    }
+
+    return query.expect(HttpStatus.OK);
   }
 
   async createBlog(
