@@ -1,10 +1,11 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import request, { Response } from 'supertest';
+import request from 'supertest';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
 import { faker } from '@faker-js/faker';
 import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
 import { HttpCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/HttpCreateBlog.dto';
 import { DB_BLOG_CONSTRAINTS } from '../../src/modules/bloggers-platform/blogs/domain/blog.entity';
+import { ResponseWithBody } from './generics';
 
 export class BlogsTestHelper {
   constructor(private app: INestApplication) {}
@@ -39,10 +40,19 @@ export class BlogsTestHelper {
     };
   }
 
+  async getBlogById(
+    id: string,
+    options?: { status: HttpStatus },
+  ): Promise<ResponseWithBody<ViewBlogDto>> {
+    return request(this.app.getHttpServer())
+      .get(`/blogs/${id}`)
+      .expect(options?.status ?? HttpStatus.OK);
+  }
+
   async createBlog(
     dto: HttpCreateBlogDto,
     options?: { status: HttpStatus },
-  ): Promise<Response> {
+  ): Promise<ResponseWithBody<ViewBlogDto>> {
     return request(this.app.getHttpServer())
       .post('/blogs')
       .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })

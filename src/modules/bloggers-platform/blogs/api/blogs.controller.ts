@@ -31,6 +31,7 @@ import { HttpCreateBlogDto } from './dto/HttpCreateBlog.dto';
 import { CreateBlogCommand } from '../application/useCases/create-blog.use-case';
 import { ViewBlogDto } from './dto/Blog.view-dto';
 import { BlogsQueryParamsDto } from './dto/BlogQueryParams.dto';
+import { GetBlogQuery } from '../application/queries/get-blog.query';
 
 @Controller('blogs')
 export class BlogsController {
@@ -45,7 +46,8 @@ export class BlogsController {
 
   @Get(':id')
   async getBlogById(@Param('id') id: string): Promise<ViewBlogDto> {
-    return await this.blogsQueryRepository.findById(id);
+    const query = new GetBlogQuery(id);
+    return this.queryBus.execute(query);
   }
 
   @Get(':id/posts')

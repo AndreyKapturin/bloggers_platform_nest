@@ -7,8 +7,7 @@ import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.
 import { HttpLikeStatusDto } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
 import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
-
-type ResponseWithBody<T> = Omit<Response, 'body'> & { body: T };
+import { ResponseWithBody } from './generics';
 
 export const POST_CONSTRAINTS = {
   TITLE_MAX_LENGTH: 30,
