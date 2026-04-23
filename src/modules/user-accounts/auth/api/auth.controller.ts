@@ -51,7 +51,10 @@ export class AuthController {
     @ExtractUserFromRequest() user: UserInRequest,
   ): Promise<AccessTokenDto> {
     const tokensPair = await this.authService.login(user.id);
-    response.cookie('refreshToken', tokensPair.refreshToken);
+    response.cookie('refreshToken', tokensPair.refreshToken, {
+      secure: true,
+      httpOnly: true,
+    });
     return new AccessTokenDto(tokensPair.accessToken);
   }
 

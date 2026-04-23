@@ -38,7 +38,9 @@ describe('login', () => {
       await authTestHelper.loginUser(loginViaEmail);
 
     expect(loginWithEmailResponse.header['set-cookie']).toEqual(
-      expect.arrayContaining([expect.stringMatching('refreshToken=')]),
+      expect.arrayContaining([
+        expect.stringMatching('refreshToken=.+HttpOnly; Secure'),
+      ]),
     );
 
     expect(loginWithEmailResponse.body).toEqual({
