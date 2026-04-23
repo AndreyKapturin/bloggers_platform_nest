@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BlogsRepository } from '../infrastructure/blogs.repository';
-import { InputUpdateBlogDto } from '../dto/Blog.input-update-dto';
+import { HttpUpdateBlogDto } from '../api/dto/HttpUpdateBlog.dto';
 
 @Injectable()
 export class BlogsService {
@@ -8,7 +8,7 @@ export class BlogsService {
 
   async updateBlog(
     id: string,
-    inputUpdateBlogDto: InputUpdateBlogDto,
+    inputUpdateBlogDto: HttpUpdateBlogDto,
   ): Promise<void> {
     const blogDocument = await this.blogsRepository.findById(id);
 

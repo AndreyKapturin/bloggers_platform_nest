@@ -14,7 +14,6 @@ import {
 import { BlogsService } from '../application/blogs.service';
 import { BlogsQueryRepository } from '../infrastructure/blogs.query-repository';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
-import { InputUpdateBlogDto } from '../dto/Blog.input-update-dto';
 import { PostsQueryParamsDto } from '../../posts/dto/PostQueryParams.dto';
 import { PostsService } from '../../posts/application/posts.service';
 import { PostsQueryRepository } from '../../posts/infrastructure/Post.query-repository';
@@ -32,6 +31,7 @@ import { CreateBlogCommand } from '../application/useCases/create-blog.use-case'
 import { ViewBlogDto } from './dto/Blog.view-dto';
 import { BlogsQueryParamsDto } from './dto/BlogQueryParams.dto';
 import { GetBlogQuery } from '../application/queries/get-blog.query';
+import { HttpUpdateBlogDto } from './dto/HttpUpdateBlog.dto';
 
 @Controller('blogs')
 export class BlogsController {
@@ -100,7 +100,7 @@ export class BlogsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateBlog(
     @Param('id') id: string,
-    @Body() inputUpdateBlogDto: InputUpdateBlogDto,
+    @Body() inputUpdateBlogDto: HttpUpdateBlogDto,
   ): Promise<ViewBlogDto> {
     await this.blogsService.updateBlog(id, inputUpdateBlogDto);
     return await this.blogsQueryRepository.findById(id);

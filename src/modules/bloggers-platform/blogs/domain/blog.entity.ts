@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 import { DomainCreateBlogDto } from './dto/DomainCreateBlog.dto';
-import { InputUpdateBlogDto } from '../dto/Blog.input-update-dto';
+import { HttpUpdateBlogDto } from '../api/dto/HttpUpdateBlog.dto';
 
 export const DB_BLOG_CONSTRAINTS = {
   NAME_MAX_LENGTH: 15,
@@ -46,7 +46,7 @@ export class Blog {
     return blog as TBlogDocument;
   }
 
-  update(inputUpdateBlogDto: InputUpdateBlogDto): void {
+  update(inputUpdateBlogDto: HttpUpdateBlogDto): void {
     this.name = inputUpdateBlogDto.name;
     this.description = inputUpdateBlogDto.description;
     this.websiteUrl = inputUpdateBlogDto.websiteUrl;

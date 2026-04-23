@@ -6,6 +6,7 @@ import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/B
 import { HttpCreateBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/HttpCreateBlog.dto';
 import { DB_BLOG_CONSTRAINTS } from '../../src/modules/bloggers-platform/blogs/domain/blog.entity';
 import { ResponseWithBody } from './generics';
+import { HttpUpdateBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/HttpUpdateBlog.dto';
 
 export class BlogsTestHelper {
   constructor(private app: INestApplication) {}
@@ -58,6 +59,18 @@ export class BlogsTestHelper {
       .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
       .send(dto)
       .expect(options?.status ?? HttpStatus.CREATED);
+  }
+
+  async updateBlog(
+    id: string,
+    dto: HttpUpdateBlogDto,
+    options?: { status: HttpStatus },
+  ) {
+    await request(this.app.getHttpServer())
+      .put(`/blogs/${id}`)
+      .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
+      .send(dto)
+      .expect(options?.status ?? HttpStatus.NO_CONTENT);
   }
 
   async createRandomBlog(): Promise<ViewBlogDto> {
