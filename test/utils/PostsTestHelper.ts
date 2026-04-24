@@ -11,6 +11,7 @@ import { HttpCreatePostDto } from '../../src/modules/bloggers-platform/posts/api
 import { LIKE_STATUSES_REG_EXP } from './reg-exp';
 import { NewestLike } from '../../src/modules/bloggers-platform/posts/domain/Post.entity';
 import { HttpUpdatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpUpdatePost.dto';
+import { HttpCreateBlogPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreateBlogPost.dto';
 
 const expectedNewestLike: NewestLike = {
   login: expect.any(String),
@@ -21,7 +22,7 @@ const expectedNewestLike: NewestLike = {
 export class PostsTestHelper {
   constructor(private app: INestApplication) {}
 
-  createInputDto(blogId: string): HttpCreatePostDto {
+  createBlogPostInputDto(): HttpCreateBlogPostDto {
     const title = faker.lorem.words({ min: 1, max: 3 });
     const shortDescription = faker.lorem.sentence({ min: 5, max: 10 });
     const content = faker.lorem.sentence({ min: 5, max: 50 });
@@ -29,6 +30,12 @@ export class PostsTestHelper {
       title,
       shortDescription,
       content,
+    };
+  }
+
+  createInputDto(blogId: string): HttpCreatePostDto {
+    return {
+      ...this.createBlogPostInputDto(),
       blogId,
     };
   }
@@ -115,6 +122,29 @@ export class PostsTestHelper {
       .send(dto)
       .expect(innerOptions.status);
 
+    if (innerOptions.auth) {
+      createPostRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
+    }
+
+    return createPostRequest;
+  }
+
+  async createBlogPost(
+    blogId: string,
+    dto: HttpCreateBlogPostDto,
+    options?: { status?: HttpStatus; auth?: boolean },
+  ): Promise<ResponseWithBody<ViewPostDto>> {
+    const innerOptions = {
+      status: HttpStatus.CREATED,
+      auth: true,
+      ...options,
+    };
+
+    const createPostRequest = request(this.app.getHttpServer())
+      .post(`/blogs/${blogId}/posts`)
+      .send(dto)
+      .expect(innerOptions.status);
+    
     if (innerOptions.auth) {
       createPostRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
     }

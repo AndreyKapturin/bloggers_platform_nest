@@ -26,6 +26,7 @@ export function setupApp(app: INestApplication) {
     new ValidationPipe({
       transform: true,
       stopAtFirstError: true,
+      validateCustomDecorators: true,
       exceptionFactory: (errors) => {
         const formattedErrors = errors.map(_formatError);
         throw new DomainException(

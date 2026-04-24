@@ -1,22 +1,7 @@
-import { IsNotEmpty, IsString, Length } from 'class-validator';
-import { DB_POST_CONSTRAINTS } from '../../domain/Post.entity';
+import { IsNotEmpty, IsString } from 'class-validator';
+import { HttpCreateBlogPostDto } from './HttpCreateBlogPost.dto';
 
-export class HttpCreatePostDto {
-  @Length(1, DB_POST_CONSTRAINTS.TITLE_MAX_LENGTH)
-  @IsString()
-  @IsNotEmpty()
-  title!: string;
-
-  @Length(1, DB_POST_CONSTRAINTS.SHORT_DESCRIPTION_MAX_LENGTH)
-  @IsString()
-  @IsNotEmpty()
-  shortDescription!: string;
-
-  @Length(1, DB_POST_CONSTRAINTS.CONTENT_MAX_LENGTH)
-  @IsString()
-  @IsNotEmpty()
-  content!: string;
-
+export class HttpCreatePostDto extends HttpCreateBlogPostDto {
   @IsString()
   @IsNotEmpty()
   blogId!: string;
