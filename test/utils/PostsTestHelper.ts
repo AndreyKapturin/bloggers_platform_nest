@@ -45,7 +45,7 @@ export class PostsTestHelper {
         likesCount: expect.any(Number),
         dislikesCount: expect.any(Number),
         myStatus: expect.stringMatching(LIKE_STATUSES_REG_EXP),
-        newestLikes: expect.arrayContaining([expectedNewestLike]),
+        newestLikes: expect.arrayOf(expectedNewestLike),
       },
       ...overrdieFields,
     };
@@ -72,7 +72,7 @@ export class PostsTestHelper {
   async getPost(
     id: string,
     options?: { status?: HttpStatus; accessToken?: string },
-  ): Promise<Response> {
+  ): Promise<ResponseWithBody<ViewPostDto>> {
     const getRequest = request(this.app.getHttpServer())
       .get(`/posts/${id}`)
       .expect(options?.status ?? HttpStatus.OK);
@@ -102,7 +102,7 @@ export class PostsTestHelper {
   async createPost(
     dto: HttpCreatePostDto,
     options?: { status?: HttpStatus; auth?: boolean },
-  ): Promise<Response> {
+  ): Promise<ResponseWithBody<ViewPostDto>> {
     const innerOptions = {
       status: HttpStatus.CREATED,
       auth: true,
