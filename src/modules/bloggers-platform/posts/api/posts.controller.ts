@@ -11,7 +11,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { InputCreatePostDto } from '../dto/Post.input-create-dto';
 import { ViewPostDto } from '../dto/Post.view-dto';
 import { PostsService } from '../application/posts.service';
 import { PostsQueryRepository } from '../infrastructure/Post.query-repository';
@@ -35,6 +34,7 @@ import { HttpLikeStatusDto } from '../../dto/HttpLikeStatus.dto';
 import { LikePostCommand } from '../application/useCases/like-post.use-case';
 import { GetPostQuery } from '../application/queries/get-post.query';
 import { GetPostsQuery } from '../application/queries/get-posts.query';
+import { HttpCreatePostDto } from './dto/HttpCreatePost.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -108,7 +108,7 @@ export class PostsController {
   @Post()
   @UseGuards(BasicAuthGuard)
   async createPost(
-    @Body() inputCreatePostDto: InputCreatePostDto,
+    @Body() inputCreatePostDto: HttpCreatePostDto,
   ): Promise<ViewPostDto> {
     const postId = await this.postsService.createPost(inputCreatePostDto);
     return this.postsQueryRepository.findById(postId);

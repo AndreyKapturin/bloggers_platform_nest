@@ -2,6 +2,12 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 import { UpdatePostDto } from '../dto/Post.update-dto';
 
+export const DB_POST_CONSTRAINTS = {
+  TITLE_MAX_LENGTH: 30,
+  SHORT_DESCRIPTION_MAX_LENGTH: 100,
+  CONTENT_MAX_LENGTH: 1000,
+};
+
 @Schema({ _id: false })
 export class NewestLike {
   @Prop({ type: Date, required: true })
@@ -28,13 +34,25 @@ export class ExtendedLikesInfo {
 
 @Schema({ timestamps: true })
 export class Post {
-  @Prop({ type: String, required: true })
+  @Prop({
+    type: String,
+    required: true,
+    maxLength: DB_POST_CONSTRAINTS.TITLE_MAX_LENGTH,
+  })
   title!: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({
+    type: String,
+    required: true,
+    maxLength: DB_POST_CONSTRAINTS.SHORT_DESCRIPTION_MAX_LENGTH,
+  })
   shortDescription!: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({
+    type: String,
+    required: true,
+    maxLength: DB_POST_CONSTRAINTS.CONTENT_MAX_LENGTH,
+  })
   content!: string;
 
   @Prop({ type: String, required: true })

@@ -3,11 +3,11 @@ import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import request from 'supertest';
-import { InputCreatePostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.input-create-dto';
 import { InputUpdatePostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.input-update-dto';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
 import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 import { PostsTestHelper } from '../utils/PostsTestHelper';
+import { HttpCreatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreatePost.dto';
 
 describe('update post', () => {
   let app: INestApplication;
@@ -15,7 +15,7 @@ describe('update post', () => {
   let blogsTestHelper: BlogsTestHelper;
   let postsTestHelper: PostsTestHelper;
 
-  let inputCreatePost: InputCreatePostDto;
+  let inputCreatePost: HttpCreatePostDto;
 
   let blogId: string;
   let postId: string;
