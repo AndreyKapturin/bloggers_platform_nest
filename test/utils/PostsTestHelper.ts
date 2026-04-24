@@ -163,4 +163,25 @@ export class PostsTestHelper {
 
     return updatePostRequest;
   }
+
+  async deletePost(
+    postId: string,
+    options?: { status?: HttpStatus; auth?: boolean },
+  ) {
+    const innerOptions = {
+      status: HttpStatus.NO_CONTENT,
+      auth: true,
+      ...options,
+    };
+
+    const deletePostRequest = request(this.app.getHttpServer())
+      .delete(`/posts/${postId}`)
+      .expect(innerOptions.status);
+
+    if (innerOptions.auth) {
+      deletePostRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
+    }
+
+    return deletePostRequest;
+  }
 }
