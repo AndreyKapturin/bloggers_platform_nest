@@ -1,5 +1,5 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import request, { Response } from 'supertest';
+import request from 'supertest';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
 import { faker } from '@faker-js/faker';
 import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.view-dto';
@@ -10,6 +10,7 @@ import { ResponseWithBody } from './generics';
 import { HttpCreatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreatePost.dto';
 import { LIKE_STATUSES_REG_EXP } from './reg-exp';
 import { NewestLike } from '../../src/modules/bloggers-platform/posts/domain/Post.entity';
+import { HttpUpdatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpUpdatePost.dto';
 
 const expectedNewestLike: NewestLike = {
   login: expect.any(String),
@@ -138,5 +139,28 @@ export class PostsTestHelper {
     }
 
     return responses;
+  }
+
+  async updatePost(
+    postId: string,
+    dto: HttpUpdatePostDto,
+    options?: { status?: HttpStatus; auth?: boolean },
+  ) {
+    const innerOptions = {
+      status: HttpStatus.NO_CONTENT,
+      auth: true,
+      ...options,
+    };
+
+    const updatePostRequest = request(this.app.getHttpServer())
+      .put(`/posts/${postId}`)
+      .send(dto)
+      .expect(innerOptions.status);
+
+    if (innerOptions.auth) {
+      updatePostRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
+    }
+
+    return updatePostRequest;
   }
 }

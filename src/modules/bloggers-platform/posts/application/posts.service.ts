@@ -4,9 +4,9 @@ import { Post } from '../domain/Post.entity';
 import type { TPostModel } from '../domain/Post.entity';
 import { PostsRepository } from '../infrastructure/Post.repository';
 import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
-import { InputUpdatePostDto } from '../dto/Post.input-update-dto';
 import { UpdatePostDto } from '../dto/Post.update-dto';
 import { HttpCreatePostDto } from '../api/dto/HttpCreatePost.dto';
+import { HttpUpdatePostDto } from '../api/dto/HttpUpdatePost.dto';
 
 @Injectable()
 export class PostsService {
@@ -43,7 +43,7 @@ export class PostsService {
 
   async updatePost(
     postId: string,
-    inputUpdatePostDto: InputUpdatePostDto,
+    inputUpdatePostDto: HttpUpdatePostDto,
   ): Promise<void> {
     const postDocument = await this.postsRepository.findById(postId);
 

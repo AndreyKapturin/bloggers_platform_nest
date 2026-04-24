@@ -16,7 +16,6 @@ import { PostsService } from '../application/posts.service';
 import { PostsQueryRepository } from '../infrastructure/Post.query-repository';
 import { PostsQueryParamsDto } from '../dto/PostQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
-import { InputUpdatePostDto } from '../dto/Post.input-update-dto';
 import { CommentsQueryParamsDto } from '../../comments/api/dto/CommentsQueryParams.dto';
 import { CommentsQueryRepository } from '../../comments/infrastructure/Comments.query-repository';
 import { ViewCommentDto } from '../../comments/api/dto/ViewComment.dto';
@@ -35,6 +34,7 @@ import { LikePostCommand } from '../application/useCases/like-post.use-case';
 import { GetPostQuery } from '../application/queries/get-post.query';
 import { GetPostsQuery } from '../application/queries/get-posts.query';
 import { HttpCreatePostDto } from './dto/HttpCreatePost.dto';
+import { HttpUpdatePostDto } from './dto/HttpUpdatePost.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -114,14 +114,14 @@ export class PostsController {
     return this.postsQueryRepository.findById(postId);
   }
 
-  @Put(':id')
+  @Put(':postId')
   @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updatePost(
-    @Param('id') id: string,
-    @Body() inputUpdatePostDto: InputUpdatePostDto,
+    @Param('postId') postId: string,
+    @Body() dto: HttpUpdatePostDto,
   ): Promise<void> {
-    await this.postsService.updatePost(id, inputUpdatePostDto);
+    await this.postsService.updatePost(postId, dto);
   }
 
   @Delete(':id')
