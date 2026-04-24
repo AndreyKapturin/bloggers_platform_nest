@@ -35,8 +35,11 @@ import {
 } from './posts/domain/post-reaction.entity';
 import { GetPostQueryHandler } from './posts/application/queries/get-post.query';
 import { GetPostsQueryHandler } from './posts/application/queries/get-posts.query';
+import { CreateBlogUseCase } from './blogs/application/useCases/create-blog.use-case';
+import { GetBlogQueryHandler } from './blogs/application/queries/get-blog.query';
 
 const useCases = [
+  CreateBlogUseCase,
   CreateCommentUseCase,
   UpdateCommentUseCase,
   DeleteCommentUseCase,
@@ -49,6 +52,7 @@ const queries = [
   GetPostCommentsQueryHandler,
   GetPostQueryHandler,
   GetPostsQueryHandler,
+  GetBlogQueryHandler,
 ];
 
 @Module({

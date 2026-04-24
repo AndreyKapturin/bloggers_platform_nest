@@ -12,12 +12,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BlogsService } from '../application/blogs.service';
-import { InputCreateBlogDto } from '../dto/Blog.input-create-dto';
 import { BlogsQueryRepository } from '../infrastructure/blogs.query-repository';
-import { ViewBlogDto } from '../dto/Blog.view-dto';
-import { BlogsQueryParamsDto } from '../dto/BlogQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
-import { InputUpdateBlogDto } from '../dto/Blog.input-update-dto';
 import { PostsQueryParamsDto } from '../../posts/dto/PostQueryParams.dto';
 import { PostsService } from '../../posts/application/posts.service';
 import { PostsQueryRepository } from '../../posts/infrastructure/Post.query-repository';
@@ -25,11 +21,17 @@ import { ViewPostDto } from '../../posts/dto/Post.view-dto';
 import { InputCreatePostDto } from '../../posts/dto/Post.input-create-dto';
 import { BlogPostDtoExtractor } from '../decorators/blog-post-dto-extractor.decorator';
 import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
-import { QueryBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetPostsQuery } from '../../posts/application/queries/get-posts.query';
 import { OptionalUserFromRequest } from '../../../user-accounts/auth/decorators/optional-user-in-request.decorator';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/strategies/jwt/JwtOptional.guard';
 import { UserInRequest } from '../../../user-accounts/auth/dto/UserInRequest.dto';
+import { HttpCreateBlogDto } from './dto/HttpCreateBlog.dto';
+import { CreateBlogCommand } from '../application/useCases/create-blog.use-case';
+import { ViewBlogDto } from './dto/Blog.view-dto';
+import { BlogsQueryParamsDto } from './dto/BlogQueryParams.dto';
+import { GetBlogQuery } from '../application/queries/get-blog.query';
+import { HttpUpdateBlogDto } from './dto/HttpUpdateBlog.dto';
 
 @Controller('blogs')
 export class BlogsController {
@@ -38,12 +40,14 @@ export class BlogsController {
     private blogsQueryRepository: BlogsQueryRepository,
     private postsServise: PostsService,
     private postsQueryRepository: PostsQueryRepository,
+    private commandBus: CommandBus,
     private queryBus: QueryBus,
   ) {}
 
   @Get(':id')
   async getBlogById(@Param('id') id: string): Promise<ViewBlogDto> {
-    return await this.blogsQueryRepository.findById(id);
+    const query = new GetBlogQuery(id);
+    return this.queryBus.execute(query);
   }
 
   @Get(':id/posts')
@@ -58,7 +62,7 @@ export class BlogsController {
       user?.id ?? null,
       blogId,
     );
-    
+
     return this.queryBus.execute(query);
   }
 
@@ -71,10 +75,13 @@ export class BlogsController {
 
   @Post()
   @UseGuards(BasicAuthGuard)
-  async createBlog(
-    @Body() inputCreateBlogDto: InputCreateBlogDto,
-  ): Promise<ViewBlogDto> {
-    const blogId = await this.blogsService.createBlog(inputCreateBlogDto);
+  async createBlog(@Body() dto: HttpCreateBlogDto): Promise<ViewBlogDto> {
+    const command = new CreateBlogCommand(
+      dto.name,
+      dto.description,
+      dto.websiteUrl,
+    );
+    const blogId = await this.commandBus.execute(command);
     return await this.blogsQueryRepository.findById(blogId);
   }
 
@@ -93,7 +100,7 @@ export class BlogsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateBlog(
     @Param('id') id: string,
-    @Body() inputUpdateBlogDto: InputUpdateBlogDto,
+    @Body() inputUpdateBlogDto: HttpUpdateBlogDto,
   ): Promise<ViewBlogDto> {
     await this.blogsService.updateBlog(id, inputUpdateBlogDto);
     return await this.blogsQueryRepository.findById(id);
