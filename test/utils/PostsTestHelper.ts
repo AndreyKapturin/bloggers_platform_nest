@@ -2,7 +2,7 @@ import { INestApplication, HttpStatus } from '@nestjs/common';
 import request from 'supertest';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
 import { faker } from '@faker-js/faker';
-import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.view-dto';
+import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/VIewPost.dto';
 import { HttpLikeStatusDto } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
 import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
@@ -12,7 +12,7 @@ import { LIKE_STATUSES_REG_EXP } from './reg-exp';
 import { NewestLike } from '../../src/modules/bloggers-platform/posts/domain/Post.entity';
 import { HttpUpdatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpUpdatePost.dto';
 import { HttpCreateBlogPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreateBlogPost.dto';
-import { PostsQueryParamsDto } from '../../src/modules/bloggers-platform/posts/dto/PostQueryParams.dto';
+import { PostsQueryParamsDto } from '../../src/modules/bloggers-platform/posts/api/dto/PostQueryParams.dto';
 
 const expectedNewestLike: NewestLike = {
   login: expect.any(String),

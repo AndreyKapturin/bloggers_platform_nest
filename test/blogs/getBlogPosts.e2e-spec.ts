@@ -9,7 +9,7 @@ import {
   DEFAULT_PAGE_SIZE,
   SortDirection,
 } from '../../src/core/dto/BaseQueryParams.dto';
-import { PostsSortBy } from '../../src/modules/bloggers-platform/posts/dto/PostQueryParams.dto';
+import { PostsSortBy } from '../../src/modules/bloggers-platform/posts/api/dto/PostQueryParams.dto';
 
 describe('get blog posts', () => {
   let app: INestApplication;

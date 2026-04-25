@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
-import { UpdatePostDto } from '../dto/Post.update-dto';
+import { DomainUpdatePostDto } from './dto/DomainUpdatePost.dto';
 
 export const DB_POST_CONSTRAINTS = {
   TITLE_MAX_LENGTH: 30,
@@ -89,12 +89,12 @@ export class Post {
     return postDocument as TPostDocument;
   }
 
-  update(updatePostDto: UpdatePostDto): void {
-    this.title = updatePostDto.title;
-    this.shortDescription = updatePostDto.shortDescription;
-    this.content = updatePostDto.content;
-    this.blogId = updatePostDto.blogId;
-    this.blogName = updatePostDto.blogName;
+  update(dto: DomainUpdatePostDto): void {
+    this.title = dto.title;
+    this.shortDescription = dto.shortDescription;
+    this.content = dto.content;
+    this.blogId = dto.blogId;
+    this.blogName = dto.blogName;
   }
 
   addLike() {

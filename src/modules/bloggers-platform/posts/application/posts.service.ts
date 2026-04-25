@@ -4,7 +4,7 @@ import { Post } from '../domain/Post.entity';
 import type { TPostModel } from '../domain/Post.entity';
 import { PostsRepository } from '../infrastructure/Post.repository';
 import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
-import { UpdatePostDto } from '../dto/Post.update-dto';
+import { DomainUpdatePostDto } from '../domain/dto/DomainUpdatePost.dto';
 import { HttpCreatePostDto } from '../api/dto/HttpCreatePost.dto';
 import { HttpUpdatePostDto } from '../api/dto/HttpUpdatePost.dto';
 
@@ -61,7 +61,7 @@ export class PostsService {
       );
     }
 
-    const updatePostDto = new UpdatePostDto(
+    const updatePostDto = new DomainUpdatePostDto(
       inputUpdatePostDto.title,
       inputUpdatePostDto.shortDescription,
       inputUpdatePostDto.content,

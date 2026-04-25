@@ -6,7 +6,6 @@ import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 import { PostsTestHelper } from '../utils/PostsTestHelper';
 import { HttpUpdatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpUpdatePost.dto';
 import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
-import { HttpCreatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreatePost.dto';
 import { DB_POST_CONSTRAINTS } from '../../src/modules/bloggers-platform/posts/domain/Post.entity';
 import { faker } from '@faker-js/faker';
 
@@ -100,7 +99,7 @@ describe('update post', () => {
     const dto = postsTestHelper.createInputDto(blog.id);
     await postsTestHelper.updatePost(
       post.id,
-      { ...dto, title: 123 } as unknown as HttpCreatePostDto,
+      { ...dto, title: 123 } as unknown as HttpUpdatePostDto,
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -133,7 +132,7 @@ describe('update post', () => {
     const dto = postsTestHelper.createInputDto(blog.id);
     await postsTestHelper.updatePost(
       post.id,
-      { ...dto, shortDescription: true } as unknown as HttpCreatePostDto,
+      { ...dto, shortDescription: true } as unknown as HttpUpdatePostDto,
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -166,7 +165,7 @@ describe('update post', () => {
     const dto = postsTestHelper.createInputDto(blog.id);
     await postsTestHelper.updatePost(
       post.id,
-      { ...dto, content: {} } as unknown as HttpCreatePostDto,
+      { ...dto, content: {} } as unknown as HttpUpdatePostDto,
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -186,7 +185,7 @@ describe('update post', () => {
     const dto = postsTestHelper.createInputDto(blog.id);
     await postsTestHelper.updatePost(
       post.id,
-      { ...dto, blogId: 123 } as unknown as HttpCreatePostDto,
+      { ...dto, blogId: 123 } as unknown as HttpUpdatePostDto,
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -197,7 +196,7 @@ describe('update post', () => {
     const { blogId: _, ...dtoWithoutBlogId } = dto;
     await postsTestHelper.updatePost(
       post.id,
-      dtoWithoutBlogId as unknown as HttpCreatePostDto,
+      dtoWithoutBlogId as unknown as HttpUpdatePostDto,
       { status: HttpStatus.BAD_REQUEST },
     );
   });

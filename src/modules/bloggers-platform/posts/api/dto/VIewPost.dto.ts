@@ -1,5 +1,5 @@
-import { LikeStatus } from '../../dto/HttpLikeStatus.dto';
-import { NewestLike, TPostDocument } from '../domain/Post.entity';
+import { LikeStatus } from '../../../dto/HttpLikeStatus.dto';
+import { NewestLike, TPostDocument } from '../../domain/Post.entity';
 
 export class ViewPostDto {
   id!: string;

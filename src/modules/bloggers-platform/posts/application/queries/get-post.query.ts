@@ -1,5 +1,5 @@
 import { QueryHandler, Query, IQueryHandler } from '@nestjs/cqrs';
-import { ViewPostDto } from '../../dto/Post.view-dto';
+import { ViewPostDto } from '../../api/dto/VIewPost.dto';
 import { PostsQueryRepository } from '../../infrastructure/Post.query-repository';
 import { PostReactionsRepository } from '../../infrastructure/PostReactions.repository';
 import { LikeStatus } from '../../../dto/HttpLikeStatus.dto';

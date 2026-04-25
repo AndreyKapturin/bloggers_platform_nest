@@ -6,7 +6,7 @@ import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 import { PostsTestHelper } from '../utils/PostsTestHelper';
 import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
 import { LikeStatus } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
-import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.view-dto';
+import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/VIewPost.dto';
 import { DB_POST_CONSTRAINTS } from '../../src/modules/bloggers-platform/posts/domain/Post.entity';
 import { HttpCreatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreatePost.dto';
 import { faker } from '@faker-js/faker';
