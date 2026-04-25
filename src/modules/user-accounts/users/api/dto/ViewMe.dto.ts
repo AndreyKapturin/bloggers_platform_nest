@@ -1,4 +1,4 @@
-import { TUserDocument } from '../domain/user.entity';
+import { TUserDocument } from '../../domain/user.entity';
 
 export class ViewMeDto {
   email!: string;

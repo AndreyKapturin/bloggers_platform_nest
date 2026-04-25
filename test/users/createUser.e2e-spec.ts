@@ -1,18 +1,12 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import request from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
+import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
+import { ApiErrorResultDto } from '../../src/core/dto/ApiErrorResult.dto';
 
 describe('create user', () => {
-  const inputUser: InputCreateUserDto = {
-    login: 'User_01',
-    email: 'user1@mail.ru',
-    password: 'Strong_password',
-  };
-
   let app: INestApplication;
   let usersTestHelper: UsersTestHelper;
 
@@ -28,36 +22,53 @@ describe('create user', () => {
     await app.close();
   });
 
-  it('should create and return user', async () => {
-    const createUserResponse = await usersTestHelper.createUser(inputUser);
+  it('should create and return user if data is valid and admin auth passed', async () => {
+    const dto = usersTestHelper.createInputDto();
+    const createUserResponse = await usersTestHelper.createUser(dto);
 
-    expect(createUserResponse.body).toEqual({
-      id: expect.any(String),
-      login: inputUser.login,
-      email: inputUser.email,
-      createdAt: expect.any(String),
+    const expectedUser = usersTestHelper.createExpectedUser({
+      login: dto.login,
+      email: dto.email,
     });
+
+    expect(createUserResponse.body).toEqual(expectedUser);
   });
 
   it(`shouldn't create user if login is busy`, async () => {
-    const equalLogin: InputCreateUserDto = {
-      ...inputUser,
-      email: 'unique@mail.ru',
+    const user = await usersTestHelper.createRandomUser();
+    const dto = usersTestHelper.createInputDto();
+    const equalLogin: HttpCreateUserDto = {
+      ...dto,
+      login: user.login,
     };
 
-    await usersTestHelper.createUser(equalLogin, {
-      status: HttpStatus.BAD_REQUEST,
+    const createUserResponse =
+      await usersTestHelper.createUser<ApiErrorResultDto>(equalLogin, {
+        status: HttpStatus.BAD_REQUEST,
+      });
+
+    expect(createUserResponse.body.errorsMessages[0]).toEqual({
+      field: 'login',
+      message: expect.any(String),
     });
   });
 
   it(`shouldn't create user if email is busy`, async () => {
-    const equalEmail: InputCreateUserDto = {
-      ...inputUser,
-      login: 'unique',
+    const user = await usersTestHelper.createRandomUser();
+    const dto = usersTestHelper.createInputDto();
+    const equalEmail: HttpCreateUserDto = {
+      ...dto,
+      email: user.email,
     };
 
-    await usersTestHelper.createUser(equalEmail, {
-      status: HttpStatus.BAD_REQUEST,
+    const createUserResponse =
+      await usersTestHelper.createUser<ApiErrorResultDto>(equalEmail, {
+        status: HttpStatus.BAD_REQUEST,
+      });
+
+    expect(createUserResponse.body.errorsMessages[0]).toEqual({
+      field: 'email',
+      message: expect.any(String),
     });
   });
 
@@ -133,16 +144,17 @@ describe('create user', () => {
     },
   ])(`shouldn't create user if $testDesc`, async ({ inputUser }) => {
     {
-      await usersTestHelper.createUser(inputUser as InputCreateUserDto, {
+      await usersTestHelper.createUser(inputUser as HttpCreateUserDto, {
         status: HttpStatus.BAD_REQUEST,
       });
     }
   });
 
   it(`shouldn't create user if not admin auth`, async () => {
-    await request(app.getHttpServer())
-      .post('/users')
-      .send(inputUser)
-      .expect(HttpStatus.UNAUTHORIZED);
+    const dto = usersTestHelper.createInputDto();
+    await usersTestHelper.createUser(dto, {
+      auth: false,
+      status: HttpStatus.UNAUTHORIZED,
+    });
   });
 });

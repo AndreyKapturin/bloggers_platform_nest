@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { ViewUserDto } from '../dto/User.view-dto';
+import { ViewUserDto } from '../api/dto/ViewUser.dto';
 import { User } from '../domain/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, QueryFilter } from 'mongoose';
-import { UserQueryParamsDto } from '../dto/UserQueryParams.dto';
+import { UserQueryParamsDto } from '../api/dto/UserQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
-import { ViewMeDto } from '../dto/Me.view-dto';
+import { ViewMeDto } from '../api/dto/ViewMe.dto';
 
 @Injectable()
 export class UsersQueryRepository {
