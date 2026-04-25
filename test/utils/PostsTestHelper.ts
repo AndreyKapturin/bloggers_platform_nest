@@ -112,6 +112,28 @@ export class PostsTestHelper {
     return getRequest;
   }
 
+  async getBlogPosts(
+    blogId: string,
+    options?: {
+      accessToken?: string;
+      filter?: Partial<PostsQueryParamsDto>;
+    },
+  ): Promise<ResponseWithBody<PaginatedView<ViewPostDto>>> {
+    const getRequest = request(this.app.getHttpServer())
+      .get(`/blogs/${blogId}/posts`)
+      .expect(HttpStatus.OK);
+
+    if (options?.accessToken) {
+      getRequest.auth(options.accessToken, { type: 'bearer' });
+    }
+
+    if (options?.filter) {
+      getRequest.query(options.filter);
+    }
+
+    return getRequest;
+  }
+
   async createPost(
     dto: HttpCreatePostDto,
     options?: { status?: HttpStatus; auth?: boolean },
