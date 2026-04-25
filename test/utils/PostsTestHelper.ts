@@ -24,9 +24,9 @@ export class PostsTestHelper {
   constructor(private app: INestApplication) {}
 
   createBlogPostInputDto(): HttpCreateBlogPostDto {
-    const title = faker.lorem.words({ min: 1, max: 3 });
-    const shortDescription = faker.lorem.sentence({ min: 5, max: 10 });
-    const content = faker.lorem.sentence({ min: 5, max: 50 });
+    const title = faker.lorem.words({ min: 1, max: 2 });
+    const shortDescription = faker.lorem.sentence({ min: 3, max: 10 });
+    const content = faker.lorem.sentence({ min: 5, max: 45 });
     return {
       title,
       shortDescription,
