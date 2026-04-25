@@ -8,7 +8,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { InputCreateUserDto } from '../../users/dto/CreateUser.input-dto';
+import { HttpCreateUserDto } from '../../users/api/dto/HttpCreateUser.dto';
 import { AuthService } from '../application/auth.service';
 import { LocalAuthGuard } from '../strategies/local/Local.guard';
 import { ExtractUserFromRequest } from '../decorators/extract-userId.decorator';
@@ -17,7 +17,7 @@ import { UserInRequest } from '../dto/UserInRequest.dto';
 import { InputEmailDto } from '../dto/Email.input-dto';
 import { ConfirmationCodeDto } from '../dto/ConfirmationCode.input-dto';
 import { InputNewPasswordDto } from '../dto/NewPassword.input-dto';
-import { ViewMeDto } from '../../users/dto/Me.view-dto';
+import { ViewMeDto } from '../../users/api/dto/ViewMe.dto';
 import { JwtAuthGuard } from '../strategies/jwt/Jwt.guard';
 import { UsersQueryRepository } from '../../users/infrastructure/users.query-repository';
 import { type Response } from 'express';
@@ -38,7 +38,7 @@ export class AuthController {
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
   async registration(
-    @Body() inputCreateUserDto: InputCreateUserDto,
+    @Body() inputCreateUserDto: HttpCreateUserDto,
   ): Promise<void> {
     await this.authService.registration(inputCreateUserDto);
   }

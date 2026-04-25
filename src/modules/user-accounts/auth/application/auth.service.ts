@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { InputCreateUserDto } from '../../users/dto/CreateUser.input-dto';
+import { HttpCreateUserDto } from '../../users/api/dto/HttpCreateUser.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   TUserDocument,
@@ -39,7 +39,7 @@ export class AuthService {
     private emailService: EmailService,
   ) {}
 
-  async registration(inputCreateUserDto: InputCreateUserDto): Promise<void> {
+  async registration(inputCreateUserDto: HttpCreateUserDto): Promise<void> {
     const userId = await this.usersService.createUser(inputCreateUserDto);
     const userDocument = await this.usersRepository.findById(userId);
     this._setConfirmationCode(userDocument!);

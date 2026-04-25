@@ -4,7 +4,7 @@ import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
-import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
+import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 
 const loginUser = async (
@@ -19,7 +19,7 @@ describe('get me', () => {
   let authTestHelper: AuthTestHelper;
   let accessToken: string;
 
-  const inputUser: InputCreateUserDto = {
+  const inputUser: HttpCreateUserDto = {
     login: 'User_01',
     email: 'user1@mail.ru',
     password: 'strong_password',

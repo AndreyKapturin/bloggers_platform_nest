@@ -1,16 +1,16 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
 import request, { Response } from 'supertest';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
-import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
+import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 import { faker } from '@faker-js/faker';
-import { LOGIN_CONSTRAINTS } from '../../src/modules/user-accounts/users/constants';
-import { ViewUserDto } from '../../src/modules/user-accounts/users/dto/User.view-dto';
+import { ViewUserDto } from '../../src/modules/user-accounts/users/api/dto/ViewUser.dto';
+import { USER_CONSTRAINTS } from '../../src/modules/user-accounts/users/domain/user.entity';
 
 export class UsersTestHelper {
   constructor(private app: INestApplication) {}
 
   async createUser(
-    dto: InputCreateUserDto,
+    dto: HttpCreateUserDto,
     options?: { status: HttpStatus },
   ): Promise<Response> {
     return request(this.app.getHttpServer())
@@ -20,11 +20,11 @@ export class UsersTestHelper {
       .expect(options?.status ?? HttpStatus.CREATED);
   }
 
-  createInputDto(): InputCreateUserDto {
+  createInputDto(): HttpCreateUserDto {
     const login = faker.string.alphanumeric({
       length: {
-        min: LOGIN_CONSTRAINTS.MIN_LENGTH,
-        max: LOGIN_CONSTRAINTS.MAX_LENGTH,
+        min: USER_CONSTRAINTS.LOGIN_MIN_LENGTH,
+        max: USER_CONSTRAINTS.LOGIN_MAX_LENGTH,
       },
       casing: 'mixed',
     });

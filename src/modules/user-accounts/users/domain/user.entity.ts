@@ -1,6 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
-import { CreateUserDto } from '../dto/User.create-dto';
+import { DomainCreateUserDto } from './dto/DomainCreateUser.dto';
+
+export const USER_CONSTRAINTS = {
+  LOGIN_MIN_LENGTH: 3,
+  LOGIN_MAX_LENGTH: 10,
+  PASSWORD_MIN_LENGTH: 6,
+  PASSWORD_MAX_LENGTH: 20,
+};
 
 @Schema({ _id: false })
 class EmailConfirmation {
@@ -25,7 +32,12 @@ class RecoveryCode {
 
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ type: 'String', required: true })
+  @Prop({
+    type: 'String',
+    required: true,
+    minLength: USER_CONSTRAINTS.LOGIN_MIN_LENGTH,
+    maxLength: USER_CONSTRAINTS.LOGIN_MAX_LENGTH,
+  })
   login!: string;
 
   @Prop({ type: 'String', required: true })
@@ -43,11 +55,11 @@ export class User {
   @Prop({ type: () => RecoveryCode, required: true, default: () => ({}) })
   recoveryCode!: RecoveryCode;
 
-  static makeInstanse(createUserDto: CreateUserDto): TUserDocument {
+  static makeInstanse(dto: DomainCreateUserDto): TUserDocument {
     const user = new this();
-    user.login = createUserDto.login;
-    user.email = createUserDto.email;
-    user.passwordHash = createUserDto.passwordHash;
+    user.login = dto.login;
+    user.email = dto.email;
+    user.passwordHash = dto.passwordHash;
     return user as TUserDocument;
   }
 

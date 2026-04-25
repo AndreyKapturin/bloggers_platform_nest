@@ -2,7 +2,7 @@ import { INestApplication, HttpStatus } from '@nestjs/common';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
+import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
 
@@ -11,7 +11,7 @@ describe('login', () => {
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
 
-  let inputUser: InputCreateUserDto;
+  let inputUser: HttpCreateUserDto;
 
   beforeAll(async () => {
     app = await initApp();

@@ -10,12 +10,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ViewUserDto } from '../dto/User.view-dto';
+import { ViewUserDto } from './dto/ViewUser.dto';
 import { UsersQueryRepository } from '../infrastructure/users.query-repository';
 import { UsersService } from '../application/users.service';
-import { UserQueryParamsDto } from '../dto/UserQueryParams.dto';
+import { UserQueryParamsDto } from './dto/UserQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
-import { InputCreateUserDto } from '../dto/CreateUser.input-dto';
+import { HttpCreateUserDto } from './dto/HttpCreateUser.dto';
 import { BasicAuthGuard } from '../../auth/strategies/basic/Basic.guard';
 
 @Controller('users')
@@ -35,7 +35,7 @@ export class UsersController {
 
   @Post()
   async createUser(
-    @Body() inputCreateUserDto: InputCreateUserDto,
+    @Body() inputCreateUserDto: HttpCreateUserDto,
   ): Promise<ViewUserDto> {
     const userId = await this.usersService.createUser(inputCreateUserDto);
     const viewUser = await this.usersQueryRepository.findById(userId);

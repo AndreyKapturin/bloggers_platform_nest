@@ -4,7 +4,7 @@ import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { fakeEmailService } from '../utils/mocks/fakeEmailService';
-import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
+import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 import { InputNewPasswordDto } from '../../src/modules/user-accounts/auth/dto/NewPassword.input-dto';
 import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
@@ -14,7 +14,7 @@ describe('recovery password', () => {
   let authTestHelper: AuthTestHelper;
   let mockSendRecoveryCode: jest.SpyInstance;
 
-  const inputUser: InputCreateUserDto = {
+  const inputUser: HttpCreateUserDto = {
     login: 'User_01',
     email: 'user1@mail.ru',
     password: 'Strong_password',

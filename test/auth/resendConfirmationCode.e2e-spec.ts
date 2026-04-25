@@ -6,7 +6,7 @@ import { fakeEmailService } from '../utils/mocks/fakeEmailService';
 import request from 'supertest';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
-import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
+import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 
 describe('registration-confirmation', () => {
   let app: INestApplication;
@@ -15,7 +15,7 @@ describe('registration-confirmation', () => {
   let authTestHelper: AuthTestHelper;
   let mockSendConfirmationCode: jest.SpyInstance;
 
-  let inputUser: InputCreateUserDto;
+  let inputUser: HttpCreateUserDto;
 
   beforeAll(async () => {
     app = await initApp();

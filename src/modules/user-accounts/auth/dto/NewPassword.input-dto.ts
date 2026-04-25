@@ -1,12 +1,15 @@
 import { IsString, IsNotEmpty, Length } from 'class-validator';
-import { PASSWORD_CONSTRAINTS } from '../../users/constants';
+import { USER_CONSTRAINTS } from '../../users/domain/user.entity';
 
 export class InputNewPasswordDto {
   @IsString()
   @IsNotEmpty()
   recoveryCode!: string;
 
-  @Length(PASSWORD_CONSTRAINTS.MIN_LENGTH, PASSWORD_CONSTRAINTS.MAX_LENGTH)
+  @Length(
+    USER_CONSTRAINTS.PASSWORD_MIN_LENGTH,
+    USER_CONSTRAINTS.PASSWORD_MAX_LENGTH,
+  )
   @IsString()
   @IsNotEmpty()
   newPassword!: string;

@@ -1,6 +1,6 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
 import request, { Response } from 'supertest';
-import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
+import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
 import { UsersTestHelper } from './UsersTestHelper';
 
@@ -11,7 +11,7 @@ export class AuthTestHelper {
   ) {}
 
   async registerUser(
-    inputCreateUserDto: InputCreateUserDto,
+    inputCreateUserDto: HttpCreateUserDto,
     options?: { status: HttpStatus },
   ): Promise<Response> {
     return await request(this.app.getHttpServer())

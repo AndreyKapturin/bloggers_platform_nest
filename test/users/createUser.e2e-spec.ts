@@ -3,11 +3,11 @@ import request from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
+import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
 
 describe('create user', () => {
-  const inputUser: InputCreateUserDto = {
+  const inputUser: HttpCreateUserDto = {
     login: 'User_01',
     email: 'user1@mail.ru',
     password: 'Strong_password',
@@ -40,7 +40,7 @@ describe('create user', () => {
   });
 
   it(`shouldn't create user if login is busy`, async () => {
-    const equalLogin: InputCreateUserDto = {
+    const equalLogin: HttpCreateUserDto = {
       ...inputUser,
       email: 'unique@mail.ru',
     };
@@ -51,7 +51,7 @@ describe('create user', () => {
   });
 
   it(`shouldn't create user if email is busy`, async () => {
-    const equalEmail: InputCreateUserDto = {
+    const equalEmail: HttpCreateUserDto = {
       ...inputUser,
       login: 'unique',
     };
@@ -133,7 +133,7 @@ describe('create user', () => {
     },
   ])(`shouldn't create user if $testDesc`, async ({ inputUser }) => {
     {
-      await usersTestHelper.createUser(inputUser as InputCreateUserDto, {
+      await usersTestHelper.createUser(inputUser as HttpCreateUserDto, {
         status: HttpStatus.BAD_REQUEST,
       });
     }
