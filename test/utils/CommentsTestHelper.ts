@@ -1,12 +1,10 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
 import request, { Response } from 'supertest';
-import { LikeStatus } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
 import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/ViewComment.dto';
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
 import { HttpCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/HttpComment.dto';
 import { faker } from '@faker-js/faker';
-
-const LIKE_STATUSES_REG_EXP = new RegExp(Object.values(LikeStatus).join('|'));
+import { LIKE_STATUSES_REG_EXP } from './reg-exp';
 
 export class CommentsTestHelper {
   constructor(private app: INestApplication) {}

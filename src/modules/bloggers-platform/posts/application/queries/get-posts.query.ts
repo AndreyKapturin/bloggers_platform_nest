@@ -1,9 +1,9 @@
 import { QueryHandler, Query, IQueryHandler } from '@nestjs/cqrs';
-import { ViewPostDto } from '../../dto/Post.view-dto';
+import { ViewPostDto } from '../../api/dto/VIewPost.dto';
 import { PostsQueryRepository } from '../../infrastructure/Post.query-repository';
 import { PostReactionsRepository } from '../../infrastructure/PostReactions.repository';
 import { LikeStatus } from '../../../dto/HttpLikeStatus.dto';
-import { PostsQueryParamsDto } from '../../dto/PostQueryParams.dto';
+import { PostsQueryParamsDto } from '../../api/dto/PostQueryParams.dto';
 import { PaginatedView } from '../../../../../core/dto/PaginatedView.dto';
 import { BlogsQueryRepository } from '../../../blogs/infrastructure/blogs.query-repository';
 

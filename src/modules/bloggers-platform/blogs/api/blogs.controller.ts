@@ -14,11 +14,10 @@ import {
 import { BlogsService } from '../application/blogs.service';
 import { BlogsQueryRepository } from '../infrastructure/blogs.query-repository';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
-import { PostsQueryParamsDto } from '../../posts/dto/PostQueryParams.dto';
+import { PostsQueryParamsDto } from '../../posts/api/dto/PostQueryParams.dto';
 import { PostsService } from '../../posts/application/posts.service';
 import { PostsQueryRepository } from '../../posts/infrastructure/Post.query-repository';
-import { ViewPostDto } from '../../posts/dto/Post.view-dto';
-import { InputCreatePostDto } from '../../posts/dto/Post.input-create-dto';
+import { ViewPostDto } from '../../posts/api/dto/VIewPost.dto';
 import { BlogPostDtoExtractor } from '../decorators/blog-post-dto-extractor.decorator';
 import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -32,6 +31,7 @@ import { ViewBlogDto } from './dto/Blog.view-dto';
 import { BlogsQueryParamsDto } from './dto/BlogQueryParams.dto';
 import { GetBlogQuery } from '../application/queries/get-blog.query';
 import { HttpUpdateBlogDto } from './dto/HttpUpdateBlog.dto';
+import { HttpCreatePostDto } from '../../posts/api/dto/HttpCreatePost.dto';
 
 @Controller('blogs')
 export class BlogsController {
@@ -88,10 +88,10 @@ export class BlogsController {
   @Post(':blogId/posts')
   @UseGuards(BasicAuthGuard)
   async createPostForBlog(
-    @BlogPostDtoExtractor() inputCreatePostDto: InputCreatePostDto,
+    @BlogPostDtoExtractor() dto: HttpCreatePostDto,
   ): Promise<ViewPostDto> {
-    await this.blogsQueryRepository.findById(inputCreatePostDto.blogId);
-    const postId = await this.postsServise.createPost(inputCreatePostDto);
+    await this.blogsQueryRepository.findById(dto.blogId);
+    const postId = await this.postsServise.createPost(dto);
     return this.postsQueryRepository.findById(postId);
   }
 

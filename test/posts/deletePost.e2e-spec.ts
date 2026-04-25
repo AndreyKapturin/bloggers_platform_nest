@@ -2,10 +2,9 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import request from 'supertest';
-import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
 import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 import { PostsTestHelper } from '../utils/PostsTestHelper';
+import { faker } from '@faker-js/faker';
 
 describe('delete post', () => {
   let app: INestApplication;
@@ -34,16 +33,21 @@ describe('delete post', () => {
     await app.close();
   });
 
-  it('should delete post if post exist, admin auth passed', async () => {
-    await request(app.getHttpServer())
-      .delete(`/posts/${postId}`)
-      .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
-      .expect(HttpStatus.NO_CONTENT);
+  it(`shouldn't delete post. Return NOT FOUND if post not exist`, async () => {
+    const notExistedPostId = faker.database.mongodbObjectId().toString();
+    await postsTestHelper.deletePost(notExistedPostId, {
+      status: HttpStatus.NOT_FOUND,
+    });
   });
 
-  it(`shouldn't delete post if not admin auth`, async () => {
-    await request(app.getHttpServer())
-      .delete(`/posts/${postId}`)
-      .expect(HttpStatus.UNAUTHORIZED);
+  it(`shouldn't delete post. Return UNAUTHORIZED if not admin auth`, async () => {
+    await postsTestHelper.deletePost(postId, {
+      auth: false,
+      status: HttpStatus.UNAUTHORIZED,
+    });
+  });
+
+  it('should delete post if post exist, admin auth passed', async () => {
+    await postsTestHelper.deletePost(postId);
   });
 });

@@ -1,22 +1,65 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import request, { Response } from 'supertest';
+import request from 'supertest';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
 import { faker } from '@faker-js/faker';
-import { InputCreatePostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.input-create-dto';
-import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/dto/Post.view-dto';
+import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/VIewPost.dto';
 import { HttpLikeStatusDto } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
 import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
 import { ResponseWithBody } from './generics';
+import { HttpCreatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreatePost.dto';
+import { LIKE_STATUSES_REG_EXP } from './reg-exp';
+import { NewestLike } from '../../src/modules/bloggers-platform/posts/domain/Post.entity';
+import { HttpUpdatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpUpdatePost.dto';
+import { HttpCreateBlogPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreateBlogPost.dto';
+import { PostsQueryParamsDto } from '../../src/modules/bloggers-platform/posts/api/dto/PostQueryParams.dto';
 
-export const POST_CONSTRAINTS = {
-  TITLE_MAX_LENGTH: 30,
-  SHORT_DESCRIPTION_MAX_LENGTH: 300,
-  CONTENT_MAX_LENGTH: 1000,
+const expectedNewestLike: NewestLike = {
+  login: expect.any(String),
+  userId: expect.any(String),
+  addedAt: expect.any(String),
 };
 
 export class PostsTestHelper {
   constructor(private app: INestApplication) {}
+
+  createBlogPostInputDto(): HttpCreateBlogPostDto {
+    const title = faker.lorem.words({ min: 1, max: 2 });
+    const shortDescription = faker.lorem.sentence({ min: 3, max: 10 });
+    const content = faker.lorem.sentence({ min: 5, max: 45 });
+    return {
+      title,
+      shortDescription,
+      content,
+    };
+  }
+
+  createInputDto(blogId: string): HttpCreatePostDto {
+    return {
+      ...this.createBlogPostInputDto(),
+      blogId,
+    };
+  }
+
+  createExpectedPost(overrdieFields: Partial<ViewPostDto> = {}) {
+    const expectedPost: ViewPostDto = {
+      id: expect.any(String),
+      title: expect.any(String),
+      shortDescription: expect.any(String),
+      content: expect.any(String),
+      blogName: expect.any(String),
+      blogId: expect.any(String),
+      createdAt: expect.any(String),
+      extendedLikesInfo: {
+        likesCount: expect.any(Number),
+        dislikesCount: expect.any(Number),
+        myStatus: expect.stringMatching(LIKE_STATUSES_REG_EXP),
+        newestLikes: expect.arrayOf(expectedNewestLike),
+      },
+      ...overrdieFields,
+    };
+    return expectedPost;
+  }
 
   async setLikeStatus(
     id: string,
@@ -38,7 +81,7 @@ export class PostsTestHelper {
   async getPost(
     id: string,
     options?: { status?: HttpStatus; accessToken?: string },
-  ): Promise<Response> {
+  ): Promise<ResponseWithBody<ViewPostDto>> {
     const getRequest = request(this.app.getHttpServer())
       .get(`/posts/${id}`)
       .expect(options?.status ?? HttpStatus.OK);
@@ -52,6 +95,7 @@ export class PostsTestHelper {
 
   async getPosts(options?: {
     accessToken?: string;
+    filter?: Partial<PostsQueryParamsDto>;
   }): Promise<ResponseWithBody<PaginatedView<ViewPostDto>>> {
     const getRequest = request(this.app.getHttpServer())
       .get('/posts')
@@ -61,33 +105,82 @@ export class PostsTestHelper {
       getRequest.auth(options.accessToken, { type: 'bearer' });
     }
 
-    const response = await getRequest;
-    return response;
+    if (options?.filter) {
+      getRequest.query(options.filter);
+    }
+
+    return getRequest;
+  }
+
+  async getBlogPosts(
+    blogId: string,
+    options?: {
+      accessToken?: string;
+      filter?: Partial<PostsQueryParamsDto>;
+    },
+  ): Promise<ResponseWithBody<PaginatedView<ViewPostDto>>> {
+    const getRequest = request(this.app.getHttpServer())
+      .get(`/blogs/${blogId}/posts`)
+      .expect(HttpStatus.OK);
+
+    if (options?.accessToken) {
+      getRequest.auth(options.accessToken, { type: 'bearer' });
+    }
+
+    if (options?.filter) {
+      getRequest.query(options.filter);
+    }
+
+    return getRequest;
   }
 
   async createPost(
-    dto: InputCreatePostDto,
-    options?: { status: HttpStatus },
-  ): Promise<Response> {
-    return request(this.app.getHttpServer())
+    dto: HttpCreatePostDto,
+    options?: { status?: HttpStatus; auth?: boolean },
+  ): Promise<ResponseWithBody<ViewPostDto>> {
+    const innerOptions = {
+      status: HttpStatus.CREATED,
+      auth: true,
+      ...options,
+    };
+
+    const createPostRequest = request(this.app.getHttpServer())
       .post('/posts')
-      .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
       .send(dto)
-      .expect(options?.status ?? HttpStatus.CREATED);
+      .expect(innerOptions.status);
+
+    if (innerOptions.auth) {
+      createPostRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
+    }
+
+    return createPostRequest;
+  }
+
+  async createBlogPost(
+    blogId: string,
+    dto: HttpCreateBlogPostDto,
+    options?: { status?: HttpStatus; auth?: boolean },
+  ): Promise<ResponseWithBody<ViewPostDto>> {
+    const innerOptions = {
+      status: HttpStatus.CREATED,
+      auth: true,
+      ...options,
+    };
+
+    const createPostRequest = request(this.app.getHttpServer())
+      .post(`/blogs/${blogId}/posts`)
+      .send(dto)
+      .expect(innerOptions.status);
+
+    if (innerOptions.auth) {
+      createPostRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
+    }
+
+    return createPostRequest;
   }
 
   async createRandomPost(blogId: string): Promise<ViewPostDto> {
-    const title = faker.lorem.words({ min: 1, max: 5 });
-    const shortDescription = faker.lorem.sentence({ min: 5, max: 20 });
-    const content = faker.lorem.sentence({ min: 5, max: 50 });
-
-    const dto: InputCreatePostDto = {
-      title,
-      shortDescription,
-      content,
-      blogId,
-    };
-
+    const dto = this.createInputDto(blogId);
     const createPostResponse = await this.createPost(dto);
     return createPostResponse.body;
   }
@@ -103,5 +196,49 @@ export class PostsTestHelper {
     }
 
     return responses;
+  }
+
+  async updatePost(
+    postId: string,
+    dto: HttpUpdatePostDto,
+    options?: { status?: HttpStatus; auth?: boolean },
+  ) {
+    const innerOptions = {
+      status: HttpStatus.NO_CONTENT,
+      auth: true,
+      ...options,
+    };
+
+    const updatePostRequest = request(this.app.getHttpServer())
+      .put(`/posts/${postId}`)
+      .send(dto)
+      .expect(innerOptions.status);
+
+    if (innerOptions.auth) {
+      updatePostRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
+    }
+
+    return updatePostRequest;
+  }
+
+  async deletePost(
+    postId: string,
+    options?: { status?: HttpStatus; auth?: boolean },
+  ) {
+    const innerOptions = {
+      status: HttpStatus.NO_CONTENT,
+      auth: true,
+      ...options,
+    };
+
+    const deletePostRequest = request(this.app.getHttpServer())
+      .delete(`/posts/${postId}`)
+      .expect(innerOptions.status);
+
+    if (innerOptions.auth) {
+      deletePostRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
+    }
+
+    return deletePostRequest;
   }
 }
