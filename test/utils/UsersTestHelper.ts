@@ -1,5 +1,5 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import request from 'supertest';
+import request, { Response } from 'supertest';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
 import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 import { faker } from '@faker-js/faker';
@@ -74,5 +74,26 @@ export class UsersTestHelper {
     }
 
     return responses;
+  }
+
+  async deleteUser(
+    userId: string,
+    options?: { status?: HttpStatus; auth?: boolean },
+  ): Promise<Response> {
+    const innerOptions = {
+      status: HttpStatus.NO_CONTENT,
+      auth: true,
+      ...(options ?? {}),
+    };
+
+    const deleteUserRequest = request(this.app.getHttpServer())
+      .delete(`/users/${userId}`)
+      .expect(innerOptions.status);
+
+    if (innerOptions.auth) {
+      deleteUserRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
+    }
+
+    return deleteUserRequest;
   }
 }

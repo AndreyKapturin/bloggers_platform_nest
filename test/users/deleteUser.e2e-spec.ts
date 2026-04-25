@@ -1,22 +1,15 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import request from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
-import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
+import { ViewUserDto } from '../../src/modules/user-accounts/users/api/dto/ViewUser.dto';
+import { faker } from '@faker-js/faker';
 
 describe('delete user', () => {
-  const inputUser: HttpCreateUserDto = {
-    login: 'User_01',
-    email: 'user1@mail.ru',
-    password: 'Strong_password',
-  };
-
   let app: INestApplication;
   let usersTestHelper: UsersTestHelper;
-  let userId: string;
+  let user: ViewUserDto;
 
   beforeAll(async () => {
     app = await initApp();
@@ -25,25 +18,28 @@ describe('delete user', () => {
     await cleanDatabase(app);
 
     usersTestHelper = new UsersTestHelper(app);
-
-    const createUserResponse = await usersTestHelper.createUser(inputUser);
-    userId = createUserResponse.body.id;
+    user = await usersTestHelper.createRandomUser();
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('should delete user if exist and admin auth passed', async () => {
-    await request(app.getHttpServer())
-      .delete(`/users/${userId}`)
-      .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
-      .expect(HttpStatus.NO_CONTENT);
+  it(`shouldn't delete user. Return UNAUTHORIZED if not admin auth`, async () => {
+    await usersTestHelper.deleteUser(user.id, {
+      auth: false,
+      status: HttpStatus.UNAUTHORIZED,
+    });
   });
 
-  it(`shouldn't delete user if not admin auth`, async () => {
-    await request(app.getHttpServer())
-      .delete(`/users/${userId}`)
-      .expect(HttpStatus.UNAUTHORIZED);
+  it(`shouldn't delete user. Return NOT FOUND if user not exist`, async () => {
+    const unexistedUserId = faker.database.mongodbObjectId().toString();
+    await usersTestHelper.deleteUser(unexistedUserId, {
+      status: HttpStatus.NOT_FOUND,
+    });
+  });
+
+  it('should delete user if exist and admin auth passed', async () => {
+    await usersTestHelper.deleteUser(user.id);
   });
 });
