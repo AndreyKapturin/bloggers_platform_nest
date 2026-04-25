@@ -12,6 +12,7 @@ import { LIKE_STATUSES_REG_EXP } from './reg-exp';
 import { NewestLike } from '../../src/modules/bloggers-platform/posts/domain/Post.entity';
 import { HttpUpdatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpUpdatePost.dto';
 import { HttpCreateBlogPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreateBlogPost.dto';
+import { PostsQueryParamsDto } from '../../src/modules/bloggers-platform/posts/dto/PostQueryParams.dto';
 
 const expectedNewestLike: NewestLike = {
   login: expect.any(String),
@@ -94,6 +95,7 @@ export class PostsTestHelper {
 
   async getPosts(options?: {
     accessToken?: string;
+    filter?: Partial<PostsQueryParamsDto>;
   }): Promise<ResponseWithBody<PaginatedView<ViewPostDto>>> {
     const getRequest = request(this.app.getHttpServer())
       .get('/posts')
@@ -103,8 +105,11 @@ export class PostsTestHelper {
       getRequest.auth(options.accessToken, { type: 'bearer' });
     }
 
-    const response = await getRequest;
-    return response;
+    if (options?.filter) {
+      getRequest.query(options.filter);
+    }
+
+    return getRequest;
   }
 
   async createPost(
@@ -144,7 +149,7 @@ export class PostsTestHelper {
       .post(`/blogs/${blogId}/posts`)
       .send(dto)
       .expect(innerOptions.status);
-    
+
     if (innerOptions.auth) {
       createPostRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
     }
