@@ -1,24 +1,14 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import request, { Response } from 'supertest';
+import request from 'supertest';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
 import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 import { faker } from '@faker-js/faker';
 import { ViewUserDto } from '../../src/modules/user-accounts/users/api/dto/ViewUser.dto';
 import { USER_CONSTRAINTS } from '../../src/modules/user-accounts/users/domain/user.entity';
+import { ResponseWithBody } from './generics';
 
 export class UsersTestHelper {
   constructor(private app: INestApplication) {}
-
-  async createUser(
-    dto: HttpCreateUserDto,
-    options?: { status: HttpStatus },
-  ): Promise<Response> {
-    return request(this.app.getHttpServer())
-      .post('/users')
-      .auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' })
-      .send(dto)
-      .expect(options?.status ?? HttpStatus.CREATED);
-  }
 
   createInputDto(): HttpCreateUserDto {
     const login = faker.string.alphanumeric({
@@ -36,6 +26,38 @@ export class UsersTestHelper {
       email,
       password,
     };
+  }
+
+  createExpectedUser(overrideFields: Partial<ViewUserDto> = {}): ViewUserDto {
+    return {
+      id: expect.any(String),
+      email: expect.any(String),
+      login: expect.any(String),
+      createdAt: expect.any(String),
+      ...overrideFields,
+    };
+  }
+
+  async createUser<T = ViewUserDto>(
+    dto: HttpCreateUserDto,
+    options?: { status?: HttpStatus; auth?: boolean },
+  ): Promise<ResponseWithBody<T>> {
+    const innerOptions = {
+      status: HttpStatus.CREATED,
+      auth: true,
+      ...(options ?? {}),
+    };
+
+    const createUserRequest = request(this.app.getHttpServer())
+      .post('/users')
+      .send(dto)
+      .expect(innerOptions.status);
+
+    if (innerOptions.auth) {
+      createUserRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
+    }
+
+    return createUserRequest;
   }
 
   async createRandomUser(): Promise<ViewUserDto> {
