@@ -6,6 +6,8 @@ import { faker } from '@faker-js/faker';
 import { ViewUserDto } from '../../src/modules/user-accounts/users/api/dto/ViewUser.dto';
 import { USER_CONSTRAINTS } from '../../src/modules/user-accounts/users/domain/user.entity';
 import { ResponseWithBody } from './generics';
+import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
+import { UserQueryParamsDto } from '../../src/modules/user-accounts/users/api/dto/UserQueryParams.dto';
 
 export class UsersTestHelper {
   constructor(private app: INestApplication) {}
@@ -34,6 +36,19 @@ export class UsersTestHelper {
       email: expect.any(String),
       login: expect.any(String),
       createdAt: expect.any(String),
+      ...overrideFields,
+    };
+  }
+
+  createExpectedPaginatedUser(
+    overrideFields: Partial<PaginatedView<ViewUserDto>> = {},
+  ): PaginatedView<ViewUserDto> {
+    return {
+      page: expect.any(Number),
+      pagesCount: expect.any(Number),
+      pageSize: expect.any(Number),
+      totalCount: expect.any(Number),
+      items: expect.arrayOf(this.createExpectedUser()),
       ...overrideFields,
     };
   }
@@ -74,6 +89,33 @@ export class UsersTestHelper {
     }
 
     return responses;
+  }
+
+  async getUsers(options?: {
+    auth?: boolean;
+    status?: HttpStatus;
+    filter?: Partial<UserQueryParamsDto>;
+  }): Promise<ResponseWithBody<PaginatedView<ViewUserDto>>> {
+    const innerOptions = {
+      auth: true,
+      status: HttpStatus.OK,
+      filter: {},
+      ...(options ?? {}),
+    };
+
+    const getUsersRequest = request(this.app.getHttpServer())
+      .get('/users')
+      .expect(innerOptions.status);
+
+    if (innerOptions.auth) {
+      getUsersRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
+    }
+
+    if (innerOptions.filter) {
+      getUsersRequest.query(innerOptions.filter);
+    }
+
+    return getUsersRequest;
   }
 
   async deleteUser(
