@@ -84,6 +84,15 @@ describe('create post for blog', () => {
     );
   });
 
+  it(`shouldn't create post. Return BAD_REQUEST if title is a string of spaces`, async () => {
+    const dto = postsTestHelper.createBlogPostInputDto();
+    await postsTestHelper.createBlogPost(
+      blog.id,
+      { ...dto, title: ''.repeat(5) },
+      { status: HttpStatus.BAD_REQUEST },
+    );
+  });
+
   it(`shouldn't create post. Return BAD_REQUEST if shortDescription is empty string`, async () => {
     const dto = postsTestHelper.createBlogPostInputDto();
     await postsTestHelper.createBlogPost(
@@ -114,6 +123,15 @@ describe('create post for blog', () => {
     );
   });
 
+  it(`shouldn't create post. Return BAD_REQUEST if shortDescription is a string of spaces`, async () => {
+    const dto = postsTestHelper.createBlogPostInputDto();
+    await postsTestHelper.createBlogPost(
+      blog.id,
+      { ...dto, shortDescription: ''.repeat(5) },
+      { status: HttpStatus.BAD_REQUEST },
+    );
+  });
+
   it(`shouldn't create post. Return BAD_REQUEST if content is empty string`, async () => {
     const dto = postsTestHelper.createBlogPostInputDto();
     await postsTestHelper.createBlogPost(
@@ -140,6 +158,15 @@ describe('create post for blog', () => {
     await postsTestHelper.createBlogPost(
       blog.id,
       { ...dto, content: {} } as unknown as HttpCreateBlogPostDto,
+      { status: HttpStatus.BAD_REQUEST },
+    );
+  });
+
+  it(`shouldn't create post. Return BAD_REQUEST if content is a string of spaces`, async () => {
+    const dto = postsTestHelper.createBlogPostInputDto();
+    await postsTestHelper.createBlogPost(
+      blog.id,
+      { ...dto, content: ''.repeat(5) },
       { status: HttpStatus.BAD_REQUEST },
     );
   });

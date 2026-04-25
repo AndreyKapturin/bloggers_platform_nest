@@ -1,11 +1,6 @@
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsString,
-  Length,
-  Matches,
-} from 'class-validator';
+import { IsEmail, IsNotEmpty, Length, Matches } from 'class-validator';
 import { USER_CONSTRAINTS } from '../../domain/user.entity';
+import { IsStringWithTrim } from '../../../../../core/decorators/validation/is-trim-string.decorator';
 
 export class HttpCreateUserDto {
   @Length(USER_CONSTRAINTS.LOGIN_MIN_LENGTH, USER_CONSTRAINTS.LOGIN_MAX_LENGTH)
@@ -16,7 +11,7 @@ export class HttpCreateUserDto {
   login!: string;
 
   @IsEmail()
-  @IsString()
+  @IsStringWithTrim()
   @IsNotEmpty()
   email!: string;
 
@@ -24,7 +19,7 @@ export class HttpCreateUserDto {
     USER_CONSTRAINTS.PASSWORD_MIN_LENGTH,
     USER_CONSTRAINTS.PASSWORD_MAX_LENGTH,
   )
-  @IsString()
+  @IsStringWithTrim()
   @IsNotEmpty()
   password!: string;
 }

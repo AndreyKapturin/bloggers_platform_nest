@@ -1,8 +1,9 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 import { HttpCreateBlogPostDto } from './HttpCreateBlogPost.dto';
+import { IsStringWithTrim } from '../../../../../core/decorators/validation/is-trim-string.decorator';
 
 export class HttpCreatePostDto extends HttpCreateBlogPostDto {
-  @IsString()
+  @IsStringWithTrim()
   @IsNotEmpty()
   blogId!: string;
 }

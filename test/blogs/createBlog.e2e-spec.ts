@@ -126,6 +126,30 @@ describe('create blog', () => {
     });
   });
 
+  it('should return BAD REQUEST if name field is a string of spaces', async () => {
+    const inputBlog = blogsTestHelper.createInputDto();
+    inputBlog.name = ''.repeat(5);
+    await blogsTestHelper.createBlog(inputBlog, {
+      status: HttpStatus.BAD_REQUEST,
+    });
+  });
+
+  it('should return BAD REQUEST if description field is a string of spaces', async () => {
+    const inputBlog = blogsTestHelper.createInputDto();
+    inputBlog.description = ''.repeat(5);
+    await blogsTestHelper.createBlog(inputBlog, {
+      status: HttpStatus.BAD_REQUEST,
+    });
+  });
+
+  it('should return BAD REQUEST if websiteUrl field is a string of spaces', async () => {
+    const inputBlog = blogsTestHelper.createInputDto();
+    inputBlog.websiteUrl = ''.repeat(5);
+    await blogsTestHelper.createBlog(inputBlog, {
+      status: HttpStatus.BAD_REQUEST,
+    });
+  });
+
   it(`shouldn't create blog if not admin auth`, async () => {
     const inputBlog = blogsTestHelper.createInputDto();
     await request(app.getHttpServer())

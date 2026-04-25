@@ -104,6 +104,16 @@ describe('update post', () => {
     );
   });
 
+  it(`shouldn't update post. Return BAD_REQUEST if title is a string of spaces`, async () => {
+    const post = await postsTestHelper.createRandomPost(blog.id);
+    const dto = postsTestHelper.createInputDto(blog.id);
+    await postsTestHelper.updatePost(
+      post.id,
+      { ...dto, title: ''.repeat(5) },
+      { status: HttpStatus.BAD_REQUEST },
+    );
+  });
+
   it(`shouldn't update post. Return BAD_REQUEST if shortDescription is empty string`, async () => {
     const post = await postsTestHelper.createRandomPost(blog.id);
     const dto = postsTestHelper.createInputDto(blog.id);
@@ -133,6 +143,16 @@ describe('update post', () => {
     await postsTestHelper.updatePost(
       post.id,
       { ...dto, shortDescription: true } as unknown as HttpUpdatePostDto,
+      { status: HttpStatus.BAD_REQUEST },
+    );
+  });
+
+  it(`shouldn't update post. Return BAD_REQUEST if shortDescription is a string of spaces`, async () => {
+    const post = await postsTestHelper.createRandomPost(blog.id);
+    const dto = postsTestHelper.createInputDto(blog.id);
+    await postsTestHelper.updatePost(
+      post.id,
+      { ...dto, shortDescription: ''.repeat(5) },
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -170,6 +190,16 @@ describe('update post', () => {
     );
   });
 
+  it(`shouldn't update post. Return BAD_REQUEST if content is a string of spaces`, async () => {
+    const post = await postsTestHelper.createRandomPost(blog.id);
+    const dto = postsTestHelper.createInputDto(blog.id);
+    await postsTestHelper.updatePost(
+      post.id,
+      { ...dto, content: ''.repeat(5) },
+      { status: HttpStatus.BAD_REQUEST },
+    );
+  });
+
   it(`shouldn't update post. Return BAD_REQUEST if blogId is empty string`, async () => {
     const post = await postsTestHelper.createRandomPost(blog.id);
     const dto = postsTestHelper.createInputDto(blog.id);
@@ -197,6 +227,16 @@ describe('update post', () => {
     await postsTestHelper.updatePost(
       post.id,
       dtoWithoutBlogId as unknown as HttpUpdatePostDto,
+      { status: HttpStatus.BAD_REQUEST },
+    );
+  });
+
+  it(`shouldn't update post. Return BAD_REQUEST if blogId is a string of spaces`, async () => {
+    const post = await postsTestHelper.createRandomPost(blog.id);
+    const dto = postsTestHelper.createInputDto(blog.id);
+    await postsTestHelper.updatePost(
+      post.id,
+      { ...dto, blogId: ''.repeat(5) },
       { status: HttpStatus.BAD_REQUEST },
     );
   });
