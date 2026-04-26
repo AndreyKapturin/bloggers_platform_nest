@@ -38,9 +38,9 @@ export class AuthController {
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
   async registration(
-    @Body() inputCreateUserDto: HttpCreateUserDto,
+    @Body() dto: HttpCreateUserDto,
   ): Promise<void> {
-    await this.authService.registration(inputCreateUserDto);
+    await this.authService.registration(dto);
   }
 
   @Post('login')

@@ -39,8 +39,8 @@ export class AuthService {
     private emailService: EmailService,
   ) {}
 
-  async registration(inputCreateUserDto: HttpCreateUserDto): Promise<void> {
-    const userId = await this.usersService.createUser(inputCreateUserDto);
+  async registration(dto: HttpCreateUserDto): Promise<void> {
+    const userId = await this.usersService.createUser(dto);
     const userDocument = await this.usersRepository.findById(userId);
     this._setConfirmationCode(userDocument!);
     await this.usersRepository.save(userDocument!);
