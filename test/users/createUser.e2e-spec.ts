@@ -84,7 +84,7 @@ describe('create user', () => {
     {
       testDesc: 'login is a string of spaces',
       inputUser: {
-        login: ''.repeat(5),
+        login: ' '.repeat(5),
         email: 'user_2@mail.ru',
         password: 'strong_password',
       },
@@ -116,7 +116,7 @@ describe('create user', () => {
       testDesc: 'email is a string of spaces',
       inputUser: {
         login: 'User_02',
-        email: ''.repeat(5),
+        email: ' '.repeat(5),
         password: 'strong_password',
       },
     },
@@ -148,7 +148,7 @@ describe('create user', () => {
       inputUser: {
         login: 'User_03',
         email: 'user_3@mail.ru',
-        password: ''.repeat(5),
+        password: ' '.repeat(5),
       },
     },
     {

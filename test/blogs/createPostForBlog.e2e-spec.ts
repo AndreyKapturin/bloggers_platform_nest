@@ -88,7 +88,7 @@ describe('create post for blog', () => {
     const dto = postsTestHelper.createBlogPostInputDto();
     await postsTestHelper.createBlogPost(
       blog.id,
-      { ...dto, title: ''.repeat(5) },
+      { ...dto, title: ' '.repeat(5) },
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -127,7 +127,7 @@ describe('create post for blog', () => {
     const dto = postsTestHelper.createBlogPostInputDto();
     await postsTestHelper.createBlogPost(
       blog.id,
-      { ...dto, shortDescription: ''.repeat(5) },
+      { ...dto, shortDescription: ' '.repeat(5) },
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -166,7 +166,7 @@ describe('create post for blog', () => {
     const dto = postsTestHelper.createBlogPostInputDto();
     await postsTestHelper.createBlogPost(
       blog.id,
-      { ...dto, content: ''.repeat(5) },
+      { ...dto, content: ' '.repeat(5) },
       { status: HttpStatus.BAD_REQUEST },
     );
   });

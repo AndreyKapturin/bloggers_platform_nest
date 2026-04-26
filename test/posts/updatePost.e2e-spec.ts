@@ -109,7 +109,7 @@ describe('update post', () => {
     const dto = postsTestHelper.createInputDto(blog.id);
     await postsTestHelper.updatePost(
       post.id,
-      { ...dto, title: ''.repeat(5) },
+      { ...dto, title: ' '.repeat(5) },
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -152,7 +152,7 @@ describe('update post', () => {
     const dto = postsTestHelper.createInputDto(blog.id);
     await postsTestHelper.updatePost(
       post.id,
-      { ...dto, shortDescription: ''.repeat(5) },
+      { ...dto, shortDescription: ' '.repeat(5) },
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -195,7 +195,7 @@ describe('update post', () => {
     const dto = postsTestHelper.createInputDto(blog.id);
     await postsTestHelper.updatePost(
       post.id,
-      { ...dto, content: ''.repeat(5) },
+      { ...dto, content: ' '.repeat(5) },
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -236,7 +236,7 @@ describe('update post', () => {
     const dto = postsTestHelper.createInputDto(blog.id);
     await postsTestHelper.updatePost(
       post.id,
-      { ...dto, blogId: ''.repeat(5) },
+      { ...dto, blogId: ' '.repeat(5) },
       { status: HttpStatus.BAD_REQUEST },
     );
   });
