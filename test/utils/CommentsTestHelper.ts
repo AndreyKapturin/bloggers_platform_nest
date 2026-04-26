@@ -10,6 +10,17 @@ import { ResponseWithBody } from './generics';
 export class CommentsTestHelper {
   constructor(private app: INestApplication) {}
 
+  async deleteComment(
+    commentId: string,
+    accessToken: string,
+    options?: { status: HttpStatus },
+  ): Promise<Response> {
+    return await request(this.app.getHttpServer())
+      .delete(`/comments/${commentId}`)
+      .auth(accessToken, { type: 'bearer' })
+      .expect(options?.status ?? HttpStatus.NO_CONTENT);
+  }
+
   async updateComment(
     commentId: string,
     accessToken: string,
