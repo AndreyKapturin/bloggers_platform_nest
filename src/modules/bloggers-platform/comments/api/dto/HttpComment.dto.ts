@@ -1,16 +1,13 @@
-import { IsNotEmpty, IsString, Length } from 'class-validator';
-
-export const COMMENT_CONTENT_CONSTRAINTS = {
-  MIN_LENGTH: 20,
-  MAX_LENGTH: 300,
-};
+import { IsNotEmpty, Length } from 'class-validator';
+import { COMMENT_CONTENT_CONSTRAINTS } from '../../domain/comment.entity';
+import { IsStringWithTrim } from '../../../../../core/decorators/validation/is-trim-string.decorator';
 
 export class HttpCommentDto {
   @Length(
     COMMENT_CONTENT_CONSTRAINTS.MIN_LENGTH,
     COMMENT_CONTENT_CONSTRAINTS.MAX_LENGTH,
   )
-  @IsString()
+  @IsStringWithTrim()
   @IsNotEmpty()
   content!: string;
 }

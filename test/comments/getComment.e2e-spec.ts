@@ -9,6 +9,8 @@ import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 import { PostsTestHelper } from '../utils/PostsTestHelper';
 import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/ViewComment.dto';
+import { ViewUserDto } from '../../src/modules/user-accounts/users/api/dto/ViewUser.dto';
+import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
 
 describe('get comment by id', () => {
   let app: INestApplication;
@@ -20,7 +22,7 @@ describe('get comment by id', () => {
   let commentsTestHelper: CommentsTestHelper;
 
   let comment: ViewCommentDto;
-  let commentId: string;
+  let user: ViewUserDto;
   let accessToken: string;
 
   beforeAll(async () => {
@@ -38,13 +40,19 @@ describe('get comment by id', () => {
     const blog = await blogsTestHelper.createRandomBlog();
     const post = await postsTestHelper.createRandomPost(blog.id);
 
-    accessToken = await authTestHelper.createUserAndGetAccessToken();
+    const inputUser = usersTestHelper.createInputDto();
+    const createUserResponse = await usersTestHelper.createUser(inputUser);
+    user = createUserResponse.body;
+    const inputLogin: InputLoginDto = {
+      loginOrEmail: inputUser.login,
+      password: inputUser.password,
+    };
+    accessToken = await authTestHelper.loginAndGetAccessToken(inputLogin);
 
     comment = await commentsTestHelper.createRandomComment(
       post.id,
       accessToken,
     );
-    commentId = comment.id;
   });
 
   afterAll(async () => {
@@ -52,12 +60,17 @@ describe('get comment by id', () => {
   });
 
   it('should return view comment if comment exist', async () => {
-    const expectedComment = commentsTestHelper.createExpectedComment({
+    const expectedBody = commentsTestHelper.createExpectedComment({
       content: comment.content,
+      commentatorInfo: {
+        userId: user.id,
+        userLogin: user.login,
+      },
     });
-    const getCommentResponse =
-      await commentsTestHelper.getCommentById(commentId);
-    expect(getCommentResponse.body).toEqual(expectedComment);
+    const getCommentResponse = await commentsTestHelper.getCommentById(
+      comment.id,
+    );
+    expect(getCommentResponse.body).toEqual(expectedBody);
   });
 
   it(`should return NOT FOUND status if comment not exist`, async () => {

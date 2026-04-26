@@ -3,18 +3,44 @@ import request, { Response } from 'supertest';
 import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/ViewComment.dto';
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
 import { HttpCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/HttpComment.dto';
+import { CommentsQueryParamsDto } from '../../src/modules/bloggers-platform/comments/api/dto/CommentsQueryParams.dto';
 import { faker } from '@faker-js/faker';
 import { LIKE_STATUSES_REG_EXP } from './reg-exp';
+import { ResponseWithBody } from './generics';
 
 export class CommentsTestHelper {
   constructor(private app: INestApplication) {}
 
+  async deleteComment(
+    commentId: string,
+    accessToken: string,
+    options?: { status: HttpStatus },
+  ): Promise<Response> {
+    return await request(this.app.getHttpServer())
+      .delete(`/comments/${commentId}`)
+      .auth(accessToken, { type: 'bearer' })
+      .expect(options?.status ?? HttpStatus.NO_CONTENT);
+  }
+
+  async updateComment(
+    commentId: string,
+    accessToken: string,
+    dto: HttpCommentDto,
+    options?: { status: HttpStatus },
+  ): Promise<Response> {
+    return await request(this.app.getHttpServer())
+      .put(`/comments/${commentId}`)
+      .auth(accessToken, { type: 'bearer' })
+      .send(dto)
+      .expect(options?.status ?? HttpStatus.NO_CONTENT);
+  }
+
   async createComment(
     postId: string,
     accessToken: string,
-    dto: { content: string },
+    dto: HttpCommentDto,
     options?: { status: HttpStatus },
-  ): Promise<Response> {
+  ): Promise<ResponseWithBody<ViewCommentDto>> {
     return await request(this.app.getHttpServer())
       .post(`/posts/${postId}/comments`)
       .auth(accessToken, { type: 'bearer' })
@@ -49,7 +75,7 @@ export class CommentsTestHelper {
   async getCommentById(
     id: string,
     options?: { status?: HttpStatus; accessToken?: string },
-  ): Promise<Response> {
+  ): Promise<ResponseWithBody<ViewCommentDto>> {
     const getRequest = request(this.app.getHttpServer())
       .get(`/comments/${id}`)
       .expect(options?.status ?? HttpStatus.OK);
@@ -76,14 +102,22 @@ export class CommentsTestHelper {
 
   async getPostComments(
     postId: string,
-    options?: { status?: HttpStatus; accessToken?: string },
-  ): Promise<Response> {
+    options?: {
+      status?: HttpStatus;
+      accessToken?: string;
+      filter?: Partial<CommentsQueryParamsDto>;
+    },
+  ): Promise<ResponseWithBody<PaginatedView<ViewCommentDto>>> {
     const getRequest = request(this.app.getHttpServer())
       .get(`/posts/${postId}/comments`)
       .expect(options?.status ?? HttpStatus.OK);
 
     if (options?.accessToken) {
       getRequest.auth(options.accessToken, { type: 'bearer' });
+    }
+
+    if (options?.filter) {
+      getRequest.query(options.filter as any);
     }
 
     return getRequest;

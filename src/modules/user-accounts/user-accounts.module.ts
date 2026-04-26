@@ -1,4 +1,4 @@
-import { Injectable, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthController } from './auth/api/auth.controller';
 import { User, UserSchema } from './users/domain/user.entity';
@@ -17,8 +17,10 @@ import { BasicStrategy } from './auth/strategies/basic/Basic.strategy';
 import {
   JWT_AT_SECRET,
   JWT_AT_SERVICE,
+  JWT_AT_TTL,
   JWT_RT_SECRET,
   JWT_RT_SERVICE,
+  JWT_RT_TTL,
 } from './auth/strategies/jwt/jwt-config';
 
 @Module({
@@ -42,7 +44,7 @@ import {
       useFactory: () => {
         return new JwtService({
           secret: JWT_AT_SECRET,
-          signOptions: { expiresIn: '5m' },
+          signOptions: { expiresIn: JWT_AT_TTL },
         });
       },
     },
@@ -51,7 +53,7 @@ import {
       useFactory: () => {
         return new JwtService({
           secret: JWT_RT_SECRET,
-          signOptions: { expiresIn: '1d' },
+          signOptions: { expiresIn: JWT_RT_TTL },
         });
       },
     },

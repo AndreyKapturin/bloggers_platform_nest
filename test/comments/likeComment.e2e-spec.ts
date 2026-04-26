@@ -9,6 +9,12 @@ import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { LikeStatus } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
 import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 import { PostsTestHelper } from '../utils/PostsTestHelper';
+import { JwtService } from '@nestjs/jwt';
+import {
+  JWT_AT_SECRET,
+  JWT_AT_SERVICE,
+  JWT_AT_TTL,
+} from '../../src/modules/user-accounts/auth/strategies/jwt/jwt-config';
 
 describe('like comment', () => {
   let app: INestApplication;
@@ -18,6 +24,14 @@ describe('like comment', () => {
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
   let commentsTestHelper: CommentsTestHelper;
+
+  const jwtService = new JwtService({
+    secret: JWT_AT_SECRET,
+    signOptions: { expiresIn: JWT_AT_TTL },
+  });
+
+  const originalJwtSignAsync = jwtService.signAsync.bind(jwtService);
+  const jwtSignAsyncMock = jest.spyOn(jwtService, 'signAsync');
 
   const inputLike = { likeStatus: LikeStatus.Like };
   const inputDislike = { likeStatus: LikeStatus.Dislike };
@@ -29,7 +43,9 @@ describe('like comment', () => {
   let commentId: string;
 
   beforeAll(async () => {
-    app = await initApp();
+    app = await initApp((builder) => {
+      builder.overrideProvider(JWT_AT_SERVICE).useValue(jwtService);
+    });
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
@@ -76,6 +92,7 @@ describe('like comment', () => {
       commentId,
       { accessToken: user2AccessToken },
     );
+    expect(getForAnotherUserResponse.body.likesInfo.likesCount).toBe(1);
     expect(getForAnotherUserResponse.body.likesInfo.myStatus).toBe(
       LikeStatus.None,
     );
@@ -84,6 +101,7 @@ describe('like comment', () => {
   it(`myStatus should be ${LikeStatus.None} if get request was send from anonymous user`, async () => {
     const getForAnonymousUserResponse =
       await commentsTestHelper.getCommentById(commentId);
+    expect(getForAnonymousUserResponse.body.likesInfo.likesCount).toBe(1);
     expect(getForAnonymousUserResponse.body.likesInfo.myStatus).toBe(
       LikeStatus.None,
     );
@@ -121,7 +139,7 @@ describe('like comment', () => {
     expect(getAfterNoneResponse.body.likesInfo.dislikesCount).toBe(0);
   });
 
-  it(`shouldn't set like to comment. Return UNAUTHORIZED status if passed invalid access token`, async () => {
+  it(`shouldn't set like status to comment. Return UNAUTHORIZED status if passed invalid access token`, async () => {
     const invalidAccessToken = faker.internet.jwt();
     await commentsTestHelper.setLikeStatus(
       commentId,
@@ -131,7 +149,21 @@ describe('like comment', () => {
     );
   });
 
-  it(`shouldn't set wrong status to comment. Return BAD REQUEST status`, async () => {
+  it(`shouldn't set like status to comment. Return UNAUTHORIZED status if access token expired`, async () => {
+    jwtSignAsyncMock.mockImplementationOnce(async (payload, options) => {
+      return originalJwtSignAsync(payload, { ...options, expiresIn: '1s' });
+    });
+
+    const accessToken = await authTestHelper.createUserAndGetAccessToken();
+
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    await commentsTestHelper.setLikeStatus(commentId, inputLike, accessToken, {
+      status: HttpStatus.UNAUTHORIZED,
+    });
+  });
+
+  it(`shouldn't set wrong like status to comment. Return BAD REQUEST status`, async () => {
     await commentsTestHelper.setLikeStatus(
       commentId,
       inputWrongStatus,
@@ -140,7 +172,7 @@ describe('like comment', () => {
     );
   });
 
-  it(`shouldn't set like to comment. Return NOT FOUND status if comment not exist`, async () => {
+  it(`shouldn't set like status to comment. Return NOT FOUND status if comment not exist`, async () => {
     const notExistCommentId = faker.database.mongodbObjectId().toString();
 
     await commentsTestHelper.setLikeStatus(
