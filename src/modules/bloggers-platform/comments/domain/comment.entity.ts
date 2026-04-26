@@ -2,6 +2,11 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 import { DomainCreateCommentDto } from './dto/DomainCreateComment.dto';
 
+export const COMMENT_CONTENT_CONSTRAINTS = {
+  MIN_LENGTH: 20,
+  MAX_LENGTH: 300,
+};
+
 @Schema({ _id: false })
 class LikesInfo {
   @Prop({ type: Number, default: 0 })
@@ -22,7 +27,12 @@ class CommentatorInfo {
 
 @Schema({ timestamps: true })
 export class Comment {
-  @Prop({ type: String, required: true })
+  @Prop({
+    type: String,
+    required: true,
+    minLength: COMMENT_CONTENT_CONSTRAINTS.MIN_LENGTH,
+    maxLength: COMMENT_CONTENT_CONSTRAINTS.MAX_LENGTH,
+  })
   content!: string;
 
   @Prop({ type: String, required: true })
