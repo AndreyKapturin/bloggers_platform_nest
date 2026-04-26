@@ -3,6 +3,7 @@ import request, { Response } from 'supertest';
 import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/ViewComment.dto';
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
 import { HttpCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/HttpComment.dto';
+import { CommentsQueryParamsDto } from '../../src/modules/bloggers-platform/comments/api/dto/CommentsQueryParams.dto';
 import { faker } from '@faker-js/faker';
 import { LIKE_STATUSES_REG_EXP } from './reg-exp';
 import { ResponseWithBody } from './generics';
@@ -101,7 +102,11 @@ export class CommentsTestHelper {
 
   async getPostComments(
     postId: string,
-    options?: { status?: HttpStatus; accessToken?: string },
+    options?: {
+      status?: HttpStatus;
+      accessToken?: string;
+      filter?: Partial<CommentsQueryParamsDto>;
+    },
   ): Promise<ResponseWithBody<PaginatedView<ViewCommentDto>>> {
     const getRequest = request(this.app.getHttpServer())
       .get(`/posts/${postId}/comments`)
@@ -109,6 +114,10 @@ export class CommentsTestHelper {
 
     if (options?.accessToken) {
       getRequest.auth(options.accessToken, { type: 'bearer' });
+    }
+
+    if (options?.filter) {
+      getRequest.query(options.filter as any);
     }
 
     return getRequest;
