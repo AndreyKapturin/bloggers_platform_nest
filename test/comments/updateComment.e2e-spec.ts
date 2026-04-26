@@ -7,9 +7,16 @@ import { faker } from '@faker-js/faker';
 import { CommentsTestHelper } from '../utils/CommentsTestHelper';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/ViewComment.dto';
-import requset from 'supertest';
 import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 import { PostsTestHelper } from '../utils/PostsTestHelper';
+import { HttpCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/HttpComment.dto';
+import { COMMENT_CONTENT_CONSTRAINTS } from '../../src/modules/bloggers-platform/comments/domain/comment.entity';
+import { JwtService } from '@nestjs/jwt';
+import {
+  JWT_AT_SECRET,
+  JWT_AT_SERVICE,
+  JWT_AT_TTL,
+} from '../../src/modules/user-accounts/auth/strategies/jwt/jwt-config';
 
 describe('update comment', () => {
   let app: INestApplication;
@@ -19,15 +26,22 @@ describe('update comment', () => {
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
   let commentsTestHelper: CommentsTestHelper;
-
-  const newContent = 'Post 1 comment updated text';
-
   let accessToken: string;
   let accessToken2: string;
   let comment: ViewCommentDto;
 
+  const jwtService = new JwtService({
+    secret: JWT_AT_SECRET,
+    signOptions: { expiresIn: JWT_AT_TTL },
+  });
+
+  const originalJwtSignAsync = jwtService.signAsync.bind(jwtService);
+  const jwtSignAsyncMock = jest.spyOn(jwtService, 'signAsync');
+
   beforeAll(async () => {
-    app = await initApp();
+    app = await initApp((builder) => {
+      builder.overrideProvider(JWT_AT_SERVICE).useValue(jwtService);
+    });
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
@@ -54,12 +68,12 @@ describe('update comment', () => {
     await app.close();
   });
 
-  it('should update comment return NO CONTENT status if data is valid, comment exist, access token valid, comment belong to user', async () => {
-    await requset(app.getHttpServer())
-      .put(`/comments/${comment.id}`)
-      .auth(accessToken, { type: 'bearer' })
-      .send({ content: newContent })
-      .expect(HttpStatus.NO_CONTENT);
+  it('should update comment. Return NO CONTENT status if data is valid, comment exist, access token valid, comment belong to user', async () => {
+    const newContent = 'Post 1 comment updated text';
+
+    await commentsTestHelper.updateComment(comment.id, accessToken, {
+      content: newContent,
+    });
 
     const getAfterUpdateResponse = await commentsTestHelper.getCommentById(
       comment.id,
@@ -68,45 +82,86 @@ describe('update comment', () => {
     expect(getAfterUpdateResponse.body.content).toBe(newContent);
   });
 
-  it(`shouldn't update comment. Return UNAUTHORIZED status if passed invalid access token`, async () => {
+  it(`shouldn't update comment. Return BAD REQUSET status if content length less than min`, async () => {
+    await commentsTestHelper.updateComment(
+      comment.id,
+      accessToken,
+      { content: 'a'.repeat(COMMENT_CONTENT_CONSTRAINTS.MIN_LENGTH - 1) },
+      { status: HttpStatus.BAD_REQUEST },
+    );
+  });
+
+  it(`shouldn't update comment. Return BAD REQUSET status if content length great than max`, async () => {
+    await commentsTestHelper.updateComment(
+      comment.id,
+      accessToken,
+      { content: 'a'.repeat(COMMENT_CONTENT_CONSTRAINTS.MAX_LENGTH + 1) },
+      { status: HttpStatus.BAD_REQUEST },
+    );
+  });
+
+  it(`shouldn't update comment. Return BAD REQUSET status if content is a string of spaces`, async () => {
+    await commentsTestHelper.updateComment(
+      comment.id,
+      accessToken,
+      { content: ' '.repeat(10) },
+      { status: HttpStatus.BAD_REQUEST },
+    );
+  });
+
+  it(`shouldn't update comment. Return BAD REQUSET status if content not a string`, async () => {
+    await commentsTestHelper.updateComment(
+      comment.id,
+      accessToken,
+      { content: 10 } as unknown as HttpCommentDto,
+      { status: HttpStatus.BAD_REQUEST },
+    );
+  });
+
+  it(`shouldn't update comment. Return UNAUTHORIZED status if access token expired`, async () => {
+    jwtSignAsyncMock.mockImplementationOnce(async (payload, options) => {
+      return originalJwtSignAsync(payload, { ...options, expiresIn: '1s' });
+    });
+
+    const accessToken = await authTestHelper.createUserAndGetAccessToken();
+
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    await commentsTestHelper.updateComment(
+      comment.id,
+      accessToken,
+      { content: 'Normal length content more than 20 symbols' },
+      { status: HttpStatus.UNAUTHORIZED },
+    );
+  });
+
+  it(`shouldn't update comment. Return UNAUTHORIZED status if access token invalid`, async () => {
     const invalidAccessToken = faker.internet.jwt();
-    await requset(app.getHttpServer())
-      .put(`/comments/${comment.id}`)
-      .auth(invalidAccessToken, { type: 'bearer' })
-      .send({ content: newContent })
-      .expect(HttpStatus.UNAUTHORIZED);
-  });
-
-  it(`shouldn't update comment. Return BAD REQUEST status if data is invalid`, async () => {
-    const badContent = 'small content';
-    await requset(app.getHttpServer())
-      .put(`/comments/${comment.id}`)
-      .auth(accessToken, { type: 'bearer' })
-      .send({ content: badContent })
-      .expect(HttpStatus.BAD_REQUEST);
-
-    const getAfterUpdateResponse = await commentsTestHelper.getCommentById(
+    await commentsTestHelper.updateComment(
       comment.id,
+      invalidAccessToken,
+      { content: 'Normal length content more than 20 symbols' },
+      { status: HttpStatus.UNAUTHORIZED },
     );
-
-    expect(getAfterUpdateResponse.body.content).toBe(newContent);
   });
 
   it(`shouldn't update comment. Return FORBIDDEN status if comment not belong to user`, async () => {
-    await requset(app.getHttpServer())
-      .put(`/comments/${comment.id}`)
-      .auth(accessToken2, { type: 'bearer' })
-      .send({ content: newContent })
-      .expect(HttpStatus.FORBIDDEN);
+    await commentsTestHelper.updateComment(
+      comment.id,
+      accessToken2,
+      { content: 'Normal length content more than 20 symbols' },
+      { status: HttpStatus.FORBIDDEN },
+    );
   });
 
   it(`shouldn't update comment. Return NOF FOUND status if comment not exist`, async () => {
     const notExistCommentId = faker.database.mongodbObjectId().toString();
 
-    await requset(app.getHttpServer())
-      .put(`/comments/${notExistCommentId}`)
-      .auth(accessToken, { type: 'bearer' })
-      .send({ content: newContent })
-      .expect(HttpStatus.NOT_FOUND);
+    await commentsTestHelper.updateComment(
+      notExistCommentId,
+      accessToken,
+      { content: 'Normal length content more than 20 symbols' },
+      { status: HttpStatus.NOT_FOUND },
+    );
   });
 });
