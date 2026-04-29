@@ -9,7 +9,7 @@ import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 import { PostsTestHelper } from '../utils/PostsTestHelper';
 import { ViewUserDto } from '../../src/modules/user-accounts/users/api/dto/ViewUser.dto';
-import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
+import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpLogin.dto';
 import { COMMENT_CONTENT_CONSTRAINTS } from '../../src/modules/bloggers-platform/comments/domain/comment.entity';
 import { HttpCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/HttpComment.dto';
 import {
@@ -61,7 +61,7 @@ describe('create comment', () => {
     const inputUser = usersTestHelper.createInputDto();
     const createUserResponse = await usersTestHelper.createUser(inputUser);
     user = createUserResponse.body;
-    const inputLogin: InputLoginDto = {
+    const inputLogin: HttpLoginDto = {
       loginOrEmail: inputUser.login,
       password: inputUser.password,
     };

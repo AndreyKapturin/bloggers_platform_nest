@@ -5,6 +5,7 @@ import { initApp } from '../utils/initApp';
 import { fakeEmailService } from '../utils/mocks/fakeEmailService';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
+import { HttpConfirmationCodeDto } from '../../src/modules/user-accounts/auth/api/dto/HttpConfirmationCode.dto';
 
 describe('registration-confirmation', () => {
   let app: INestApplication;
@@ -37,23 +38,41 @@ describe('registration-confirmation', () => {
     const inputUser = usersTestHelper.createInputDto();
     await authTestHelper.registerUser(inputUser);
     const confirmationCode = mockSendConfirmationCode.mock.calls[0][1];
-    await authTestHelper.confirmRegistration(confirmationCode);
+    const codeDto: HttpConfirmationCodeDto = { code: confirmationCode };
+    await authTestHelper.confirmRegistration(codeDto);
   });
 
-  it('should return bad request if user already confirmed', async () => {
+  it('should return BAD REQUEST if user already confirmed', async () => {
     const inputUser = usersTestHelper.createInputDto();
     await authTestHelper.registerUser(inputUser);
     const confirmationCode = mockSendConfirmationCode.mock.calls[0][1];
 
-    await authTestHelper.confirmRegistration(confirmationCode);
+    const codeDto: HttpConfirmationCodeDto = { code: confirmationCode };
 
-    await authTestHelper.confirmRegistration(confirmationCode, {
+    await authTestHelper.confirmRegistration(codeDto);
+
+    await authTestHelper.confirmRegistration(codeDto, {
       status: HttpStatus.BAD_REQUEST,
     });
   });
 
-  it('should return bad request if confirmation code is incorrect', async () => {
-    await authTestHelper.confirmRegistration('incorrect code', {
+  it('should return BAD REQUEST if confirmation code is empty string', async () => {
+    const badCodeDto: HttpConfirmationCodeDto = { code: '' };
+    await authTestHelper.confirmRegistration(badCodeDto, {
+      status: HttpStatus.BAD_REQUEST,
+    });
+  });
+
+  it('should return BAD REQUEST if confirmation code is string of spaces', async () => {
+    const badCodeDto: HttpConfirmationCodeDto = { code: ' '.repeat(5) };
+    await authTestHelper.confirmRegistration(badCodeDto, {
+      status: HttpStatus.BAD_REQUEST,
+    });
+  });
+
+  it('should return BAD REQUEST if confirmation code does not belong to the user', async () => {
+    const badCodeDto: HttpConfirmationCodeDto = { code: crypto.randomUUID() };
+    await authTestHelper.confirmRegistration(badCodeDto, {
       status: HttpStatus.BAD_REQUEST,
     });
   });

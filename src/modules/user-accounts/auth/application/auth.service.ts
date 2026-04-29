@@ -9,7 +9,6 @@ import {
 import { UsersRepository } from '../../users/infrastructure/users.repository';
 import { CryptoService } from '../../../../services/CryptoService';
 import { DateUtils } from '../../../../utils/DateUtils';
-import { AccessTokenDto } from '../dto/AccessToken.view-dto';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from '../../../notification/email.service';
 import { UsersService } from '../../users/application/users.service';
@@ -17,7 +16,7 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
-import { InputNewPasswordDto } from '../dto/NewPassword.input-dto';
+import { HttpNewPasswordDto } from '../api/dto/HttpNewPassword.dto';
 import { JwtAccessTokenPayload, JwtRegreshTokenPayload } from '../types';
 import { JWT_AT_SERVICE, JWT_RT_SERVICE } from '../strategies/jwt/jwt-config';
 
@@ -39,8 +38,8 @@ export class AuthService {
     private emailService: EmailService,
   ) {}
 
-  async registration(inputCreateUserDto: HttpCreateUserDto): Promise<void> {
-    const userId = await this.usersService.createUser(inputCreateUserDto);
+  async registration(dto: HttpCreateUserDto): Promise<void> {
+    const userId = await this.usersService.createUser(dto);
     const userDocument = await this.usersRepository.findById(userId);
     this._setConfirmationCode(userDocument!);
     await this.usersRepository.save(userDocument!);
@@ -167,7 +166,7 @@ export class AuthService {
       .catch((error) => console.log('Send recovery code error: ', error));
   }
 
-  async updatePassword(newPasswordDto: InputNewPasswordDto): Promise<void> {
+  async updatePassword(newPasswordDto: HttpNewPasswordDto): Promise<void> {
     const { recoveryCode, newPassword } = newPasswordDto;
     const userDocument =
       await this.usersRepository.findByRecoveryCode(recoveryCode);

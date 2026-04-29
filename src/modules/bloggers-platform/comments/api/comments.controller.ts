@@ -10,8 +10,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { HttpCommentDto } from './dto/HttpComment.dto';
-import { ExtractUserFromRequest } from '../../../user-accounts/auth/decorators/extract-userId.decorator';
-import { UserInRequest } from '../../../user-accounts/auth/dto/UserInRequest.dto';
+import { ExtractUserFromRequest } from '../../../../core/decorators/extract-userId.decorator';
+import { UserInRequestDto } from '../../../../core/dto/UserInRequest.dto';
 import { UpdateCommentCommand } from '../application/useCases/update-comment.use-case';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { JwtAuthGuard } from '../../../user-accounts/auth/strategies/jwt/Jwt.guard';
@@ -20,7 +20,7 @@ import { HttpLikeStatusDto } from '../../dto/HttpLikeStatus.dto';
 import { LikeCommentCommand } from '../application/useCases/like-comment.use-case';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/strategies/jwt/JwtOptional.guard';
 import { GetCommentQuery } from '../application/queries/get-comment-by-id.query';
-import { OptionalUserFromRequest } from '../../../user-accounts/auth/decorators/optional-user-in-request.decorator';
+import { OptionalUserFromRequest } from '../../../../core/decorators/optional-user-in-request.decorator';
 
 @Controller('comments')
 export class CommentsController {
@@ -33,7 +33,7 @@ export class CommentsController {
   @UseGuards(JwtOptionalAuthGuard)
   async getById(
     @Param('id') id: string,
-    @OptionalUserFromRequest() user: UserInRequest | null,
+    @OptionalUserFromRequest() user: UserInRequestDto | null,
   ) {
     const query = new GetCommentQuery(id, user?.id ?? null);
     return this.queryBus.execute(query);
@@ -45,7 +45,7 @@ export class CommentsController {
   async updateComment(
     @Param('commentId') commentId: string,
     @Body() dto: HttpCommentDto,
-    @ExtractUserFromRequest() user: UserInRequest,
+    @ExtractUserFromRequest() user: UserInRequestDto,
   ) {
     const command = new UpdateCommentCommand(commentId, dto.content, user.id);
     await this.commandBus.execute(command);
@@ -57,7 +57,7 @@ export class CommentsController {
   async changeLikeStatus(
     @Param('commentId') commentId: string,
     @Body() dto: HttpLikeStatusDto,
-    @ExtractUserFromRequest() user: UserInRequest,
+    @ExtractUserFromRequest() user: UserInRequestDto,
   ) {
     const command = new LikeCommentCommand(commentId, dto.likeStatus, user.id);
     await this.commandBus.execute(command);
@@ -68,7 +68,7 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   async deleteComment(
     @Param('commentId') commentId: string,
-    @ExtractUserFromRequest() user: UserInRequest,
+    @ExtractUserFromRequest() user: UserInRequestDto,
   ) {
     const command = new DeleteCommentCommand(commentId, user.id);
     await this.commandBus.execute(command);

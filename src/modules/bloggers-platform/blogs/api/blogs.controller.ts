@@ -22,9 +22,9 @@ import { BlogPostDtoExtractor } from '../decorators/blog-post-dto-extractor.deco
 import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetPostsQuery } from '../../posts/application/queries/get-posts.query';
-import { OptionalUserFromRequest } from '../../../user-accounts/auth/decorators/optional-user-in-request.decorator';
+import { OptionalUserFromRequest } from '../../../../core/decorators/optional-user-in-request.decorator'; 
 import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/strategies/jwt/JwtOptional.guard';
-import { UserInRequest } from '../../../user-accounts/auth/dto/UserInRequest.dto';
+import { UserInRequestDto } from '../../../../core/dto/UserInRequest.dto';
 import { HttpCreateBlogDto } from './dto/HttpCreateBlog.dto';
 import { CreateBlogCommand } from '../application/useCases/create-blog.use-case';
 import { ViewBlogDto } from './dto/Blog.view-dto';
@@ -55,7 +55,7 @@ export class BlogsController {
   async getBlogPosts(
     @Param('id') blogId: string,
     @Query() postsQueryParamsDto: PostsQueryParamsDto,
-    @OptionalUserFromRequest() user: UserInRequest | null,
+    @OptionalUserFromRequest() user: UserInRequestDto | null,
   ): Promise<PaginatedView<ViewPostDto>> {
     const query = new GetPostsQuery(
       postsQueryParamsDto,

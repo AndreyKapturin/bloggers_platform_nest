@@ -24,10 +24,10 @@ import { JwtAuthGuard } from '../../../user-accounts/auth/strategies/jwt/Jwt.gua
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreateCommentCommand } from '../../comments/application/useCases/create-comment.use-case';
 import { HttpCommentDto } from '../../comments/api/dto/HttpComment.dto';
-import { ExtractUserFromRequest } from '../../../user-accounts/auth/decorators/extract-userId.decorator';
-import { UserInRequest } from '../../../user-accounts/auth/dto/UserInRequest.dto';
+import { ExtractUserFromRequest } from '../../../../core/decorators/extract-userId.decorator';
+import { UserInRequestDto } from '../../../../core/dto/UserInRequest.dto';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/strategies/jwt/JwtOptional.guard';
-import { OptionalUserFromRequest } from '../../../user-accounts/auth/decorators/optional-user-in-request.decorator';
+import { OptionalUserFromRequest } from '../../../../core/decorators/optional-user-in-request.decorator';
 import { GetPostCommentsQuery } from '../../comments/application/queries/get-comments-for-post.query';
 import { HttpLikeStatusDto } from '../../dto/HttpLikeStatus.dto';
 import { LikePostCommand } from '../application/useCases/like-post.use-case';
@@ -50,7 +50,7 @@ export class PostsController {
   @UseGuards(JwtOptionalAuthGuard)
   async getById(
     @Param('id') id: string,
-    @OptionalUserFromRequest() user: UserInRequest | null,
+    @OptionalUserFromRequest() user: UserInRequestDto | null,
   ): Promise<ViewPostDto> {
     const query = new GetPostQuery(id, user?.id ?? null);
     return this.queryBus.execute(query);
@@ -61,7 +61,7 @@ export class PostsController {
   async getPostComments(
     @Param('id') postId: string,
     @Query() queryParams: CommentsQueryParamsDto,
-    @OptionalUserFromRequest() user: UserInRequest | null,
+    @OptionalUserFromRequest() user: UserInRequestDto | null,
   ): Promise<PaginatedView<ViewCommentDto>> {
     const query = new GetPostCommentsQuery(
       postId,
@@ -76,7 +76,7 @@ export class PostsController {
   async createPostComment(
     @Param('postId') postId: string,
     @Body() dto: HttpCommentDto,
-    @ExtractUserFromRequest() user: UserInRequest,
+    @ExtractUserFromRequest() user: UserInRequestDto,
   ): Promise<ViewCommentDto> {
     const command = new CreateCommentCommand(postId, dto.content, user.id);
     const commentId = await this.commandBus.execute(command);
@@ -89,7 +89,7 @@ export class PostsController {
   async changeLikeStatus(
     @Param('postId') postId: string,
     @Body() dto: HttpLikeStatusDto,
-    @ExtractUserFromRequest() user: UserInRequest,
+    @ExtractUserFromRequest() user: UserInRequestDto,
   ): Promise<void> {
     const command = new LikePostCommand(user.id, postId, dto.likeStatus);
     await this.commandBus.execute(command);
@@ -99,7 +99,7 @@ export class PostsController {
   @UseGuards(JwtOptionalAuthGuard)
   async getPosts(
     @Query() queryParams: PostsQueryParamsDto,
-    @OptionalUserFromRequest() user: UserInRequest | null,
+    @OptionalUserFromRequest() user: UserInRequestDto | null,
   ): Promise<PaginatedView<ViewPostDto>> {
     const query = new GetPostsQuery(queryParams, user?.id ?? null);
     return this.queryBus.execute(query);

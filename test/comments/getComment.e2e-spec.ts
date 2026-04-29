@@ -10,7 +10,7 @@ import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 import { PostsTestHelper } from '../utils/PostsTestHelper';
 import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/ViewComment.dto';
 import { ViewUserDto } from '../../src/modules/user-accounts/users/api/dto/ViewUser.dto';
-import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
+import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpLogin.dto';
 
 describe('get comment by id', () => {
   let app: INestApplication;
@@ -43,7 +43,7 @@ describe('get comment by id', () => {
     const inputUser = usersTestHelper.createInputDto();
     const createUserResponse = await usersTestHelper.createUser(inputUser);
     user = createUserResponse.body;
-    const inputLogin: InputLoginDto = {
+    const inputLogin: HttpLoginDto = {
       loginOrEmail: inputUser.login,
       password: inputUser.password,
     };
