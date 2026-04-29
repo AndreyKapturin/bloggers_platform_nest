@@ -74,8 +74,8 @@ export class AuthController {
 
   @Post('password-recovery')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async recoveryPassword(@Body() inputEmailDto: HttpEmailDto): Promise<void> {
-    await this.authService.recoveryPassword(inputEmailDto.email);
+  async recoveryPassword(@Body() dto: HttpEmailDto): Promise<void> {
+    await this.authService.recoveryPassword(dto.email);
   }
 
   @Post('new-password')

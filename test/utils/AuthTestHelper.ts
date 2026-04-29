@@ -66,4 +66,14 @@ export class AuthTestHelper {
       .send(dto)
       .expect(options?.status ?? HttpStatus.NO_CONTENT);
   }
+
+  async recoveryPassword(
+    dto: HttpEmailDto,
+    options?: { status: HttpStatus },
+  ): Promise<Response> {
+    return await request(this.app.getHttpServer())
+      .post('/auth/password-recovery')
+      .send(dto)
+      .expect(options?.status ?? HttpStatus.NO_CONTENT);
+  }
 }
