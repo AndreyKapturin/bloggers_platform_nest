@@ -1,7 +1,7 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
 import request, { Response } from 'supertest';
 import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
-import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
+import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpLogin.dto';
 import { UsersTestHelper } from './UsersTestHelper';
 
 export class AuthTestHelper {
@@ -31,7 +31,7 @@ export class AuthTestHelper {
   }
 
   async loginUser(
-    dto: InputLoginDto,
+    dto: HttpLoginDto,
     options?: { status: HttpStatus },
   ): Promise<Response> {
     return await request(this.app.getHttpServer())
@@ -40,7 +40,7 @@ export class AuthTestHelper {
       .expect(options?.status ?? HttpStatus.OK);
   }
 
-  async loginAndGetAccessToken(dto: InputLoginDto): Promise<string> {
+  async loginAndGetAccessToken(dto: HttpLoginDto): Promise<string> {
     const loginResponse = await this.loginUser(dto);
     return loginResponse.body.accessToken;
   }

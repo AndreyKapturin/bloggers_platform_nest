@@ -3,13 +3,13 @@ import request, { Response } from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
+import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpLogin.dto';
 import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 
 const loginUser = async (
   app: INestApplication,
-  inputLoginDto: InputLoginDto,
+  inputLoginDto: HttpLoginDto,
 ): Promise<Response> => {
   return request(app.getHttpServer()).post('/auth/login').send(inputLoginDto);
 };
@@ -25,7 +25,7 @@ describe('get me', () => {
     password: 'strong_password',
   };
 
-  const inputLogin: InputLoginDto = {
+  const inputLogin: HttpLoginDto = {
     loginOrEmail: inputUser.login,
     password: inputUser.password,
   };

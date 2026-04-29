@@ -5,6 +5,7 @@ import { initApp } from '../utils/initApp';
 import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
+import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpLogin.dto';
 
 describe('login', () => {
   let app: INestApplication;
@@ -61,21 +62,71 @@ describe('login', () => {
     });
   });
 
-  it(`shouldn't login user if password is wrong`, async () => {
-    const loginViaLogin = {
-      loginOrEmail: inputUser.email,
-      password: 'wrong password',
-    };
-
-    await authTestHelper.loginUser(loginViaLogin, {
-      status: HttpStatus.UNAUTHORIZED,
+  it.each([
+    {
+      testDesc: 'loginOrEmail is empty string',
+      inputLogin: {
+        loginOrEmail: '',
+        password: 'strong_password',
+      },
+    },
+    {
+      testDesc: 'loginOrEmail is string of spaces',
+      inputLogin: {
+        loginOrEmail: ' '.repeat(5),
+        password: 'strong_password',
+      },
+    },
+    {
+      testDesc: 'loginOrEmail is not string',
+      inputLogin: {
+        loginOrEmail: 10,
+        password: 'strong_password',
+      },
+    },
+    {
+      testDesc: 'loginOrEmail is not passed',
+      inputLogin: {
+        password: 'strong_password',
+      },
+    },
+    {
+      testDesc: 'password is empty string',
+      inputLogin: {
+        login: 'User_03',
+        password: '',
+      },
+    },
+    {
+      testDesc: 'password is string of spaces',
+      inputLogin: {
+        login: 'User_03',
+        password: ' '.repeat(5),
+      },
+    },
+    {
+      testDesc: 'password is not string',
+      inputLogin: {
+        login: 'User_03',
+        password: 1223456,
+      },
+    },
+    {
+      testDesc: 'password is not passed',
+      inputLogin: {
+        login: 'User_03',
+      },
+    },
+  ])(`shouldn't login user if $testDesc`, async ({ inputLogin }) => {
+    await authTestHelper.loginUser(inputLogin as unknown as HttpLoginDto, {
+      status: HttpStatus.BAD_REQUEST,
     });
   });
 
   it(`shouldn't login user if user not exist`, async () => {
     const notExistLogin = {
       loginOrEmail: 'not_exist',
-      password: 'wrong password',
+      password: 'strong_password123',
     };
 
     await authTestHelper.loginUser(notExistLogin, {

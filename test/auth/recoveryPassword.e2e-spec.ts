@@ -6,7 +6,7 @@ import { initApp } from '../utils/initApp';
 import { fakeEmailService } from '../utils/mocks/fakeEmailService';
 import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 import { InputNewPasswordDto } from '../../src/modules/user-accounts/auth/dto/NewPassword.input-dto';
-import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
+import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpLogin.dto';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 
 describe('recovery password', () => {
@@ -60,7 +60,7 @@ describe('recovery password', () => {
       .send(inputNewPassword)
       .expect(HttpStatus.NO_CONTENT);
 
-    const inputLoginViaOldPassword: InputLoginDto = {
+    const inputLoginViaOldPassword: HttpLoginDto = {
       loginOrEmail: inputUser.login,
       password: inputUser.password,
     };
@@ -69,7 +69,7 @@ describe('recovery password', () => {
       status: HttpStatus.UNAUTHORIZED,
     });
 
-    const inputLoginViaNewPassword: InputLoginDto = {
+    const inputLoginViaNewPassword: HttpLoginDto = {
       loginOrEmail: inputUser.login,
       password: inputNewPassword.newPassword,
     };
