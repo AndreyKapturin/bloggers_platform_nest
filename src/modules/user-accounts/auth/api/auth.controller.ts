@@ -14,7 +14,7 @@ import { LocalAuthGuard } from '../strategies/local/Local.guard';
 import { ExtractUserFromRequest } from '../decorators/extract-userId.decorator';
 import { AccessTokenDto } from '../dto/AccessToken.view-dto';
 import { UserInRequest } from '../dto/UserInRequest.dto';
-import { InputEmailDto } from '../dto/Email.input-dto';
+import { HttpEmailDto } from './dto/HttpEmail.dto';
 import { HttpConfirmationCodeDto } from './dto/HttpConfirmationCode.dto';
 import { InputNewPasswordDto } from '../dto/NewPassword.input-dto';
 import { ViewMeDto } from '../../users/api/dto/ViewMe.dto';
@@ -59,7 +59,7 @@ export class AuthController {
   @Post('registration-email-resending')
   @HttpCode(HttpStatus.NO_CONTENT)
   async resendConfirmationEmail(
-    @Body() inputEmailDto: InputEmailDto,
+    @Body() inputEmailDto: HttpEmailDto,
   ): Promise<void> {
     await this.authService.resendConfirmationEmail(inputEmailDto.email);
   }
@@ -74,7 +74,7 @@ export class AuthController {
 
   @Post('password-recovery')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async recoveryPassword(@Body() inputEmailDto: InputEmailDto): Promise<void> {
+  async recoveryPassword(@Body() inputEmailDto: HttpEmailDto): Promise<void> {
     await this.authService.recoveryPassword(inputEmailDto.email);
   }
 

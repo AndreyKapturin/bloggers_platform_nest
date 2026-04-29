@@ -3,6 +3,8 @@ import request, { Response } from 'supertest';
 import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
 import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpLogin.dto';
 import { UsersTestHelper } from './UsersTestHelper';
+import { HttpEmailDto } from '../../src/modules/user-accounts/auth/api/dto/HttpEmail.dto';
+import { HttpConfirmationCodeDto } from '../../src/modules/user-accounts/auth/api/dto/HttpConfirmationCode.dto';
 
 export class AuthTestHelper {
   constructor(
@@ -21,12 +23,12 @@ export class AuthTestHelper {
   }
 
   async confirmRegistration(
-    code: string,
+    dto: HttpConfirmationCodeDto,
     options?: { status: HttpStatus },
   ): Promise<Response> {
     return await request(this.app.getHttpServer())
       .post('/auth/registration-confirmation')
-      .send({ code })
+      .send(dto)
       .expect(options?.status ?? HttpStatus.NO_CONTENT);
   }
 
@@ -53,5 +55,15 @@ export class AuthTestHelper {
       password: inputUser.password,
     });
     return accessToken;
+  }
+
+  async resendConfirmationCode(
+    dto: HttpEmailDto,
+    options?: { status: HttpStatus },
+  ): Promise<Response> {
+    return request(this.app.getHttpServer())
+      .post('/auth/registration-email-resending')
+      .send(dto)
+      .expect(options?.status ?? HttpStatus.NO_CONTENT);
   }
 }

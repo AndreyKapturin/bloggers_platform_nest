@@ -9,7 +9,6 @@ import {
 import { UsersRepository } from '../../users/infrastructure/users.repository';
 import { CryptoService } from '../../../../services/CryptoService';
 import { DateUtils } from '../../../../utils/DateUtils';
-import { AccessTokenDto } from '../dto/AccessToken.view-dto';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from '../../../notification/email.service';
 import { UsersService } from '../../users/application/users.service';
