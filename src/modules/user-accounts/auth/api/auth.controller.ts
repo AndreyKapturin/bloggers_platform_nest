@@ -16,7 +16,7 @@ import { AccessTokenDto } from '../dto/AccessToken.view-dto';
 import { UserInRequest } from '../dto/UserInRequest.dto';
 import { HttpEmailDto } from './dto/HttpEmail.dto';
 import { HttpConfirmationCodeDto } from './dto/HttpConfirmationCode.dto';
-import { InputNewPasswordDto } from '../dto/NewPassword.input-dto';
+import { HttpNewPasswordDto } from './dto/HttpNewPassword.dto';
 import { ViewMeDto } from '../../users/api/dto/ViewMe.dto';
 import { JwtAuthGuard } from '../strategies/jwt/Jwt.guard';
 import { UsersQueryRepository } from '../../users/infrastructure/users.query-repository';
@@ -80,9 +80,7 @@ export class AuthController {
 
   @Post('new-password')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async updatePassword(
-    @Body() newPasswordDto: InputNewPasswordDto,
-  ): Promise<void> {
-    await this.authService.updatePassword(newPasswordDto);
+  async updatePassword(@Body() dto: HttpNewPasswordDto): Promise<void> {
+    await this.authService.updatePassword(dto);
   }
 }

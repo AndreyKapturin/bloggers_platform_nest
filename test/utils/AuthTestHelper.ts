@@ -5,6 +5,7 @@ import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpL
 import { UsersTestHelper } from './UsersTestHelper';
 import { HttpEmailDto } from '../../src/modules/user-accounts/auth/api/dto/HttpEmail.dto';
 import { HttpConfirmationCodeDto } from '../../src/modules/user-accounts/auth/api/dto/HttpConfirmationCode.dto';
+import { HttpNewPasswordDto } from '../../src/modules/user-accounts/auth/api/dto/HttpNewPassword.dto';
 
 export class AuthTestHelper {
   constructor(
@@ -73,6 +74,16 @@ export class AuthTestHelper {
   ): Promise<Response> {
     return await request(this.app.getHttpServer())
       .post('/auth/password-recovery')
+      .send(dto)
+      .expect(options?.status ?? HttpStatus.NO_CONTENT);
+  }
+
+  async updatePassword(
+    dto: HttpNewPasswordDto,
+    options?: { status: HttpStatus },
+  ): Promise<Response> {
+    return await request(this.app.getHttpServer())
+      .post('/auth/new-password')
       .send(dto)
       .expect(options?.status ?? HttpStatus.NO_CONTENT);
   }

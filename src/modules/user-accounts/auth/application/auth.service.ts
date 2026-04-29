@@ -16,7 +16,7 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
-import { InputNewPasswordDto } from '../dto/NewPassword.input-dto';
+import { HttpNewPasswordDto } from '../api/dto/HttpNewPassword.dto';
 import { JwtAccessTokenPayload, JwtRegreshTokenPayload } from '../types';
 import { JWT_AT_SERVICE, JWT_RT_SERVICE } from '../strategies/jwt/jwt-config';
 
@@ -166,7 +166,7 @@ export class AuthService {
       .catch((error) => console.log('Send recovery code error: ', error));
   }
 
-  async updatePassword(newPasswordDto: InputNewPasswordDto): Promise<void> {
+  async updatePassword(newPasswordDto: HttpNewPasswordDto): Promise<void> {
     const { recoveryCode, newPassword } = newPasswordDto;
     const userDocument =
       await this.usersRepository.findByRecoveryCode(recoveryCode);
