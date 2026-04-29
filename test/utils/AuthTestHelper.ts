@@ -6,12 +6,29 @@ import { UsersTestHelper } from './UsersTestHelper';
 import { HttpEmailDto } from '../../src/modules/user-accounts/auth/api/dto/HttpEmail.dto';
 import { HttpConfirmationCodeDto } from '../../src/modules/user-accounts/auth/api/dto/HttpConfirmationCode.dto';
 import { HttpNewPasswordDto } from '../../src/modules/user-accounts/auth/api/dto/HttpNewPassword.dto';
+import { ViewMeDto } from '../../src/modules/user-accounts/users/api/dto/ViewMe.dto';
+import { ResponseWithBody } from './generics';
 
 export class AuthTestHelper {
   constructor(
     private app: INestApplication,
     private usersTestHelper: UsersTestHelper,
   ) {}
+
+  async getMe<T = ViewMeDto>(options?: {
+    status?: HttpStatus;
+    accessToken?: string;
+  }): Promise<ResponseWithBody<T>> {
+    const getMeRequest = request(this.app.getHttpServer())
+      .get('/auth/me')
+      .expect(options?.status ?? HttpStatus.OK);
+
+    if (options?.accessToken) {
+      getMeRequest.auth(options.accessToken, { type: 'bearer' });
+    }
+
+    return getMeRequest;
+  }
 
   async registerUser(
     inputCreateUserDto: HttpCreateUserDto,
