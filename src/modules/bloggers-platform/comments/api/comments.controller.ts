@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { HttpCommentDto } from './dto/HttpComment.dto';
-import { ExtractUserFromRequest } from '../../../user-accounts/auth/decorators/extract-userId.decorator';
+import { ExtractUserFromRequest } from '../../../../core/decorators/extract-userId.decorator';
 import { UserInRequestDto } from '../../../../core/dto/UserInRequest.dto';
 import { UpdateCommentCommand } from '../application/useCases/update-comment.use-case';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -20,7 +20,7 @@ import { HttpLikeStatusDto } from '../../dto/HttpLikeStatus.dto';
 import { LikeCommentCommand } from '../application/useCases/like-comment.use-case';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/strategies/jwt/JwtOptional.guard';
 import { GetCommentQuery } from '../application/queries/get-comment-by-id.query';
-import { OptionalUserFromRequest } from '../../../user-accounts/auth/decorators/optional-user-in-request.decorator';
+import { OptionalUserFromRequest } from '../../../../core/decorators/optional-user-in-request.decorator';
 
 @Controller('comments')
 export class CommentsController {

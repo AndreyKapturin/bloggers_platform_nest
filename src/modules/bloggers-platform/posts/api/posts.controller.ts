@@ -24,10 +24,10 @@ import { JwtAuthGuard } from '../../../user-accounts/auth/strategies/jwt/Jwt.gua
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreateCommentCommand } from '../../comments/application/useCases/create-comment.use-case';
 import { HttpCommentDto } from '../../comments/api/dto/HttpComment.dto';
-import { ExtractUserFromRequest } from '../../../user-accounts/auth/decorators/extract-userId.decorator';
+import { ExtractUserFromRequest } from '../../../../core/decorators/extract-userId.decorator';
 import { UserInRequestDto } from '../../../../core/dto/UserInRequest.dto';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/strategies/jwt/JwtOptional.guard';
-import { OptionalUserFromRequest } from '../../../user-accounts/auth/decorators/optional-user-in-request.decorator';
+import { OptionalUserFromRequest } from '../../../../core/decorators/optional-user-in-request.decorator';
 import { GetPostCommentsQuery } from '../../comments/application/queries/get-comments-for-post.query';
 import { HttpLikeStatusDto } from '../../dto/HttpLikeStatus.dto';
 import { LikePostCommand } from '../application/useCases/like-post.use-case';

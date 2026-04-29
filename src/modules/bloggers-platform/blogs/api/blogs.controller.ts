@@ -22,7 +22,7 @@ import { BlogPostDtoExtractor } from '../decorators/blog-post-dto-extractor.deco
 import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetPostsQuery } from '../../posts/application/queries/get-posts.query';
-import { OptionalUserFromRequest } from '../../../user-accounts/auth/decorators/optional-user-in-request.decorator';
+import { OptionalUserFromRequest } from '../../../../core/decorators/optional-user-in-request.decorator'; 
 import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/strategies/jwt/JwtOptional.guard';
 import { UserInRequestDto } from '../../../../core/dto/UserInRequest.dto';
 import { HttpCreateBlogDto } from './dto/HttpCreateBlog.dto';
