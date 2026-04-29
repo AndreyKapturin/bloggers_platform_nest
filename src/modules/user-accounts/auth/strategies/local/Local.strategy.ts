@@ -6,7 +6,7 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../../core/exceptions/DomainException';
-import { UserInRequest } from '../../dto/UserInRequest.dto';
+import { UserInRequestDto } from '../../../../../core/dto/UserInRequest.dto';
 import { Request } from 'express';
 import { HttpLoginDto } from '../../api/dto/HttpLogin.dto';
 import { validateSync } from 'class-validator';
@@ -38,7 +38,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   async validate(
     loginOrEmail: string,
     password: string,
-  ): Promise<UserInRequest | null> {
+  ): Promise<UserInRequestDto | null> {
     const userId = await this.authService.validateUser(loginOrEmail, password);
 
     if (!userId) {
@@ -54,6 +54,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       );
     }
 
-    return new UserInRequest(userId);
+    return new UserInRequestDto(userId);
   }
 }

@@ -13,7 +13,7 @@ import { AuthService } from '../application/auth.service';
 import { LocalAuthGuard } from '../strategies/local/Local.guard';
 import { ExtractUserFromRequest } from '../decorators/extract-userId.decorator';
 import { AccessTokenDto } from '../dto/AccessToken.view-dto';
-import { UserInRequest } from '../dto/UserInRequest.dto';
+import { UserInRequestDto } from '../../../../core/dto/UserInRequest.dto';
 import { HttpEmailDto } from './dto/HttpEmail.dto';
 import { HttpConfirmationCodeDto } from './dto/HttpConfirmationCode.dto';
 import { HttpNewPasswordDto } from './dto/HttpNewPassword.dto';
@@ -31,7 +31,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async me(@ExtractUserFromRequest() user: UserInRequest): Promise<ViewMeDto> {
+  async me(@ExtractUserFromRequest() user: UserInRequestDto): Promise<ViewMeDto> {
     return this.usersQueryRepository.getMe(user.id);
   }
 
@@ -46,7 +46,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   async login(
     @Res({ passthrough: true }) response: Response<AccessTokenDto>,
-    @ExtractUserFromRequest() user: UserInRequest,
+    @ExtractUserFromRequest() user: UserInRequestDto,
   ): Promise<AccessTokenDto> {
     const tokensPair = await this.authService.login(user.id);
     response.cookie('refreshToken', tokensPair.refreshToken, {

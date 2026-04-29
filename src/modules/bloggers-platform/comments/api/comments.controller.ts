@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { HttpCommentDto } from './dto/HttpComment.dto';
 import { ExtractUserFromRequest } from '../../../user-accounts/auth/decorators/extract-userId.decorator';
-import { UserInRequest } from '../../../user-accounts/auth/dto/UserInRequest.dto';
+import { UserInRequestDto } from '../../../../core/dto/UserInRequest.dto';
 import { UpdateCommentCommand } from '../application/useCases/update-comment.use-case';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { JwtAuthGuard } from '../../../user-accounts/auth/strategies/jwt/Jwt.guard';
@@ -33,7 +33,7 @@ export class CommentsController {
   @UseGuards(JwtOptionalAuthGuard)
   async getById(
     @Param('id') id: string,
-    @OptionalUserFromRequest() user: UserInRequest | null,
+    @OptionalUserFromRequest() user: UserInRequestDto | null,
   ) {
     const query = new GetCommentQuery(id, user?.id ?? null);
     return this.queryBus.execute(query);
@@ -45,7 +45,7 @@ export class CommentsController {
   async updateComment(
     @Param('commentId') commentId: string,
     @Body() dto: HttpCommentDto,
-    @ExtractUserFromRequest() user: UserInRequest,
+    @ExtractUserFromRequest() user: UserInRequestDto,
   ) {
     const command = new UpdateCommentCommand(commentId, dto.content, user.id);
     await this.commandBus.execute(command);
@@ -57,7 +57,7 @@ export class CommentsController {
   async changeLikeStatus(
     @Param('commentId') commentId: string,
     @Body() dto: HttpLikeStatusDto,
-    @ExtractUserFromRequest() user: UserInRequest,
+    @ExtractUserFromRequest() user: UserInRequestDto,
   ) {
     const command = new LikeCommentCommand(commentId, dto.likeStatus, user.id);
     await this.commandBus.execute(command);
@@ -68,7 +68,7 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   async deleteComment(
     @Param('commentId') commentId: string,
-    @ExtractUserFromRequest() user: UserInRequest,
+    @ExtractUserFromRequest() user: UserInRequestDto,
   ) {
     const command = new DeleteCommentCommand(commentId, user.id);
     await this.commandBus.execute(command);

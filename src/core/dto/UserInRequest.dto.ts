@@ -1,3 +1,3 @@
-export class UserInRequest {
+export class UserInRequestDto {
   constructor(public id: string) {}
 }

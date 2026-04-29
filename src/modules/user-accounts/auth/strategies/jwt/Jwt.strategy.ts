@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { UserInRequest } from '../../dto/UserInRequest.dto';
+import { UserInRequestDto } from '../../../../../core/dto/UserInRequest.dto';
 import { JwtAccessTokenPayload } from '../../types';
 import { JWT_AT_SECRET } from './jwt-config';
 
@@ -15,7 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtAccessTokenPayload): Promise<UserInRequest> {
+  async validate(payload: JwtAccessTokenPayload): Promise<UserInRequestDto> {
     return { id: payload.userId };
   }
 }
