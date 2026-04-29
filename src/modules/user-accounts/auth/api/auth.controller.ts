@@ -15,7 +15,7 @@ import { ExtractUserFromRequest } from '../decorators/extract-userId.decorator';
 import { AccessTokenDto } from '../dto/AccessToken.view-dto';
 import { UserInRequest } from '../dto/UserInRequest.dto';
 import { InputEmailDto } from '../dto/Email.input-dto';
-import { ConfirmationCodeDto } from '../dto/ConfirmationCode.input-dto';
+import { HttpConfirmationCodeDto } from './dto/HttpConfirmationCode.dto';
 import { InputNewPasswordDto } from '../dto/NewPassword.input-dto';
 import { ViewMeDto } from '../../users/api/dto/ViewMe.dto';
 import { JwtAuthGuard } from '../strategies/jwt/Jwt.guard';
@@ -37,9 +37,7 @@ export class AuthController {
 
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async registration(
-    @Body() dto: HttpCreateUserDto,
-  ): Promise<void> {
+  async registration(@Body() dto: HttpCreateUserDto): Promise<void> {
     await this.authService.registration(dto);
   }
 
@@ -68,7 +66,9 @@ export class AuthController {
 
   @Post('registration-confirmation')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async confirmRegistration(@Body() dto: ConfirmationCodeDto): Promise<void> {
+  async confirmRegistration(
+    @Body() dto: HttpConfirmationCodeDto,
+  ): Promise<void> {
     await this.authService.confirmRegistration(dto.code);
   }
 
