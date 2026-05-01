@@ -10,6 +10,8 @@ import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
 import { HttpEmailDto } from '../../src/modules/user-accounts/auth/api/dto/HttpEmail.dto';
 import { USER_CONSTRAINTS } from '../../src/modules/user-accounts/users/domain/user.entity';
+import { MockThrottlerToggle } from '../utils/MockThrottlerToggle';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 describe('new password', () => {
   let app: INestApplication;
@@ -17,6 +19,7 @@ describe('new password', () => {
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
   let mockSendRecoveryCode: jest.SpyInstance;
+  let mockThrottlerToggle: MockThrottlerToggle;
 
   let inputUser: HttpCreateUserDto;
   let emailDto: HttpEmailDto;
@@ -36,6 +39,10 @@ describe('new password', () => {
     inputUser = usersTestHelper.createInputDto();
     await authTestHelper.registerUser(inputUser);
     emailDto = { email: inputUser.email };
+
+    const throttlerGuard = app.get(ThrottlerGuard);
+    mockThrottlerToggle = new MockThrottlerToggle(throttlerGuard, jest);
+    mockThrottlerToggle.deactivateThrottler();
   });
 
   afterAll(async () => {
@@ -188,5 +195,27 @@ describe('new password', () => {
     await authTestHelper.updatePassword(badNewPasswordDto, {
       status: HttpStatus.BAD_REQUEST,
     });
+  });
+
+  it('should return TO MANY REQUESTS', async () => {
+    const badNewPasswordDto: HttpNewPasswordDto = {
+      newPassword: stubNewPussword,
+      recoveryCode: ' '.repeat(5),
+    };
+    const requestCount = 5;
+
+    mockThrottlerToggle.activateThrottler();
+
+    for (let i = 0; i < requestCount; i++) {
+      await authTestHelper.updatePassword(badNewPasswordDto, {
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    await authTestHelper.updatePassword(badNewPasswordDto, {
+      status: HttpStatus.TOO_MANY_REQUESTS,
+    });
+
+    mockThrottlerToggle.deactivateThrottler();
   });
 });

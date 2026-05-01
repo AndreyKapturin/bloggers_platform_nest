@@ -6,6 +6,8 @@ import { fakeEmailService } from '../utils/mocks/fakeEmailService';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
 import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { MockThrottlerToggle } from '../utils/MockThrottlerToggle';
 
 describe('registration', () => {
   let app: INestApplication;
@@ -14,14 +16,26 @@ describe('registration', () => {
 
   let inputUser: HttpCreateUserDto;
 
+  let mockThrottlerToggle: MockThrottlerToggle;
+
   beforeAll(async () => {
     app = await initApp();
+
+    const throttlerGuard = app.get(ThrottlerGuard);
+    mockThrottlerToggle = new MockThrottlerToggle(throttlerGuard, jest);
+    mockThrottlerToggle.deactivateThrottler();
+
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
+
     usersTestHelper = new UsersTestHelper(app);
     authTestHelper = new AuthTestHelper(app, usersTestHelper);
     inputUser = usersTestHelper.createInputDto();
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   it('should register user if data is correct', async () => {
@@ -193,7 +207,21 @@ describe('registration', () => {
     );
   });
 
-  afterAll(async () => {
-    await app.close();
+  //TODO - move limit and ttl to env or config
+
+  it('should return TO MANY REQUESTS', async () => {
+    mockThrottlerToggle.activateThrottler();
+    const requestCount = 5;
+
+    for (let i = 0; i < requestCount; i++) {
+      const inputUserDto = usersTestHelper.createInputDto();
+      await authTestHelper.registerUser(inputUserDto);
+    }
+
+    const inputUserDto = usersTestHelper.createInputDto();
+    await authTestHelper.registerUser(inputUserDto, {
+      status: HttpStatus.TOO_MANY_REQUESTS,
+    });
+    mockThrottlerToggle.deactivateThrottler();
   });
 });

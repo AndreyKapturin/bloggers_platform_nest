@@ -6,12 +6,15 @@ import { fakeEmailService } from '../utils/mocks/fakeEmailService';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
 import { HttpConfirmationCodeDto } from '../../src/modules/user-accounts/auth/api/dto/HttpConfirmationCode.dto';
+import { MockThrottlerToggle } from '../utils/MockThrottlerToggle';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 describe('registration-confirmation', () => {
   let app: INestApplication;
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
   let mockSendConfirmationCode: jest.SpyInstance;
+  let mockThrottlerToggle: MockThrottlerToggle;
 
   beforeAll(async () => {
     app = await initApp();
@@ -21,6 +24,10 @@ describe('registration-confirmation', () => {
 
     usersTestHelper = new UsersTestHelper(app);
     authTestHelper = new AuthTestHelper(app, usersTestHelper);
+
+    const throttlerGuard = app.get(ThrottlerGuard);
+    mockThrottlerToggle = new MockThrottlerToggle(throttlerGuard, jest);
+    mockThrottlerToggle.deactivateThrottler();
   });
 
   beforeEach(() => {
@@ -75,6 +82,25 @@ describe('registration-confirmation', () => {
     await authTestHelper.confirmRegistration(badCodeDto, {
       status: HttpStatus.BAD_REQUEST,
     });
+  });
+
+  it('should return TO MANY REQUESTS', async () => {
+    mockThrottlerToggle.activateThrottler();
+
+    const requestCount = 5;
+    const badCodeDto: HttpConfirmationCodeDto = { code: '' };
+
+    for (let i = 0; i < requestCount; i++) {
+      await authTestHelper.confirmRegistration(badCodeDto, {
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    await authTestHelper.confirmRegistration(badCodeDto, {
+      status: HttpStatus.TOO_MANY_REQUESTS,
+    });
+
+    mockThrottlerToggle.deactivateThrottler();
   });
 
   afterAll(async () => {

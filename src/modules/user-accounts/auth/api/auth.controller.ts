@@ -21,7 +21,9 @@ import { ViewMeDto } from '../../users/api/dto/ViewMe.dto';
 import { JwtAuthGuard } from '../strategies/jwt/Jwt.guard';
 import { UsersQueryRepository } from '../../users/infrastructure/users.query-repository';
 import { type Response } from 'express';
+import { SkipThrottle, ThrottlerGuard } from '@nestjs/throttler';
 
+@UseGuards(ThrottlerGuard)
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -30,8 +32,11 @@ export class AuthController {
   ) {}
 
   @Get('me')
+  @SkipThrottle()
   @UseGuards(JwtAuthGuard)
-  async me(@ExtractUserFromRequest() user: UserInRequestDto): Promise<ViewMeDto> {
+  async me(
+    @ExtractUserFromRequest() user: UserInRequestDto,
+  ): Promise<ViewMeDto> {
     return this.usersQueryRepository.getMe(user.id);
   }
 
@@ -44,6 +49,7 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
+  @SkipThrottle()
   async login(
     @Res({ passthrough: true }) response: Response<AccessTokenDto>,
     @ExtractUserFromRequest() user: UserInRequestDto,

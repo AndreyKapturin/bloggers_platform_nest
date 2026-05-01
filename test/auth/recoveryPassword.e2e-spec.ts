@@ -7,6 +7,8 @@ import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
 import { HttpEmailDto } from '../../src/modules/user-accounts/auth/api/dto/HttpEmail.dto';
+import { MockThrottlerToggle } from '../utils/MockThrottlerToggle';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 describe('recovery password', () => {
   let app: INestApplication;
@@ -14,6 +16,7 @@ describe('recovery password', () => {
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
   let mockSendRecoveryCode: jest.SpyInstance;
+  let mockThrottlerToggle: MockThrottlerToggle;
 
   let inputUser: HttpCreateUserDto;
 
@@ -28,6 +31,10 @@ describe('recovery password', () => {
 
     inputUser = usersTestHelper.createInputDto();
     await authTestHelper.registerUser(inputUser);
+
+    const throttlerGuard = app.get(ThrottlerGuard);
+    mockThrottlerToggle = new MockThrottlerToggle(throttlerGuard, jest);
+    mockThrottlerToggle.deactivateThrottler();
   });
 
   afterAll(async () => {
@@ -51,8 +58,8 @@ describe('recovery password', () => {
   });
 
   it(`should return NO CONTENT status if user not exist. Email shouldn't send`, async () => {
-    const notExostedEmailDto: HttpEmailDto = { email: 'not_exist@mail.ru' };
-    await authTestHelper.recoveryPassword(notExostedEmailDto, {
+    const notExistedEmailDto: HttpEmailDto = { email: 'not_exist@mail.ru' };
+    await authTestHelper.recoveryPassword(notExistedEmailDto, {
       status: HttpStatus.NO_CONTENT,
     });
 
@@ -85,5 +92,24 @@ describe('recovery password', () => {
     await authTestHelper.recoveryPassword(badEmailDto, {
       status: HttpStatus.BAD_REQUEST,
     });
+  });
+
+  it('should return TO MANY REQUESTS', async () => {
+    const notExistedEmailDto: HttpEmailDto = { email: 'not_exist@mail.ru' };
+    const requestCount = 5;
+
+    mockThrottlerToggle.activateThrottler();
+
+    for (let i = 0; i < requestCount; i++) {
+      await authTestHelper.recoveryPassword(notExistedEmailDto, {
+        status: HttpStatus.NO_CONTENT,
+      });
+    }
+
+    await authTestHelper.recoveryPassword(notExistedEmailDto, {
+      status: HttpStatus.TOO_MANY_REQUESTS,
+    });
+
+    mockThrottlerToggle.deactivateThrottler();
   });
 });

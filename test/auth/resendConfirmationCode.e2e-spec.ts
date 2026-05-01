@@ -7,6 +7,8 @@ import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
 import { HttpEmailDto } from '../../src/modules/user-accounts/auth/api/dto/HttpEmail.dto';
 import { HttpConfirmationCodeDto } from '../../src/modules/user-accounts/auth/api/dto/HttpConfirmationCode.dto';
+import { MockThrottlerToggle } from '../utils/MockThrottlerToggle';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 describe('registration-confirmation', () => {
   let app: INestApplication;
@@ -14,6 +16,7 @@ describe('registration-confirmation', () => {
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
   let mockSendConfirmationCode: jest.SpyInstance;
+  let mockThrottlerToggle: MockThrottlerToggle;
 
   let inputEmailDto: HttpEmailDto;
 
@@ -35,6 +38,10 @@ describe('registration-confirmation', () => {
       fakeEmailService,
       'sendConfirmationCode',
     );
+
+    const throttlerGuard = app.get(ThrottlerGuard);
+    mockThrottlerToggle = new MockThrottlerToggle(throttlerGuard, jest);
+    mockThrottlerToggle.deactivateThrottler();
   });
 
   afterAll(async () => {
@@ -103,5 +110,26 @@ describe('registration-confirmation', () => {
       status: HttpStatus.BAD_REQUEST,
     });
     expect(mockSendConfirmationCode).not.toHaveBeenCalled();
+  });
+
+  //TODO - move limit and ttl to env or config
+
+  it('should return TO MANY REQUESTS', async () => {
+    const notExistedEmailDto: HttpEmailDto = { email: 'notexisted@mail.ru' };
+    const requestCount = 5;
+
+    mockThrottlerToggle.activateThrottler();
+
+    for (let i = 0; i < requestCount; i++) {
+      await authTestHelper.resendConfirmationCode(notExistedEmailDto, {
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    await authTestHelper.resendConfirmationCode(inputEmailDto, {
+      status: HttpStatus.TOO_MANY_REQUESTS,
+    });
+
+    mockThrottlerToggle.deactivateThrottler();
   });
 });
