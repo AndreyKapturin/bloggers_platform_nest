@@ -1,30 +1,40 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import request from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { fakeEmailService } from '../utils/mocks/fakeEmailService';
-import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
-import { registerUser } from '../utils/registerUser';
-import { InputNewPasswordDto } from '../../src/modules/user-accounts/auth/dto/NewPassword.input-dto';
-import { InputLoginDto } from '../../src/modules/user-accounts/auth/dto/Login.input-dto';
+import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
+import { AuthTestHelper } from '../utils/AuthTestHelper';
+import { UsersTestHelper } from '../utils/UsersTestHelper';
+import { HttpEmailDto } from '../../src/modules/user-accounts/auth/api/dto/HttpEmail.dto';
+import { MockThrottlerToggle } from '../utils/MockThrottlerToggle';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 describe('recovery password', () => {
   let app: INestApplication;
-  let mockSendRecoveryCode: jest.SpyInstance;
 
-  const inputUser: InputCreateUserDto = {
-    login: 'User_01',
-    email: 'user1@mail.ru',
-    password: 'Strong_password',
-  };
+  let usersTestHelper: UsersTestHelper;
+  let authTestHelper: AuthTestHelper;
+  let mockSendRecoveryCode: jest.SpyInstance;
+  let mockThrottlerToggle: MockThrottlerToggle;
+
+  let inputUser: HttpCreateUserDto;
 
   beforeAll(async () => {
     app = await initApp();
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
-    await registerUser(app, inputUser);
+
+    usersTestHelper = new UsersTestHelper(app);
+    authTestHelper = new AuthTestHelper(app, usersTestHelper);
+
+    inputUser = usersTestHelper.createInputDto();
+    await authTestHelper.registerUser(inputUser);
+
+    const throttlerGuard = app.get(ThrottlerGuard);
+    mockThrottlerToggle = new MockThrottlerToggle(throttlerGuard, jest);
+    mockThrottlerToggle.deactivateThrottler();
   });
 
   afterAll(async () => {
@@ -40,63 +50,66 @@ describe('recovery password', () => {
     mockSendRecoveryCode.mockReset();
   });
 
-  it('should successfully recovery password', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/password-recovery')
-      .send({ email: inputUser.email })
-      .expect(HttpStatus.NO_CONTENT);
-
+  it('should send recovery code if user exist', async () => {
+    const emailDto: HttpEmailDto = { email: inputUser.email };
+    await authTestHelper.recoveryPassword(emailDto);
     const recoveryCode = mockSendRecoveryCode.mock.calls[0][1];
-
-    const inputNewPassword: InputNewPasswordDto = {
-      newPassword: 'New_strong_password',
-      recoveryCode,
-    };
-
-    await request(app.getHttpServer())
-      .post('/auth/new-password')
-      .send(inputNewPassword)
-      .expect(HttpStatus.NO_CONTENT);
-
-    const inputLoginViaOldPassword: InputLoginDto = {
-      loginOrEmail: inputUser.login,
-      password: inputUser.password,
-    };
-
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(inputLoginViaOldPassword)
-      .expect(HttpStatus.UNAUTHORIZED);
-
-    const inputLoginViaNewPassword: InputLoginDto = {
-      loginOrEmail: inputUser.login,
-      password: inputNewPassword.newPassword,
-    };
-
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(inputLoginViaNewPassword)
-      .expect(HttpStatus.OK);
+    expect(recoveryCode).toEqual(expect.any(String));
   });
 
-  it('should return NO CONTENT status if user not exist', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/password-recovery')
-      .send({ email: 'not_exist@mail.ru' })
-      .expect(HttpStatus.NO_CONTENT);
+  it(`should return NO CONTENT status if user not exist. Email shouldn't send`, async () => {
+    const notExistedEmailDto: HttpEmailDto = { email: 'not_exist@mail.ru' };
+    await authTestHelper.recoveryPassword(notExistedEmailDto, {
+      status: HttpStatus.NO_CONTENT,
+    });
 
     expect(mockSendRecoveryCode).not.toHaveBeenCalled();
   });
 
-  it('should return BAD REQUEST status if recovery code is incorrect', async () => {
-    const inputNewPassword: InputNewPasswordDto = {
-      newPassword: 'New_strong_password',
-      recoveryCode: 'not existed code',
-    };
+  it('should return BAD REQUEST status if email is empty string', async () => {
+    const badEmailDto: HttpEmailDto = { email: '' };
+    await authTestHelper.recoveryPassword(badEmailDto, {
+      status: HttpStatus.BAD_REQUEST,
+    });
+  });
 
-    await request(app.getHttpServer())
-      .post('/auth/new-password')
-      .send(inputNewPassword)
-      .expect(HttpStatus.BAD_REQUEST);
+  it('should return BAD REQUEST status if email is string of spaces', async () => {
+    const badEmailDto: HttpEmailDto = { email: ' '.repeat(5) };
+    await authTestHelper.recoveryPassword(badEmailDto, {
+      status: HttpStatus.BAD_REQUEST,
+    });
+  });
+
+  it('should return BAD REQUEST status if email is not a string', async () => {
+    const badEmailDto = { email: 101 } as unknown as HttpEmailDto;
+    await authTestHelper.recoveryPassword(badEmailDto, {
+      status: HttpStatus.BAD_REQUEST,
+    });
+  });
+
+  it('should return BAD REQUEST status if email is not passed', async () => {
+    const badEmailDto = {} as unknown as HttpEmailDto;
+    await authTestHelper.recoveryPassword(badEmailDto, {
+      status: HttpStatus.BAD_REQUEST,
+    });
+  });
+
+  it('should return TO MANY REQUESTS', async () => {
+    const notExistedEmailDto: HttpEmailDto = { email: 'not_exist@mail.ru' };
+    const requestCount = 5;
+
+    mockThrottlerToggle.activateThrottler();
+
+    for (let i = 0; i < requestCount; i++) {
+      await authTestHelper.recoveryPassword(notExistedEmailDto, {
+        status: HttpStatus.NO_CONTENT,
+      });
+    }
+
+    await authTestHelper.recoveryPassword(notExistedEmailDto, {
+      status: HttpStatus.TOO_MANY_REQUESTS,
+    });
+
+    mockThrottlerToggle.deactivateThrottler();
   });
 });

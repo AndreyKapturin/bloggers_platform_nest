@@ -1,9 +1,0 @@
-export const LOGIN_CONSTRAINTS = {
-  MIN_LENGTH: 3,
-  MAX_LENGTH: 10,
-};
-
-export const PASSWORD_CONSTRAINTS = {
-  MIN_LENGTH: 6,
-  MAX_LENGTH: 20,
-};

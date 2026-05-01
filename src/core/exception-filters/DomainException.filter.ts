@@ -27,6 +27,8 @@ export class DomainHttpExceptionsFilter implements ExceptionFilter {
     switch (status) {
       case DomainExceptionStatus.InvalidCredentials:
         return HttpStatus.UNAUTHORIZED;
+      case DomainExceptionStatus.PermissionError:
+        return HttpStatus.FORBIDDEN;
       case DomainExceptionStatus.NotFound:
         return HttpStatus.NOT_FOUND;
       case DomainExceptionStatus.InvalidData:

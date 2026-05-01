@@ -4,9 +4,9 @@ import { Post } from '../domain/Post.entity';
 import type { TPostModel } from '../domain/Post.entity';
 import { PostsRepository } from '../infrastructure/Post.repository';
 import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
-import { InputCreatePostDto } from '../dto/Post.input-create-dto';
-import { InputUpdatePostDto } from '../dto/Post.input-update-dto';
-import { UpdatePostDto } from '../dto/Post.update-dto';
+import { DomainUpdatePostDto } from '../domain/dto/DomainUpdatePost.dto';
+import { HttpCreatePostDto } from '../api/dto/HttpCreatePost.dto';
+import { HttpUpdatePostDto } from '../api/dto/HttpUpdatePost.dto';
 
 @Injectable()
 export class PostsService {
@@ -17,7 +17,7 @@ export class PostsService {
     private blogsRepository: BlogsRepository,
   ) {}
 
-  async createPost(inputCreatePostDto: InputCreatePostDto): Promise<string> {
+  async createPost(inputCreatePostDto: HttpCreatePostDto): Promise<string> {
     const blogDocument = await this.blogsRepository.findById(
       inputCreatePostDto.blogId,
     );
@@ -43,7 +43,7 @@ export class PostsService {
 
   async updatePost(
     postId: string,
-    inputUpdatePostDto: InputUpdatePostDto,
+    inputUpdatePostDto: HttpUpdatePostDto,
   ): Promise<void> {
     const postDocument = await this.postsRepository.findById(postId);
 
@@ -61,7 +61,7 @@ export class PostsService {
       );
     }
 
-    const updatePostDto = new UpdatePostDto(
+    const updatePostDto = new DomainUpdatePostDto(
       inputUpdatePostDto.title,
       inputUpdatePostDto.shortDescription,
       inputUpdatePostDto.content,

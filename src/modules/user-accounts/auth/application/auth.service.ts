@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InputCreateUserDto } from '../../users/dto/CreateUser.input-dto';
+import { Inject, Injectable } from '@nestjs/common';
+import { HttpCreateUserDto } from '../../users/api/dto/HttpCreateUser.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   TUserDocument,
@@ -9,7 +9,6 @@ import {
 import { UsersRepository } from '../../users/infrastructure/users.repository';
 import { CryptoService } from '../../../../services/CryptoService';
 import { DateUtils } from '../../../../utils/DateUtils';
-import { AccessTokenDto } from '../dto/AccessToken.view-dto';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from '../../../notification/email.service';
 import { UsersService } from '../../users/application/users.service';
@@ -17,8 +16,9 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
-import { InputNewPasswordDto } from '../dto/NewPassword.input-dto';
-import { JwtAccessTokenPayload } from '../types';
+import { HttpNewPasswordDto } from '../api/dto/HttpNewPassword.dto';
+import { JwtAccessTokenPayload, JwtRegreshTokenPayload } from '../types';
+import { JWT_AT_SERVICE, JWT_RT_SERVICE } from '../strategies/jwt/jwt-config';
 
 // TODO: to env
 const CONFIRMATION_CODE_TTL_DAYS = 2;
@@ -31,12 +31,15 @@ export class AuthService {
     private usersRepository: UsersRepository,
     private usersService: UsersService,
     private cryptoService: CryptoService,
-    private jwtService: JwtService,
+    @Inject(JWT_AT_SERVICE)
+    private jwtAccessTokenService: JwtService,
+    @Inject(JWT_RT_SERVICE)
+    private jwtRefreshTokenService: JwtService,
     private emailService: EmailService,
   ) {}
 
-  async registration(inputCreateUserDto: InputCreateUserDto): Promise<void> {
-    const userId = await this.usersService.createUser(inputCreateUserDto);
+  async registration(dto: HttpCreateUserDto): Promise<void> {
+    const userId = await this.usersService.createUser(dto);
     const userDocument = await this.usersRepository.findById(userId);
     this._setConfirmationCode(userDocument!);
     await this.usersRepository.save(userDocument!);
@@ -61,10 +64,19 @@ export class AuthService {
     return null;
   }
 
-  async login(userId: string): Promise<AccessTokenDto> {
-    const payload: JwtAccessTokenPayload = { userId };
-    const accessToken = this.jwtService.sign(payload);
-    return new AccessTokenDto(accessToken);
+  async login(
+    userId: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const accessTokenPayload: JwtAccessTokenPayload = { userId };
+    const refreshTokenPayload: JwtRegreshTokenPayload = {
+      userId,
+      deviceId: crypto.randomUUID(),
+    };
+    const accessToken =
+      await this.jwtAccessTokenService.signAsync(accessTokenPayload);
+    const refreshToken =
+      await this.jwtRefreshTokenService.signAsync(refreshTokenPayload);
+    return { accessToken, refreshToken };
   }
 
   async resendConfirmationEmail(email: string): Promise<void> {
@@ -154,7 +166,7 @@ export class AuthService {
       .catch((error) => console.log('Send recovery code error: ', error));
   }
 
-  async updatePassword(newPasswordDto: InputNewPasswordDto): Promise<void> {
+  async updatePassword(newPasswordDto: HttpNewPasswordDto): Promise<void> {
     const { recoveryCode, newPassword } = newPasswordDto;
     const userDocument =
       await this.usersRepository.findByRecoveryCode(recoveryCode);

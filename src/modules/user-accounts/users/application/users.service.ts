@@ -8,7 +8,7 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
-import { InputCreateUserDto } from '../dto/CreateUser.input-dto';
+import { HttpCreateUserDto } from '../api/dto/HttpCreateUser.dto';
 
 @Injectable()
 export class UsersService {
@@ -18,8 +18,8 @@ export class UsersService {
     private cryptoService: CryptoService,
   ) {}
 
-  async createUser(inputCreateUserDto: InputCreateUserDto): Promise<string> {
-    const { login, email, password } = inputCreateUserDto;
+  async createUser(dto: HttpCreateUserDto): Promise<string> {
+    const { login, email, password } = dto;
 
     const isEmailBusy = await this.usersRepository.findByEmail(email);
 
@@ -60,7 +60,7 @@ export class UsersService {
     });
 
     await this.usersRepository.save(newUserDocument);
-    
+
     return newUserDocument.id;
   }
 

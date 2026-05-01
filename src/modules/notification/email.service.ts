@@ -6,7 +6,7 @@ export class EmailService {
   constructor(private mailerService: MailerService) {}
 
   async sendConfirmationCode(email: string, code: string): Promise<void> {
-    await this.mailerService.sendMail({
+    return await this.mailerService.sendMail({
       to: email,
       subject: 'Email confirmation',
       html: this._createConfurmationCodeMailHTML(code),
@@ -14,7 +14,7 @@ export class EmailService {
   }
 
   async sendRecoveryCode(email: string, code: string): Promise<void> {
-    await this.mailerService.sendMail({
+    return await this.mailerService.sendMail({
       to: email,
       subject: 'Recovery password',
       html: this._createPasswordRecoveryCodeMailHTML(code),

@@ -1,27 +1,32 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import request from 'supertest';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
-import { registerUser } from '../utils/registerUser';
-import { InputCreateUserDto } from '../../src/modules/user-accounts/users/dto/CreateUser.input-dto';
+import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto/HttpCreateUser.dto';
+import { AuthTestHelper } from '../utils/AuthTestHelper';
+import { UsersTestHelper } from '../utils/UsersTestHelper';
+import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpLogin.dto';
 
 describe('login', () => {
   let app: INestApplication;
+  let usersTestHelper: UsersTestHelper;
+  let authTestHelper: AuthTestHelper;
 
-  const inputUser: InputCreateUserDto = {
-    login: 'User_01',
-    email: 'user1@mail.ru',
-    password: 'strong_password',
-  };
+  let inputUser: HttpCreateUserDto;
 
   beforeAll(async () => {
     app = await initApp();
     setupApp(app);
     await app.init();
     await cleanDatabase(app);
+    usersTestHelper = new UsersTestHelper(app);
+    authTestHelper = new AuthTestHelper(app, usersTestHelper);
+    inputUser = usersTestHelper.createInputDto();
+    await authTestHelper.registerUser(inputUser);
+  });
 
-    await registerUser(app, inputUser);
+  afterAll(async () => {
+    await app.close();
   });
 
   it('should login user via email', async () => {
@@ -30,10 +35,14 @@ describe('login', () => {
       password: inputUser.password,
     };
 
-    const loginWithEmailResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(loginViaEmail)
-      .expect(HttpStatus.OK);
+    const loginWithEmailResponse =
+      await authTestHelper.loginUser(loginViaEmail);
+
+    expect(loginWithEmailResponse.header['set-cookie']).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching('refreshToken=.+HttpOnly; Secure'),
+      ]),
+    );
 
     expect(loginWithEmailResponse.body).toEqual({
       accessToken: expect.any(String),
@@ -46,41 +55,82 @@ describe('login', () => {
       password: inputUser.password,
     };
 
-    const loginViaLoginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(loginViaLogin)
-      .expect(HttpStatus.OK);
+    const loginViaLoginResponse = await authTestHelper.loginUser(loginViaLogin);
 
     expect(loginViaLoginResponse.body).toEqual({
       accessToken: expect.any(String),
     });
   });
 
-  it(`shouldn't login user if password is wrong`, async () => {
-    const loginViaLogin = {
-      loginOrEmail: inputUser.email,
-      password: 'wrong password',
-    };
-
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(loginViaLogin)
-      .expect(HttpStatus.UNAUTHORIZED);
+  it.each([
+    {
+      testDesc: 'loginOrEmail is empty string',
+      inputLogin: {
+        loginOrEmail: '',
+        password: 'strong_password',
+      },
+    },
+    {
+      testDesc: 'loginOrEmail is string of spaces',
+      inputLogin: {
+        loginOrEmail: ' '.repeat(5),
+        password: 'strong_password',
+      },
+    },
+    {
+      testDesc: 'loginOrEmail is not string',
+      inputLogin: {
+        loginOrEmail: 10,
+        password: 'strong_password',
+      },
+    },
+    {
+      testDesc: 'loginOrEmail is not passed',
+      inputLogin: {
+        password: 'strong_password',
+      },
+    },
+    {
+      testDesc: 'password is empty string',
+      inputLogin: {
+        login: 'User_03',
+        password: '',
+      },
+    },
+    {
+      testDesc: 'password is string of spaces',
+      inputLogin: {
+        login: 'User_03',
+        password: ' '.repeat(5),
+      },
+    },
+    {
+      testDesc: 'password is not string',
+      inputLogin: {
+        login: 'User_03',
+        password: 1223456,
+      },
+    },
+    {
+      testDesc: 'password is not passed',
+      inputLogin: {
+        login: 'User_03',
+      },
+    },
+  ])(`shouldn't login user if $testDesc`, async ({ inputLogin }) => {
+    await authTestHelper.loginUser(inputLogin as unknown as HttpLoginDto, {
+      status: HttpStatus.BAD_REQUEST,
+    });
   });
 
   it(`shouldn't login user if user not exist`, async () => {
     const notExistLogin = {
       loginOrEmail: 'not_exist',
-      password: 'wrong password',
+      password: 'strong_password123',
     };
 
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(notExistLogin)
-      .expect(HttpStatus.UNAUTHORIZED);
-  });
-
-  afterAll(async () => {
-    await app.close();
+    await authTestHelper.loginUser(notExistLogin, {
+      status: HttpStatus.UNAUTHORIZED,
+    });
   });
 });

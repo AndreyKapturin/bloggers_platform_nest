@@ -6,7 +6,12 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../../core/exceptions/DomainException';
-import { UserInRequest } from '../../dto/UserInRequest.dto';
+import { UserInRequestDto } from '../../../../../core/dto/UserInRequest.dto';
+import { Request } from 'express';
+import { HttpLoginDto } from '../../api/dto/HttpLogin.dto';
+import { validateSync } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
+import { formatError } from '../../../../../core/validation/formatter/formatError';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
@@ -14,10 +19,26 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     super({ usernameField: 'loginOrEmail' });
   }
 
+  authenticate(req: Request, options?: any): void {
+    const dto = plainToInstance(HttpLoginDto, { ...req.body });
+    const errors = validateSync(dto, { stopAtFirstError: true });
+
+    if (errors.length) {
+      const formattedErrors = errors.map(formatError);
+      throw new DomainException(
+        DomainExceptionStatus.InvalidData,
+        'Invalid data',
+        formattedErrors,
+      );
+    }
+
+    super.authenticate(req, options);
+  }
+
   async validate(
     loginOrEmail: string,
     password: string,
-  ): Promise<UserInRequest | null> {
+  ): Promise<UserInRequestDto | null> {
     const userId = await this.authService.validateUser(loginOrEmail, password);
 
     if (!userId) {
@@ -33,6 +54,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       );
     }
 
-    return new UserInRequest(userId);
+    return new UserInRequestDto(userId);
   }
 }

@@ -4,27 +4,19 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from './exceptions/DomainException';
-import { FieldErrorDto } from './dto/ApiErrorResult.dto';
-import { ValidationError } from 'class-validator';
-
-const _formatError = (validetionError: ValidationError): FieldErrorDto => {
-  let message = '';
-
-  for (const key in validetionError.constraints) {
-    message = validetionError.constraints[key];
-    break;
-  }
-
-  return new FieldErrorDto(message, validetionError.property);
-};
+import cookieParser from 'cookie-parser';
+import { formatError } from './validation/formatter/formatError';
 
 export function setupApp(app: INestApplication) {
+  app.use(cookieParser());
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
       stopAtFirstError: true,
+      validateCustomDecorators: true,
       exceptionFactory: (errors) => {
-        const formattedErrors = errors.map(_formatError);
+        const formattedErrors = errors.map(formatError);
         throw new DomainException(
           DomainExceptionStatus.InvalidData,
           'Validation error',
@@ -33,6 +25,6 @@ export function setupApp(app: INestApplication) {
       },
     }),
   );
-  
+
   app.useGlobalFilters(new DomainHttpExceptionsFilter());
 }
