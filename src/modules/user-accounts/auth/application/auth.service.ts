@@ -1,11 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { HttpCreateUserDto } from '../../users/api/dto/HttpCreateUser.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  TUserDocument,
-  type TUserModel,
-  User,
-} from '../../users/domain/user.entity';
+import { TUserDocument } from '../../users/domain/user.entity';
 import { UsersRepository } from '../../users/infrastructure/users.repository';
 import { CryptoService } from '../../../../services/CryptoService';
 import { DateUtils } from '../../../../utils/DateUtils';
@@ -19,15 +14,11 @@ import {
 import { HttpNewPasswordDto } from '../api/dto/HttpNewPassword.dto';
 import { JwtAccessTokenPayload, JwtRegreshTokenPayload } from '../types';
 import { JWT_AT_SERVICE, JWT_RT_SERVICE } from '../strategies/jwt/jwt-config';
-
-// TODO: to env
-const CONFIRMATION_CODE_TTL_DAYS = 2;
-const RECOVERY_CODE_TTL_MINUTES = 15;
+import { UserAccountsConfig } from '../../user-accounts.config';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name) private UserModel: TUserModel,
     private usersRepository: UsersRepository,
     private usersService: UsersService,
     private cryptoService: CryptoService,
@@ -36,6 +27,7 @@ export class AuthService {
     @Inject(JWT_RT_SERVICE)
     private jwtRefreshTokenService: JwtService,
     private emailService: EmailService,
+    private userAuthConfig: UserAccountsConfig,
   ) {}
 
   async registration(dto: HttpCreateUserDto): Promise<void> {
@@ -154,7 +146,7 @@ export class AuthService {
 
     const recoveryCode = crypto.randomUUID();
     const codeExpirationDate = DateUtils.getDatePlusMinutes(
-      RECOVERY_CODE_TTL_MINUTES,
+      this.userAuthConfig.recoveryCodeTtlMinutes,
     );
 
     userDocument.setRecoveryCode(recoveryCode, codeExpirationDate);
@@ -195,7 +187,7 @@ export class AuthService {
   private _setConfirmationCode(userDocument: TUserDocument) {
     const confirmationCode = crypto.randomUUID();
     const codeExpirationDate = DateUtils.getDatePlusDays(
-      CONFIRMATION_CODE_TTL_DAYS,
+      this.userAuthConfig.confirmationCodeTtlHourse,
     );
 
     userDocument.setEmailConfirmationCode(confirmationCode, codeExpirationDate);
