@@ -207,8 +207,6 @@ describe('registration', () => {
     );
   });
 
-  //TODO - move limit and ttl to env or config
-
   it('should return TO MANY REQUESTS', async () => {
     mockThrottlerToggle.activateThrottler();
     const requestCount = 5;
