@@ -15,13 +15,10 @@ import { NotificationModule } from '../notification/notification.module';
 import { JwtStrategy } from './auth/strategies/jwt/Jwt.strategy';
 import { BasicStrategy } from './auth/strategies/basic/Basic.strategy';
 import {
-  JWT_AT_SECRET,
   JWT_AT_SERVICE,
-  JWT_AT_TTL,
-  JWT_RT_SECRET,
   JWT_RT_SERVICE,
-  JWT_RT_TTL,
 } from './auth/strategies/jwt/jwt-config';
+import { UserAccountsConfig } from './user-accounts.config';
 
 @Module({
   imports: [
@@ -32,6 +29,7 @@ import {
   ],
   controllers: [UsersController, AuthController],
   providers: [
+    UserAccountsConfig,
     UsersService,
     UsersRepository,
     UsersQueryRepository,
@@ -41,21 +39,23 @@ import {
     JwtStrategy,
     {
       provide: JWT_AT_SERVICE,
-      useFactory: () => {
+      useFactory: (userAccountsConfig: UserAccountsConfig) => {
         return new JwtService({
-          secret: JWT_AT_SECRET,
-          signOptions: { expiresIn: JWT_AT_TTL },
+          secret: userAccountsConfig.accessTokenSecret,
+          signOptions: { expiresIn: userAccountsConfig.accessTokenExpireIn },
         });
       },
+      inject: [UserAccountsConfig],
     },
     {
       provide: JWT_RT_SERVICE,
-      useFactory: () => {
+      useFactory: (userAccountsConfig: UserAccountsConfig) => {
         return new JwtService({
-          secret: JWT_RT_SECRET,
-          signOptions: { expiresIn: JWT_RT_TTL },
+          secret: userAccountsConfig.refreshTokenSecret,
+          signOptions: { expiresIn: userAccountsConfig.refreshTokenExpireIn },
         });
       },
+      inject: [UserAccountsConfig],
     },
     BasicStrategy,
   ],

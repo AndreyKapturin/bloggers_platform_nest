@@ -3,15 +3,15 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserInRequestDto } from '../../../../../core/dto/UserInRequest.dto';
 import { JwtAccessTokenPayload } from '../../types';
-import { JWT_AT_SECRET } from './jwt-config';
+import { UserAccountsConfig } from '../../../user-accounts.config';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(userAccountsConfig: UserAccountsConfig) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: JWT_AT_SECRET,
+      secretOrKey: userAccountsConfig.accessTokenSecret,
     });
   }
 

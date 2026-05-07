@@ -9,12 +9,7 @@ import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { LikeStatus } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
 import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 import { PostsTestHelper } from '../utils/PostsTestHelper';
-import { JwtService } from '@nestjs/jwt';
-import {
-  JWT_AT_SECRET,
-  JWT_AT_SERVICE,
-  JWT_AT_TTL,
-} from '../../src/modules/user-accounts/auth/strategies/jwt/jwt-config';
+import { overrideAccessTokenJwtService } from '../utils/overrideAccessTokenJwtService';
 
 describe('like comment', () => {
   let app: INestApplication;
@@ -24,14 +19,6 @@ describe('like comment', () => {
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
   let commentsTestHelper: CommentsTestHelper;
-
-  const jwtService = new JwtService({
-    secret: JWT_AT_SECRET,
-    signOptions: { expiresIn: JWT_AT_TTL },
-  });
-
-  const originalJwtSignAsync = jwtService.signAsync.bind(jwtService);
-  const jwtSignAsyncMock = jest.spyOn(jwtService, 'signAsync');
 
   const inputLike = { likeStatus: LikeStatus.Like };
   const inputDislike = { likeStatus: LikeStatus.Dislike };
@@ -44,7 +31,7 @@ describe('like comment', () => {
 
   beforeAll(async () => {
     app = await initApp((builder) => {
-      builder.overrideProvider(JWT_AT_SERVICE).useValue(jwtService);
+      overrideAccessTokenJwtService(builder);
     });
     setupApp(app);
     await app.init();
@@ -149,20 +136,6 @@ describe('like comment', () => {
     );
   });
 
-  it(`shouldn't set like status to comment. Return UNAUTHORIZED status if access token expired`, async () => {
-    jwtSignAsyncMock.mockImplementationOnce(async (payload, options) => {
-      return originalJwtSignAsync(payload, { ...options, expiresIn: '1s' });
-    });
-
-    const accessToken = await authTestHelper.createUserAndGetAccessToken();
-
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    await commentsTestHelper.setLikeStatus(commentId, inputLike, accessToken, {
-      status: HttpStatus.UNAUTHORIZED,
-    });
-  });
-
   it(`shouldn't set wrong like status to comment. Return BAD REQUEST status`, async () => {
     await commentsTestHelper.setLikeStatus(
       commentId,
@@ -181,5 +154,15 @@ describe('like comment', () => {
       user1AccessToken,
       { status: HttpStatus.NOT_FOUND },
     );
+  });
+
+  it(`shouldn't set like status to comment. Return UNAUTHORIZED status if access token expired`, async () => {
+    const accessToken = await authTestHelper.createUserAndGetAccessToken();
+
+    await new Promise((resolve) => setTimeout(resolve, 2100));
+
+    await commentsTestHelper.setLikeStatus(commentId, inputLike, accessToken, {
+      status: HttpStatus.UNAUTHORIZED,
+    });
   });
 });
