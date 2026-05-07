@@ -6,7 +6,7 @@ import { NotificationConfig } from './notification.config';
 @Module({
   imports: [
     MailerModule.forRootAsync({
-      imports: [NotificationModule],
+      extraProviders: [NotificationConfig],
       inject: [NotificationConfig],
       useFactory: (notificationConfig: NotificationConfig) => {
         return {
@@ -24,7 +24,7 @@ import { NotificationConfig } from './notification.config';
       },
     }),
   ],
-  providers: [EmailService, NotificationConfig],
-  exports: [EmailService, NotificationConfig],
+  providers: [EmailService],
+  exports: [EmailService],
 })
 export class NotificationModule {}
