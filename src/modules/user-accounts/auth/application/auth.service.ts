@@ -12,9 +12,25 @@ import {
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
 import { HttpNewPasswordDto } from '../api/dto/HttpNewPassword.dto';
-import { JwtAccessTokenPayload, JwtRegreshTokenPayload } from '../types';
+import {
+  JwtAccessTokenSignPayload,
+  JwtRefreshTokenDecodedPayload,
+  JwtRefreshTokenSignPayload,
+} from '../types';
 import { JWT_AT_SERVICE, JWT_RT_SERVICE } from '../strategies/jwt/jwt-config';
 import { UserAccountsConfig } from '../../user-accounts.config';
+import { InjectModel } from '@nestjs/mongoose';
+import {
+  DeviceSession,
+  type TDeviceSessionModel,
+} from '../domain/DeviceSession.entity';
+import { LoginDto } from './dto/Login.dto';
+import { DeviceSessionsRepository } from '../infrastructure/DeviceSessions.repository';
+
+type JwtTokensPair = {
+  accessToken: string;
+  refreshToken: string;
+};
 
 @Injectable()
 export class AuthService {
@@ -28,6 +44,9 @@ export class AuthService {
     private jwtRefreshTokenService: JwtService,
     private emailService: EmailService,
     private userAuthConfig: UserAccountsConfig,
+    @InjectModel(DeviceSession.name)
+    private DeviceSessionModel: TDeviceSessionModel,
+    private deviceSessionRepository: DeviceSessionsRepository,
   ) {}
 
   async registration(dto: HttpCreateUserDto): Promise<void> {
@@ -56,11 +75,10 @@ export class AuthService {
     return null;
   }
 
-  async login(
-    userId: string,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const accessTokenPayload: JwtAccessTokenPayload = { userId };
-    const refreshTokenPayload: JwtRegreshTokenPayload = {
+  async login(dto: LoginDto): Promise<JwtTokensPair> {
+    const { userId, ip, deviceName } = dto;
+    const accessTokenPayload: JwtAccessTokenSignPayload = { userId };
+    const refreshTokenPayload: JwtRefreshTokenSignPayload = {
       userId,
       deviceId: crypto.randomUUID(),
     };
@@ -68,6 +86,23 @@ export class AuthService {
       await this.jwtAccessTokenService.signAsync(accessTokenPayload);
     const refreshToken =
       await this.jwtRefreshTokenService.signAsync(refreshTokenPayload);
+
+    const decodedRefreshTokenPayload =
+      this.jwtAccessTokenService.decode<JwtRefreshTokenDecodedPayload>(
+        refreshToken,
+      );
+
+    const tokenExpAt = new Date(decodedRefreshTokenPayload.exp * 1000);
+
+    const deviceSession = this.DeviceSessionModel.makeInstance({
+      userId: decodedRefreshTokenPayload.userId,
+      deviceId: decodedRefreshTokenPayload.deviceId,
+      deviceName,
+      ip,
+      tokenExpAt,
+    });
+
+    await this.deviceSessionRepository.save(deviceSession);
     return { accessToken, refreshToken };
   }
 
@@ -182,6 +217,53 @@ export class AuthService {
     userDocument.removeRecoveryCode();
 
     await this.usersRepository.save(userDocument);
+  }
+
+  async refreshTokens(
+    deviceId: string,
+    userId: string,
+  ): Promise<JwtTokensPair> {
+    const deviceSession =
+      await this.deviceSessionRepository.findByDeviceIdAndUserId(
+        deviceId,
+        userId,
+      );
+
+    if (!deviceSession) {
+      throw new DomainException(
+        DomainExceptionStatus.InvalidCredentials,
+        'Invalid refresh token',
+        [
+          {
+            field: 'refreshToken',
+            message: 'Invalid refresh token',
+          },
+        ],
+      );
+    }
+
+    const accessTokenPayload: JwtAccessTokenSignPayload = { userId };
+    const refreshTokenPayload: JwtRefreshTokenSignPayload = {
+      userId,
+      deviceId,
+    };
+
+    const accessToken =
+      await this.jwtAccessTokenService.signAsync(accessTokenPayload);
+    const refreshToken =
+      await this.jwtRefreshTokenService.signAsync(refreshTokenPayload);
+
+    const decodedRefreshTokenPayload =
+      this.jwtAccessTokenService.decode<JwtRefreshTokenDecodedPayload>(
+        refreshToken,
+      );
+
+    const tokenExpAt = new Date(decodedRefreshTokenPayload.exp * 1000);
+
+    deviceSession.updateTokenExpAt(tokenExpAt);
+
+    await this.deviceSessionRepository.save(deviceSession);
+    return { accessToken, refreshToken };
   }
 
   private _setConfirmationCode(userDocument: TUserDocument) {

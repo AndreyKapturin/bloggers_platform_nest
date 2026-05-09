@@ -19,10 +19,19 @@ import {
   JWT_RT_SERVICE,
 } from './auth/strategies/jwt/jwt-config';
 import { UserAccountsConfig } from './user-accounts.config';
+import {
+  DeviceSession,
+  DeviceSessionSchema,
+} from './auth/domain/DeviceSession.entity';
+import { DeviceSessionsRepository } from './auth/infrastructure/DeviceSessions.repository';
+import { JwtRefreshStrategy } from './auth/strategies/jwt/JwtRefresh.strategy';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: DeviceSession.name, schema: DeviceSessionSchema },
+    ]),
     PassportModule,
     JwtModule,
     NotificationModule,
@@ -37,6 +46,7 @@ import { UserAccountsConfig } from './user-accounts.config';
     AuthService,
     LocalStrategy,
     JwtStrategy,
+    JwtRefreshStrategy,
     {
       provide: JWT_AT_SERVICE,
       useFactory: (userAccountsConfig: UserAccountsConfig) => {
@@ -58,6 +68,7 @@ import { UserAccountsConfig } from './user-accounts.config';
       inject: [UserAccountsConfig],
     },
     BasicStrategy,
+    DeviceSessionsRepository,
   ],
   exports: [UsersRepository],
 })

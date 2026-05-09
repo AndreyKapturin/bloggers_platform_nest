@@ -8,12 +8,22 @@ import { HttpConfirmationCodeDto } from '../../src/modules/user-accounts/auth/ap
 import { HttpNewPasswordDto } from '../../src/modules/user-accounts/auth/api/dto/HttpNewPassword.dto';
 import { ViewMeDto } from '../../src/modules/user-accounts/users/api/dto/ViewMe.dto';
 import { ResponseWithBody } from './generics';
+import { AccessTokenDto } from '../../src/modules/user-accounts/auth/dto/AccessToken.view-dto';
 
 export class AuthTestHelper {
   constructor(
     private app: INestApplication,
     private usersTestHelper: UsersTestHelper,
   ) {}
+
+  extractRefreshTokenFromCookie(response: Response): string | null {
+    const setCookieHeader = response.headers['set-cookie'];
+    const cookies = Array.isArray(setCookieHeader)
+      ? setCookieHeader
+      : [setCookieHeader];
+    const match = cookies.join(' ').match(/refreshToken=([^;]+)/);
+    return match ? match[1] : null;
+  }
 
   async getMe<T = ViewMeDto>(options?: {
     status?: HttpStatus;
@@ -50,10 +60,10 @@ export class AuthTestHelper {
       .expect(options?.status ?? HttpStatus.NO_CONTENT);
   }
 
-  async loginUser(
+  async loginUser<T = AccessTokenDto>(
     dto: HttpLoginDto,
     options?: { status: HttpStatus },
-  ): Promise<Response> {
+  ): Promise<ResponseWithBody<T>> {
     return await request(this.app.getHttpServer())
       .post('/auth/login')
       .send(dto)
@@ -103,5 +113,27 @@ export class AuthTestHelper {
       .post('/auth/new-password')
       .send(dto)
       .expect(options?.status ?? HttpStatus.NO_CONTENT);
+  }
+
+  async refreshTokens(options?: {
+    status?: HttpStatus;
+    refreshToken?: string;
+  }) {
+    options = {
+      status: HttpStatus.OK,
+      ...(options ?? {}),
+    };
+    const refreshTokensRequest = request(this.app.getHttpServer())
+      .post('/auth/refresh-token')
+      .expect(options.status as HttpStatus);
+
+    if (options.refreshToken) {
+      refreshTokensRequest.set(
+        'Cookie',
+        `refreshToken=${options.refreshToken}`,
+      );
+    }
+
+    return refreshTokensRequest;
   }
 }

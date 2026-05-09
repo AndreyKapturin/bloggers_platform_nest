@@ -1,8 +1,14 @@
-export type JwtAccessTokenPayload = {
+export type JwtAccessTokenSignPayload = {
   userId: string;
 };
 
-export type JwtRegreshTokenPayload = {
+export type JwtAccessTokenDecodedPayload = JwtAccessTokenSignPayload;
+
+export type JwtRefreshTokenSignPayload = {
   userId: string;
   deviceId: string;
+};
+
+export type JwtRefreshTokenDecodedPayload = JwtRefreshTokenSignPayload & {
+  exp: number;
 };

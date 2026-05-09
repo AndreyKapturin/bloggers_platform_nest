@@ -50,9 +50,9 @@ export class PostsController {
   @UseGuards(JwtOptionalAuthGuard)
   async getById(
     @Param('id') id: string,
-    @OptionalUserFromRequest() user: UserInRequestDto | null,
+    @OptionalUserFromRequest() dto: UserInRequestDto | null,
   ): Promise<ViewPostDto> {
-    const query = new GetPostQuery(id, user?.id ?? null);
+    const query = new GetPostQuery(id, dto?.userId ?? null);
     return this.queryBus.execute(query);
   }
 
@@ -61,12 +61,12 @@ export class PostsController {
   async getPostComments(
     @Param('id') postId: string,
     @Query() queryParams: CommentsQueryParamsDto,
-    @OptionalUserFromRequest() user: UserInRequestDto | null,
+    @OptionalUserFromRequest() dto: UserInRequestDto | null,
   ): Promise<PaginatedView<ViewCommentDto>> {
     const query = new GetPostCommentsQuery(
       postId,
       queryParams,
-      user?.id ?? null,
+      dto?.userId ?? null,
     );
     return await this.queryBus.execute(query);
   }
@@ -75,10 +75,14 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   async createPostComment(
     @Param('postId') postId: string,
-    @Body() dto: HttpCommentDto,
-    @ExtractUserFromRequest() user: UserInRequestDto,
+    @Body() commentDto: HttpCommentDto,
+    @ExtractUserFromRequest() userDto: UserInRequestDto,
   ): Promise<ViewCommentDto> {
-    const command = new CreateCommentCommand(postId, dto.content, user.id);
+    const command = new CreateCommentCommand(
+      postId,
+      commentDto.content,
+      userDto.userId,
+    );
     const commentId = await this.commandBus.execute(command);
     return this.commentsQueryRepository.findByIdOrThrow(commentId);
   }
@@ -88,10 +92,14 @@ export class PostsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async changeLikeStatus(
     @Param('postId') postId: string,
-    @Body() dto: HttpLikeStatusDto,
-    @ExtractUserFromRequest() user: UserInRequestDto,
+    @Body() likeDto: HttpLikeStatusDto,
+    @ExtractUserFromRequest() userDto: UserInRequestDto,
   ): Promise<void> {
-    const command = new LikePostCommand(user.id, postId, dto.likeStatus);
+    const command = new LikePostCommand(
+      userDto.userId,
+      postId,
+      likeDto.likeStatus,
+    );
     await this.commandBus.execute(command);
   }
 
@@ -99,9 +107,9 @@ export class PostsController {
   @UseGuards(JwtOptionalAuthGuard)
   async getPosts(
     @Query() queryParams: PostsQueryParamsDto,
-    @OptionalUserFromRequest() user: UserInRequestDto | null,
+    @OptionalUserFromRequest() dto: UserInRequestDto | null,
   ): Promise<PaginatedView<ViewPostDto>> {
-    const query = new GetPostsQuery(queryParams, user?.id ?? null);
+    const query = new GetPostsQuery(queryParams, dto?.userId ?? null);
     return this.queryBus.execute(query);
   }
 
