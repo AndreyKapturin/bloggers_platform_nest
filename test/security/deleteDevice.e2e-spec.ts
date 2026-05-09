@@ -68,7 +68,7 @@ describe('delete security device', () => {
 
     const deviceId1 = securityDevicesResponse.body[0].deviceId;
 
-    await securityTestHelper.deleteSecurityDevices(deviceId1, {
+    await securityTestHelper.deleteSecurityDevice(deviceId1, {
       refreshToken: refreshToken2!,
     });
 
@@ -85,7 +85,7 @@ describe('delete security device', () => {
     const invalidRefreshToken = faker.internet.jwt();
     const randomDeviceId = crypto.randomUUID();
 
-    await securityTestHelper.deleteSecurityDevices(randomDeviceId, {
+    await securityTestHelper.deleteSecurityDevice(randomDeviceId, {
       refreshToken: invalidRefreshToken,
       status: HttpStatus.UNAUTHORIZED,
     });
@@ -119,7 +119,7 @@ describe('delete security device', () => {
     });
     const user1DeviceId = user1Devices.body[0].deviceId;
 
-    await securityTestHelper.deleteSecurityDevices(user1DeviceId, {
+    await securityTestHelper.deleteSecurityDevice(user1DeviceId, {
       refreshToken: user2RefreshToken!,
       status: HttpStatus.FORBIDDEN,
     });
@@ -141,7 +141,7 @@ describe('delete security device', () => {
     const refreshToken =
       authTestHelper.extractRefreshTokenFromCookie(loginResponse);
 
-    await securityTestHelper.deleteSecurityDevices(randomDeviceId, {
+    await securityTestHelper.deleteSecurityDevice(randomDeviceId, {
       refreshToken: refreshToken!,
       status: HttpStatus.NOT_FOUND,
     });

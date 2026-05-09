@@ -14,6 +14,7 @@ import { GetSecurityDevicesQuery } from '../application/queries/get-security-dev
 import { ExtractUserWithDeviceFromRequest } from '../../../../core/decorators/extract-user-with-device.decorator';
 import { UserWithDeviceInRequestDto } from '../../../../core/dto/UserInRequest.dto';
 import { DeleteSecurityDeviceCommand } from '../application/usecases/delete-security-device.command';
+import { DeleteAllOtherSecurityDevicesCommand } from '../application/usecases/delete-all-other-security-devices.command';
 
 @Controller('security')
 @UseGuards(JwtRefreshAuthGuard)
@@ -31,16 +32,25 @@ export class SecurityDevicesController {
     return this.queryBus.execute(query);
   }
 
+  @Delete('devices')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteAllOtherSecurityDevices(
+    @ExtractUserWithDeviceFromRequest() dto: UserWithDeviceInRequestDto,
+  ): Promise<void> {
+    const command = new DeleteAllOtherSecurityDevicesCommand(
+      dto.deviceId,
+      dto.userId,
+    );
+    await this.commandBus.execute(command);
+  }
+
   @Delete('devices/:deviceId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteSecurityDevice(
     @Param('deviceId') deviceId: string,
     @ExtractUserWithDeviceFromRequest() dto: UserWithDeviceInRequestDto,
   ): Promise<void> {
-    const deleteSecurityDeviceCommand = new DeleteSecurityDeviceCommand(
-      deviceId,
-      dto.userId,
-    );
-    await this.commandBus.execute(deleteSecurityDeviceCommand);
+    const command = new DeleteSecurityDeviceCommand(deviceId, dto.userId);
+    await this.commandBus.execute(command);
   }
 }

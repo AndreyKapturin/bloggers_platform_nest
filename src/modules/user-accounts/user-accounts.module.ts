@@ -30,9 +30,11 @@ import { SecurityDevicesController } from './security/api/security.controller';
 import { GetSecurityDevicesQueryHandler } from './security/application/queries/get-security-devices.query';
 import { DeleteSecurityDeviceUseCase } from './security/application/usecases/delete-security-device.command';
 import { SecurityDevicesRepository } from './security/infrastructure/SecurityDevices.repository';
+import { DeleteAllOtherSecurityDeviceUseCase } from './security/application/usecases/delete-all-other-security-devices.command';
 
 const useCases = [
   DeleteSecurityDeviceUseCase,
+  DeleteAllOtherSecurityDeviceUseCase,
 ]
 
 const queryHandlers = [

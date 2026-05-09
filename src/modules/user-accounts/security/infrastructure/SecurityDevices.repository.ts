@@ -13,6 +13,14 @@ export class SecurityDevicesRepository {
     private DeviceSessionModel: TDeviceSessionModel,
   ) {}
 
+  async findAllActiveForUser(
+    userId: string,
+  ): Promise<TDeviceSessionDocument[]> {
+    return this.DeviceSessionModel.find({
+      $and: [{ userId }, { tokenExpAt: { $gt: Date.now() } }],
+    });
+  }
+
   async findDeviceById(
     deviceId: string,
   ): Promise<TDeviceSessionDocument | null> {
