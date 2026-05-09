@@ -45,4 +45,28 @@ export class SecurityTestHelper {
 
     return getSecurityDevicesRequest;
   }
+
+  async deleteSecurityDevices<T = ViewSecurityDevice[]>(
+    deviceId: string,
+    options?: {
+    status?: HttpStatus;
+    refreshToken?: string;
+  }): Promise<ResponseWithBody<T>> {
+    options = {
+      status: HttpStatus.NO_CONTENT,
+      ...(options ?? {}),
+    };
+    const deleteSecurityDevicesRequest = request(this.app.getHttpServer())
+      .delete(`/security/devices/${deviceId}`)
+      .expect(options.status as HttpStatus);
+
+    if (options.refreshToken) {
+      deleteSecurityDevicesRequest.set(
+        'Cookie',
+        `refreshToken=${options.refreshToken}`,
+      );
+    }
+
+    return deleteSecurityDevicesRequest;
+  }
 }

@@ -28,6 +28,12 @@ import { JwtRefreshStrategy } from './auth/strategies/jwt/JwtRefresh.strategy';
 import { SecurityDevicesQueryRepository } from './security/infrastructure/SecurityDevices.query-repository';
 import { SecurityDevicesController } from './security/api/security.controller';
 import { GetSecurityDevicesQueryHandler } from './security/application/queries/get-security-devices.query';
+import { DeleteSecurityDeviceUseCase } from './security/application/usecases/delete-security-device.command';
+import { SecurityDevicesRepository } from './security/infrastructure/SecurityDevices.repository';
+
+const useCases = [
+  DeleteSecurityDeviceUseCase,
+]
 
 const queryHandlers = [
   GetSecurityDevicesQueryHandler,
@@ -54,6 +60,7 @@ const queryHandlers = [
     LocalStrategy,
     JwtStrategy,
     JwtRefreshStrategy,
+    SecurityDevicesRepository,
     SecurityDevicesQueryRepository,
     {
       provide: JWT_AT_SERVICE,
@@ -77,6 +84,7 @@ const queryHandlers = [
     },
     BasicStrategy,
     DeviceSessionsRepository,
+    ...useCases,
     ...queryHandlers,
   ],
   exports: [UsersRepository],
