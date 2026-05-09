@@ -59,7 +59,7 @@ describe('refresh tokens', () => {
 
     expect(refreshTokenFromResponse1).toBe(refreshTokenFromService1);
 
-    await debounce(500);
+    await debounce(1000);
 
     const refreshTokenResponse = await authTestHelper.refreshTokens({
       refreshToken: refreshTokenFromResponse1!,

@@ -62,12 +62,25 @@ export class AuthTestHelper {
 
   async loginUser<T = AccessTokenDto>(
     dto: HttpLoginDto,
-    options?: { status: HttpStatus },
+    options?: {
+      status?: HttpStatus;
+      userAgent?: string;
+    },
   ): Promise<ResponseWithBody<T>> {
-    return await request(this.app.getHttpServer())
+    options = {
+      status: HttpStatus.OK,
+      ...(options ?? {}),
+    };
+    const loginRequest = request(this.app.getHttpServer())
       .post('/auth/login')
       .send(dto)
-      .expect(options?.status ?? HttpStatus.OK);
+      .expect(options.status as HttpStatus);
+
+    if (options.userAgent) {
+      loginRequest.set('User-Agent', options.userAgent);
+    }
+
+    return loginRequest;
   }
 
   async loginAndGetAccessToken(dto: HttpLoginDto): Promise<string> {
@@ -137,10 +150,7 @@ export class AuthTestHelper {
     return refreshTokensRequest;
   }
 
-  async logout(options?: {
-    status?: HttpStatus;
-    refreshToken?: string;
-  }) {
+  async logout(options?: { status?: HttpStatus; refreshToken?: string }) {
     options = {
       status: HttpStatus.NO_CONTENT,
       ...(options ?? {}),

@@ -19,7 +19,12 @@ export class DeviceSession {
   @Prop({ type: Date, required: true })
   tokenExpAt!: Date;
 
-  static makeInstance(dto: DomainCreateDeviceSessionDto): TDeviceSessionDocument {
+  createdAt!: Date;
+  updatedAt!: Date;
+
+  static makeInstance(
+    dto: DomainCreateDeviceSessionDto,
+  ): TDeviceSessionDocument {
     const deviceSession = new this();
     deviceSession.userId = dto.userId;
     deviceSession.deviceId = dto.deviceId;

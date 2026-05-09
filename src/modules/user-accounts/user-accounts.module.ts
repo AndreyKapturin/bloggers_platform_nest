@@ -25,6 +25,13 @@ import {
 } from './auth/domain/DeviceSession.entity';
 import { DeviceSessionsRepository } from './auth/infrastructure/DeviceSessions.repository';
 import { JwtRefreshStrategy } from './auth/strategies/jwt/JwtRefresh.strategy';
+import { SecurityDevicesQueryRepository } from './security/infrastructure/SecurityDevices.query-repository';
+import { SecurityDevicesController } from './security/api/security.controller';
+import { GetSecurityDevicesQueryHandler } from './security/application/queries/get-security-devices.query';
+
+const queryHandlers = [
+  GetSecurityDevicesQueryHandler,
+]
 
 @Module({
   imports: [
@@ -36,7 +43,7 @@ import { JwtRefreshStrategy } from './auth/strategies/jwt/JwtRefresh.strategy';
     JwtModule,
     NotificationModule,
   ],
-  controllers: [UsersController, AuthController],
+  controllers: [UsersController, AuthController, SecurityDevicesController],
   providers: [
     UserAccountsConfig,
     UsersService,
@@ -47,6 +54,7 @@ import { JwtRefreshStrategy } from './auth/strategies/jwt/JwtRefresh.strategy';
     LocalStrategy,
     JwtStrategy,
     JwtRefreshStrategy,
+    SecurityDevicesQueryRepository,
     {
       provide: JWT_AT_SERVICE,
       useFactory: (userAccountsConfig: UserAccountsConfig) => {
@@ -69,6 +77,7 @@ import { JwtRefreshStrategy } from './auth/strategies/jwt/JwtRefresh.strategy';
     },
     BasicStrategy,
     DeviceSessionsRepository,
+    ...queryHandlers,
   ],
   exports: [UsersRepository],
 })
