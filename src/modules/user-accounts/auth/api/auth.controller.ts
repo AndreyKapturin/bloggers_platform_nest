@@ -119,4 +119,18 @@ export class AuthController {
     });
     return new AccessTokenDto(tokensPair.accessToken);
   }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtRefreshAuthGuard)
+  async logount(
+    @Res({ passthrough: true }) response: Response<AccessTokenDto>,
+    @ExtractUserWithDeviceFromRequest() dto: UserWithDeviceInRequestDto,
+  ): Promise<void> {
+    await this.authService.logout(dto.deviceId, dto.userId);
+    response.clearCookie('refreshToken', {
+      secure: true,
+      httpOnly: true,
+    });
+  }
 }

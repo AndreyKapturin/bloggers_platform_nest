@@ -266,6 +266,29 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  async logout(deviceId: string, userId: string): Promise<void> {
+    const deviceSession =
+      await this.deviceSessionRepository.findByDeviceIdAndUserId(
+        deviceId,
+        userId,
+      );
+
+    if (!deviceSession) {
+      throw new DomainException(
+        DomainExceptionStatus.InvalidCredentials,
+        'Invalid refresh token',
+        [
+          {
+            field: 'refreshToken',
+            message: 'Invalid refresh token',
+          },
+        ],
+      );
+    }
+
+    await this.deviceSessionRepository.delete(deviceSession);
+  }
+
   private _setConfirmationCode(userDocument: TUserDocument) {
     const confirmationCode = crypto.randomUUID();
     const codeExpirationDate = DateUtils.getDatePlusDays(

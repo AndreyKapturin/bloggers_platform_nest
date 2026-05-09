@@ -27,4 +27,8 @@ export class DeviceSessionsRepository {
     });
     return deviceSession;
   }
+
+  async delete(deviceSessionDocument: TDeviceSessionDocument): Promise<void> {
+    await deviceSessionDocument.deleteOne();
+  }
 }

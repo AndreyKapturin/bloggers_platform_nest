@@ -136,4 +136,26 @@ export class AuthTestHelper {
 
     return refreshTokensRequest;
   }
+
+  async logout(options?: {
+    status?: HttpStatus;
+    refreshToken?: string;
+  }) {
+    options = {
+      status: HttpStatus.NO_CONTENT,
+      ...(options ?? {}),
+    };
+    const refreshTokensRequest = request(this.app.getHttpServer())
+      .post('/auth/logout')
+      .expect(options.status as HttpStatus);
+
+    if (options.refreshToken) {
+      refreshTokensRequest.set(
+        'Cookie',
+        `refreshToken=${options.refreshToken}`,
+      );
+    }
+
+    return refreshTokensRequest;
+  }
 }
