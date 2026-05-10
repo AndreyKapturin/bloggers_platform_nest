@@ -11,4 +11,5 @@ export type JwtRefreshTokenSignPayload = {
 
 export type JwtRefreshTokenDecodedPayload = JwtRefreshTokenSignPayload & {
   exp: number;
+  iat: number;
 };

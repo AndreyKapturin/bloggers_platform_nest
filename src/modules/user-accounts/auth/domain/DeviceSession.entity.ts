@@ -17,7 +17,10 @@ export class DeviceSession {
   ip!: string;
 
   @Prop({ type: Date, required: true })
-  tokenExpAt!: Date;
+  tokenIat!: Date;
+
+  @Prop({ type: Date, required: true })
+  tokenExp!: Date;
 
   createdAt!: Date;
   updatedAt!: Date;
@@ -30,12 +33,14 @@ export class DeviceSession {
     deviceSession.deviceId = dto.deviceId;
     deviceSession.deviceName = dto.deviceName;
     deviceSession.ip = dto.ip;
-    deviceSession.tokenExpAt = dto.tokenExpAt;
+    deviceSession.tokenIat = dto.tokenIat;
+    deviceSession.tokenExp = dto.tokenExp;
     return deviceSession as TDeviceSessionDocument;
   }
 
-  updateTokenExpAt(newExpAt: Date): void {
-    this.tokenExpAt = newExpAt;
+  updateTokenIatAndExp(tokenIat: Date, tokenExp: Date): void {
+    this.tokenIat = tokenIat;
+    this.tokenExp = tokenExp;
   }
 }
 

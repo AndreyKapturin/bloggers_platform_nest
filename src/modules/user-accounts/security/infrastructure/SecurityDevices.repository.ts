@@ -17,7 +17,7 @@ export class SecurityDevicesRepository {
     userId: string,
   ): Promise<TDeviceSessionDocument[]> {
     return this.DeviceSessionModel.find({
-      $and: [{ userId }, { tokenExpAt: { $gt: Date.now() } }],
+      $and: [{ userId }, { tokenExp: { $gt: Date.now() } }],
     });
   }
 
@@ -25,7 +25,7 @@ export class SecurityDevicesRepository {
     deviceId: string,
   ): Promise<TDeviceSessionDocument | null> {
     return this.DeviceSessionModel.findOne({
-      $and: [{ deviceId }, { tokenExpAt: { $gt: Date.now() } }],
+      $and: [{ deviceId }, { tokenExp: { $gt: Date.now() } }],
     });
   }
 

@@ -4,6 +4,7 @@ export class DomainCreateDeviceSessionDto {
     public deviceId: string,
     public deviceName: string,
     public ip: string,
-    public tokenExpAt: Date,
+    public tokenIat: Date,
+    public tokenExp: Date,
   ) {}
 }

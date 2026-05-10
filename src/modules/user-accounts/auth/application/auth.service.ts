@@ -87,19 +87,18 @@ export class AuthService {
     const refreshToken =
       await this.jwtRefreshTokenService.signAsync(refreshTokenPayload);
 
-    const decodedRefreshTokenPayload =
-      this.jwtAccessTokenService.decode<JwtRefreshTokenDecodedPayload>(
+    const { exp, iat } =
+      this.jwtRefreshTokenService.decode<JwtRefreshTokenDecodedPayload>(
         refreshToken,
       );
 
-    const tokenExpAt = new Date(decodedRefreshTokenPayload.exp * 1000);
-
     const deviceSession = this.DeviceSessionModel.makeInstance({
-      userId: decodedRefreshTokenPayload.userId,
-      deviceId: decodedRefreshTokenPayload.deviceId,
+      userId: refreshTokenPayload.userId,
+      deviceId: refreshTokenPayload.deviceId,
       deviceName,
       ip,
-      tokenExpAt,
+      tokenIat: new Date(iat * 1000),
+      tokenExp: new Date(exp * 1000),
     });
 
     await this.deviceSessionRepository.save(deviceSession);
@@ -253,14 +252,15 @@ export class AuthService {
     const refreshToken =
       await this.jwtRefreshTokenService.signAsync(refreshTokenPayload);
 
-    const decodedRefreshTokenPayload =
-      this.jwtAccessTokenService.decode<JwtRefreshTokenDecodedPayload>(
+    const { exp, iat } =
+      this.jwtRefreshTokenService.decode<JwtRefreshTokenDecodedPayload>(
         refreshToken,
       );
 
-    const tokenExpAt = new Date(decodedRefreshTokenPayload.exp * 1000);
-
-    deviceSession.updateTokenExpAt(tokenExpAt);
+    deviceSession.updateTokenIatAndExp(
+      new Date(iat * 1000),
+      new Date(exp * 1000),
+    );
 
     await this.deviceSessionRepository.save(deviceSession);
     return { accessToken, refreshToken };

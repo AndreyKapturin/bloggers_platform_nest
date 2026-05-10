@@ -56,10 +56,10 @@ export class JwtRefreshStrategy extends PassportStrategy(
       );
     }
 
-    if (
-      deviceSession.tokenExpAt.getTime() !==
-      new Date(payload.exp * 1000).getTime()
-    ) {
+    const sessionTokenIatTimeshtamp = deviceSession.tokenIat.getTime();
+    const payloadTokenIatTimeshtamp = new Date(payload.iat * 1000).getTime();
+    
+    if (sessionTokenIatTimeshtamp !== payloadTokenIatTimeshtamp) {
       throw new DomainException(
         DomainExceptionStatus.InvalidCredentials,
         'Invalid refresh token',

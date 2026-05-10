@@ -17,7 +17,7 @@ export class SecurityDevicesQueryRepository {
     userId: string,
   ): Promise<ViewSecurityDevice[]> {
     const activeSessions = await this.DeviceSessionModel.find({
-      $and: [{ userId }, { tokenExpAt: { $gt: Date.now() } }],
+      $and: [{ userId }, { tokenExp: { $gt: Date.now() } }],
     });
     return activeSessions.map((session) => ViewSecurityDevice.toView(session));
   }

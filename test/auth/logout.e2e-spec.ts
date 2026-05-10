@@ -5,6 +5,7 @@ import { initApp } from '../utils/initApp';
 import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpLogin.dto';
 import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
+import { debounce } from '../utils/debounce';
 
 describe('logout', () => {
   let app: INestApplication;
@@ -37,11 +38,11 @@ describe('logout', () => {
 
     const loginResponse = await authTestHelper.loginUser(loginDto);
 
-    const refreshTokenFromResponse1 =
+    const refreshTokenFromResponse =
       authTestHelper.extractRefreshTokenFromCookie(loginResponse);
 
     const logoutResponse = await authTestHelper.logout({
-      refreshToken: refreshTokenFromResponse1!,
+      refreshToken: refreshTokenFromResponse!,
     });
 
     const refreshTokenFromLogoutResponse =
@@ -50,7 +51,37 @@ describe('logout', () => {
     expect(refreshTokenFromLogoutResponse).toBeNull();
 
     const logoutWithRevokedTokenResponse = await authTestHelper.logout({
-      refreshToken: refreshTokenFromResponse1!,
+      refreshToken: refreshTokenFromResponse!,
+      status: HttpStatus.UNAUTHORIZED,
+    });
+  });
+
+  it('should return UNAUTHORIZED if refresh token is invalid', async () => {
+    const createUserDto = usersTestHelper.createInputDto();
+    const loginDto: HttpLoginDto = {
+      loginOrEmail: createUserDto.login,
+      password: createUserDto.password,
+    };
+
+    await usersTestHelper.createUser(createUserDto);
+
+    const loginResponse = await authTestHelper.loginUser(loginDto);
+
+    const refreshTokenFromResponse =
+      authTestHelper.extractRefreshTokenFromCookie(loginResponse);
+
+    await debounce(1000);
+
+    const refreshTokensResponse = await authTestHelper.refreshTokens({
+      refreshToken: refreshTokenFromResponse!,
+    });
+
+    const newRefreshToken = authTestHelper.extractRefreshTokenFromCookie(
+      refreshTokensResponse,
+    );
+
+    const logoutResponse = await authTestHelper.logout({
+      refreshToken: refreshTokenFromResponse!,
       status: HttpStatus.UNAUTHORIZED,
     });
   });
