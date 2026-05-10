@@ -6,6 +6,8 @@ import { HttpCreateUserDto } from '../../src/modules/user-accounts/users/api/dto
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
 import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpLogin.dto';
+import { MockThrottlerToggle } from '../utils/MockThrottlerToggle';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 describe('login', () => {
   let app: INestApplication;
@@ -13,6 +15,8 @@ describe('login', () => {
   let authTestHelper: AuthTestHelper;
 
   let inputUser: HttpCreateUserDto;
+
+  let mockThrottlerToggle: MockThrottlerToggle;
 
   beforeAll(async () => {
     app = await initApp();
@@ -23,6 +27,10 @@ describe('login', () => {
     authTestHelper = new AuthTestHelper(app, usersTestHelper);
     inputUser = usersTestHelper.createInputDto();
     await authTestHelper.registerUser(inputUser);
+
+    const throttlerGuard = app.get(ThrottlerGuard);
+    mockThrottlerToggle = new MockThrottlerToggle(throttlerGuard, jest);
+    mockThrottlerToggle.deactivateThrottler();
   });
 
   afterAll(async () => {
@@ -132,5 +140,27 @@ describe('login', () => {
     await authTestHelper.loginUser(notExistLogin, {
       status: HttpStatus.UNAUTHORIZED,
     });
+  });
+
+  it('should return TO MANY REQUESTS', async () => {
+    const notExistLogin = {
+      loginOrEmail: 'not_exist',
+      password: 'strong_password123',
+    };
+    const requestCount = 5;
+
+    mockThrottlerToggle.activateThrottler();
+
+    for (let i = 0; i < requestCount; i++) {
+      await authTestHelper.loginUser(notExistLogin, {
+        status: HttpStatus.UNAUTHORIZED,
+      });
+    }
+
+    await authTestHelper.loginUser(notExistLogin, {
+      status: HttpStatus.TOO_MANY_REQUESTS,
+    });
+
+    mockThrottlerToggle.deactivateThrottler();
   });
 });

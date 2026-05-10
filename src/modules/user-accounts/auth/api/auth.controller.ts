@@ -57,7 +57,6 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
-  @SkipThrottle()
   async login(
     @Req() req: Request,
     @Ip() ip: string,

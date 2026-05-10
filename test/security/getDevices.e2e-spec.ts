@@ -46,7 +46,7 @@ describe('get security devices', () => {
     const loginResponse1 = await authTestHelper.loginUser(loginDto, {
       userAgent: userAgent1,
     });
-    await authTestHelper.loginUser(loginDto, {
+    const loginResponse2 = await authTestHelper.loginUser(loginDto, {
       userAgent: userAgent2,
     });
     await authTestHelper.loginUser(loginDto, {
@@ -56,19 +56,28 @@ describe('get security devices', () => {
     const refreshToken1 =
       authTestHelper.extractRefreshTokenFromCookie(loginResponse1);
 
+    const refreshToken2 =
+      authTestHelper.extractRefreshTokenFromCookie(loginResponse2);
+
     expect(refreshToken1).toBeDefined();
 
-    const securityDevicesResponse = await securityTestHelper.getSecurityDevices(
-      {
-        refreshToken: refreshToken1!,
-      },
-    );
+    let securityDevicesResponse = await securityTestHelper.getSecurityDevices({
+      refreshToken: refreshToken1!,
+    });
 
     expect(securityDevicesResponse.body).toBeInstanceOf(Array);
     expect(securityDevicesResponse.body).toHaveLength(3);
     expect(securityDevicesResponse.body).toEqual(
       expect.arrayOf(securityTestHelper.createExpectedSecurityDevice()),
     );
+
+    await authTestHelper.logout({ refreshToken: refreshToken2! });
+
+    securityDevicesResponse = await securityTestHelper.getSecurityDevices({
+      refreshToken: refreshToken1!,
+    });
+
+    expect(securityDevicesResponse.body).toHaveLength(2);
   });
 
   it(`shouldn't return security devices if refresh token is revoked `, async () => {

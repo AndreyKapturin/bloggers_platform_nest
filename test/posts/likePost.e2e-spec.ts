@@ -12,6 +12,8 @@ import {
 } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
 import { faker } from '@faker-js/faker';
 import { NewestLike } from '../../src/modules/bloggers-platform/posts/domain/Post.entity';
+import { MockThrottlerToggle } from '../utils/MockThrottlerToggle';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 describe('like post', () => {
   let app: INestApplication;
@@ -20,6 +22,8 @@ describe('like post', () => {
   let postsTestHelper: PostsTestHelper;
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
+
+  let mockThrottlerToggle: MockThrottlerToggle;
 
   const inputLike = { likeStatus: LikeStatus.Like };
   const inputDislike = { likeStatus: LikeStatus.Dislike };
@@ -49,6 +53,10 @@ describe('like post', () => {
     usersTestHelper = new UsersTestHelper(app);
     authTestHelper = new AuthTestHelper(app, usersTestHelper);
 
+    const throttlerGuard = app.get(ThrottlerGuard);
+    mockThrottlerToggle = new MockThrottlerToggle(throttlerGuard, jest);
+    mockThrottlerToggle.deactivateThrottler();
+
     const blog = await blogsTestHelper.createRandomBlog();
     const post = await postsTestHelper.createRandomPost(blog.id);
     postId = post.id;
@@ -58,6 +66,7 @@ describe('like post', () => {
   });
 
   afterAll(async () => {
+    mockThrottlerToggle.activateThrottler();
     await app.close();
   });
 
