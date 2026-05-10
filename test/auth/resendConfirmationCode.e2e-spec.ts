@@ -112,8 +112,6 @@ describe('registration-confirmation', () => {
     expect(mockSendConfirmationCode).not.toHaveBeenCalled();
   });
 
-  //TODO - move limit and ttl to env or config
-
   it('should return TO MANY REQUESTS', async () => {
     const notExistedEmailDto: HttpEmailDto = { email: 'notexisted@mail.ru' };
     const requestCount = 5;

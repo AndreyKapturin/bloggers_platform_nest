@@ -1,23 +1,26 @@
 import { Module } from '@nestjs/common';
 import { EmailService } from './email.service';
 import { MailerModule } from '@nestjs-modules/mailer';
-
-const MAIL_USERNAME = 'andrei.kapturin';
-const MAIL_EMAIL = 'andrei.kapturin@yandex.ru';
-const MAIL_PASSWORD = 'bzdpxrwgduazkgkg';
+import { NotificationConfig } from './notification.config';
 
 @Module({
   imports: [
-    MailerModule.forRoot({
-      transport: {
-        service: 'Yandex',
-        auth: {
-          user: MAIL_USERNAME,
-          pass: MAIL_PASSWORD,
-        },
-      },
-      defaults: {
-        from: `"Bloggers platform" <${MAIL_EMAIL}>`,
+    MailerModule.forRootAsync({
+      extraProviders: [NotificationConfig],
+      inject: [NotificationConfig],
+      useFactory: (notificationConfig: NotificationConfig) => {
+        return {
+          transport: {
+            service: notificationConfig.mailServiceId,
+            auth: {
+              user: notificationConfig.mailUsername,
+              pass: notificationConfig.mailPassword,
+            },
+          },
+          defaults: {
+            from: `"Bloggers platform" <${notificationConfig.mailSenderEmail}>`,
+          },
+        };
       },
     }),
   ],

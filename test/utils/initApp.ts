@@ -1,16 +1,17 @@
 import { INestApplication } from '@nestjs/common';
-import { AppModule } from '../../src/app.module';
 import { Test, TestingModule, TestingModuleBuilder } from '@nestjs/testing';
 import { EmailService } from '../../src/modules/notification/email.service';
 import { fakeEmailService } from './mocks/fakeEmailService';
+import { initDynamicApp } from '../../src/initDynamicApp';
 
 export type AdditionalBuildStep = (builder: TestingModuleBuilder) => void;
 
 export async function initApp(
   additionalBuildStep?: AdditionalBuildStep,
 ): Promise<INestApplication> {
+  const DynamicAppModule = await initDynamicApp();
   const testingModuleBuilder: TestingModuleBuilder = Test.createTestingModule({
-    imports: [AppModule],
+    imports: [DynamicAppModule],
   });
 
   testingModuleBuilder

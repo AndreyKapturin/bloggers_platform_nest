@@ -55,11 +55,11 @@ export class BlogsController {
   async getBlogPosts(
     @Param('id') blogId: string,
     @Query() postsQueryParamsDto: PostsQueryParamsDto,
-    @OptionalUserFromRequest() user: UserInRequestDto | null,
+    @OptionalUserFromRequest() dto: UserInRequestDto | null,
   ): Promise<PaginatedView<ViewPostDto>> {
     const query = new GetPostsQuery(
       postsQueryParamsDto,
-      user?.id ?? null,
+      dto?.userId ?? null,
       blogId,
     );
 

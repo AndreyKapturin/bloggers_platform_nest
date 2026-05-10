@@ -8,12 +8,7 @@ import { CommentsTestHelper } from '../utils/CommentsTestHelper';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { BlogsTestHelper } from '../utils/BlogsTestHelper';
 import { PostsTestHelper } from '../utils/PostsTestHelper';
-import { JwtService } from '@nestjs/jwt';
-import {
-  JWT_AT_SECRET,
-  JWT_AT_SERVICE,
-  JWT_AT_TTL,
-} from '../../src/modules/user-accounts/auth/strategies/jwt/jwt-config';
+import { overrideAccessTokenJwtService } from '../utils/overrideAccessTokenJwtService';
 
 describe('delete comment', () => {
   let app: INestApplication;
@@ -30,17 +25,9 @@ describe('delete comment', () => {
   let accessToken: string;
   let accessToken2: string;
 
-  const jwtService = new JwtService({
-    secret: JWT_AT_SECRET,
-    signOptions: { expiresIn: JWT_AT_TTL },
-  });
-
-  const originalJwtSignAsync = jwtService.signAsync.bind(jwtService);
-  const jwtSignAsyncMock = jest.spyOn(jwtService, 'signAsync');
-
   beforeAll(async () => {
     app = await initApp((builder) => {
-      builder.overrideProvider(JWT_AT_SERVICE).useValue(jwtService);
+      overrideAccessTokenJwtService(builder);
     });
     setupApp(app);
     await app.init();
@@ -70,20 +57,6 @@ describe('delete comment', () => {
     await app.close();
   });
 
-  it(`shouldn't delete comment. Return UNAUTHORIZED status if access token expired`, async () => {
-    jwtSignAsyncMock.mockImplementationOnce(async (payload, options) => {
-      return originalJwtSignAsync(payload, { ...options, expiresIn: '1s' });
-    });
-
-    const accessToken = await authTestHelper.createUserAndGetAccessToken();
-
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    await commentsTestHelper.deleteComment(commentId, accessToken, {
-      status: HttpStatus.UNAUTHORIZED,
-    });
-  });
-
   it(`shouldn't delete comment. Return UNAUTHORIZED status if passed invalid access token`, async () => {
     const invalidAccessToken = faker.internet.jwt();
     await commentsTestHelper.deleteComment(commentId, invalidAccessToken, {
@@ -110,6 +83,16 @@ describe('delete comment', () => {
     });
     await commentsTestHelper.getCommentById(commentId, {
       status: HttpStatus.NOT_FOUND,
+    });
+  });
+
+  it(`shouldn't delete comment. Return UNAUTHORIZED status if access token expired`, async () => {
+    const accessToken = await authTestHelper.createUserAndGetAccessToken();
+
+    await new Promise((resolve) => setTimeout(resolve, 2100));
+
+    await commentsTestHelper.deleteComment(commentId, accessToken, {
+      status: HttpStatus.UNAUTHORIZED,
     });
   });
 });

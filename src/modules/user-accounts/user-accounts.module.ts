@@ -15,23 +15,45 @@ import { NotificationModule } from '../notification/notification.module';
 import { JwtStrategy } from './auth/strategies/jwt/Jwt.strategy';
 import { BasicStrategy } from './auth/strategies/basic/Basic.strategy';
 import {
-  JWT_AT_SECRET,
   JWT_AT_SERVICE,
-  JWT_AT_TTL,
-  JWT_RT_SECRET,
   JWT_RT_SERVICE,
-  JWT_RT_TTL,
 } from './auth/strategies/jwt/jwt-config';
+import { UserAccountsConfig } from './user-accounts.config';
+import {
+  DeviceSession,
+  DeviceSessionSchema,
+} from './auth/domain/DeviceSession.entity';
+import { DeviceSessionsRepository } from './auth/infrastructure/DeviceSessions.repository';
+import { JwtRefreshStrategy } from './auth/strategies/jwt/JwtRefresh.strategy';
+import { SecurityDevicesQueryRepository } from './security/infrastructure/SecurityDevices.query-repository';
+import { SecurityDevicesController } from './security/api/security.controller';
+import { GetSecurityDevicesQueryHandler } from './security/application/queries/get-security-devices.query';
+import { DeleteSecurityDeviceUseCase } from './security/application/usecases/delete-security-device.command';
+import { SecurityDevicesRepository } from './security/infrastructure/SecurityDevices.repository';
+import { DeleteAllOtherSecurityDeviceUseCase } from './security/application/usecases/delete-all-other-security-devices.command';
+
+const useCases = [
+  DeleteSecurityDeviceUseCase,
+  DeleteAllOtherSecurityDeviceUseCase,
+]
+
+const queryHandlers = [
+  GetSecurityDevicesQueryHandler,
+]
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: DeviceSession.name, schema: DeviceSessionSchema },
+    ]),
     PassportModule,
     JwtModule,
     NotificationModule,
   ],
-  controllers: [UsersController, AuthController],
+  controllers: [UsersController, AuthController, SecurityDevicesController],
   providers: [
+    UserAccountsConfig,
     UsersService,
     UsersRepository,
     UsersQueryRepository,
@@ -39,25 +61,33 @@ import {
     AuthService,
     LocalStrategy,
     JwtStrategy,
+    JwtRefreshStrategy,
+    SecurityDevicesRepository,
+    SecurityDevicesQueryRepository,
     {
       provide: JWT_AT_SERVICE,
-      useFactory: () => {
+      useFactory: (userAccountsConfig: UserAccountsConfig) => {
         return new JwtService({
-          secret: JWT_AT_SECRET,
-          signOptions: { expiresIn: JWT_AT_TTL },
+          secret: userAccountsConfig.accessTokenSecret,
+          signOptions: { expiresIn: userAccountsConfig.accessTokenExpireIn },
         });
       },
+      inject: [UserAccountsConfig],
     },
     {
       provide: JWT_RT_SERVICE,
-      useFactory: () => {
+      useFactory: (userAccountsConfig: UserAccountsConfig) => {
         return new JwtService({
-          secret: JWT_RT_SECRET,
-          signOptions: { expiresIn: JWT_RT_TTL },
+          secret: userAccountsConfig.refreshTokenSecret,
+          signOptions: { expiresIn: userAccountsConfig.refreshTokenExpireIn },
         });
       },
+      inject: [UserAccountsConfig],
     },
     BasicStrategy,
+    DeviceSessionsRepository,
+    ...useCases,
+    ...queryHandlers,
   ],
   exports: [UsersRepository],
 })

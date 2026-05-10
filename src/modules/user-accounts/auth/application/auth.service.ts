@@ -1,11 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { HttpCreateUserDto } from '../../users/api/dto/HttpCreateUser.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  TUserDocument,
-  type TUserModel,
-  User,
-} from '../../users/domain/user.entity';
+import { TUserDocument } from '../../users/domain/user.entity';
 import { UsersRepository } from '../../users/infrastructure/users.repository';
 import { CryptoService } from '../../../../services/CryptoService';
 import { DateUtils } from '../../../../utils/DateUtils';
@@ -17,17 +12,29 @@ import {
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
 import { HttpNewPasswordDto } from '../api/dto/HttpNewPassword.dto';
-import { JwtAccessTokenPayload, JwtRegreshTokenPayload } from '../types';
+import {
+  JwtAccessTokenSignPayload,
+  JwtRefreshTokenDecodedPayload,
+  JwtRefreshTokenSignPayload,
+} from '../types';
 import { JWT_AT_SERVICE, JWT_RT_SERVICE } from '../strategies/jwt/jwt-config';
+import { UserAccountsConfig } from '../../user-accounts.config';
+import { InjectModel } from '@nestjs/mongoose';
+import {
+  DeviceSession,
+  type TDeviceSessionModel,
+} from '../domain/DeviceSession.entity';
+import { LoginDto } from './dto/Login.dto';
+import { DeviceSessionsRepository } from '../infrastructure/DeviceSessions.repository';
 
-// TODO: to env
-const CONFIRMATION_CODE_TTL_DAYS = 2;
-const RECOVERY_CODE_TTL_MINUTES = 15;
+type JwtTokensPair = {
+  accessToken: string;
+  refreshToken: string;
+};
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name) private UserModel: TUserModel,
     private usersRepository: UsersRepository,
     private usersService: UsersService,
     private cryptoService: CryptoService,
@@ -36,6 +43,10 @@ export class AuthService {
     @Inject(JWT_RT_SERVICE)
     private jwtRefreshTokenService: JwtService,
     private emailService: EmailService,
+    private userAuthConfig: UserAccountsConfig,
+    @InjectModel(DeviceSession.name)
+    private DeviceSessionModel: TDeviceSessionModel,
+    private deviceSessionRepository: DeviceSessionsRepository,
   ) {}
 
   async registration(dto: HttpCreateUserDto): Promise<void> {
@@ -64,11 +75,10 @@ export class AuthService {
     return null;
   }
 
-  async login(
-    userId: string,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const accessTokenPayload: JwtAccessTokenPayload = { userId };
-    const refreshTokenPayload: JwtRegreshTokenPayload = {
+  async login(dto: LoginDto): Promise<JwtTokensPair> {
+    const { userId, ip, deviceName } = dto;
+    const accessTokenPayload: JwtAccessTokenSignPayload = { userId };
+    const refreshTokenPayload: JwtRefreshTokenSignPayload = {
       userId,
       deviceId: crypto.randomUUID(),
     };
@@ -76,6 +86,22 @@ export class AuthService {
       await this.jwtAccessTokenService.signAsync(accessTokenPayload);
     const refreshToken =
       await this.jwtRefreshTokenService.signAsync(refreshTokenPayload);
+
+    const { exp, iat } =
+      this.jwtRefreshTokenService.decode<JwtRefreshTokenDecodedPayload>(
+        refreshToken,
+      );
+
+    const deviceSession = this.DeviceSessionModel.makeInstance({
+      userId: refreshTokenPayload.userId,
+      deviceId: refreshTokenPayload.deviceId,
+      deviceName,
+      ip,
+      tokenIat: new Date(iat * 1000),
+      tokenExp: new Date(exp * 1000),
+    });
+
+    await this.deviceSessionRepository.save(deviceSession);
     return { accessToken, refreshToken };
   }
 
@@ -154,7 +180,7 @@ export class AuthService {
 
     const recoveryCode = crypto.randomUUID();
     const codeExpirationDate = DateUtils.getDatePlusMinutes(
-      RECOVERY_CODE_TTL_MINUTES,
+      this.userAuthConfig.recoveryCodeTtlMinutes,
     );
 
     userDocument.setRecoveryCode(recoveryCode, codeExpirationDate);
@@ -192,10 +218,81 @@ export class AuthService {
     await this.usersRepository.save(userDocument);
   }
 
+  async refreshTokens(
+    deviceId: string,
+    userId: string,
+  ): Promise<JwtTokensPair> {
+    const deviceSession =
+      await this.deviceSessionRepository.findByDeviceIdAndUserId(
+        deviceId,
+        userId,
+      );
+
+    if (!deviceSession) {
+      throw new DomainException(
+        DomainExceptionStatus.InvalidCredentials,
+        'Invalid refresh token',
+        [
+          {
+            field: 'refreshToken',
+            message: 'Invalid refresh token',
+          },
+        ],
+      );
+    }
+
+    const accessTokenPayload: JwtAccessTokenSignPayload = { userId };
+    const refreshTokenPayload: JwtRefreshTokenSignPayload = {
+      userId,
+      deviceId,
+    };
+
+    const accessToken =
+      await this.jwtAccessTokenService.signAsync(accessTokenPayload);
+    const refreshToken =
+      await this.jwtRefreshTokenService.signAsync(refreshTokenPayload);
+
+    const { exp, iat } =
+      this.jwtRefreshTokenService.decode<JwtRefreshTokenDecodedPayload>(
+        refreshToken,
+      );
+
+    deviceSession.updateTokenIatAndExp(
+      new Date(iat * 1000),
+      new Date(exp * 1000),
+    );
+
+    await this.deviceSessionRepository.save(deviceSession);
+    return { accessToken, refreshToken };
+  }
+
+  async logout(deviceId: string, userId: string): Promise<void> {
+    const deviceSession =
+      await this.deviceSessionRepository.findByDeviceIdAndUserId(
+        deviceId,
+        userId,
+      );
+
+    if (!deviceSession) {
+      throw new DomainException(
+        DomainExceptionStatus.InvalidCredentials,
+        'Invalid refresh token',
+        [
+          {
+            field: 'refreshToken',
+            message: 'Invalid refresh token',
+          },
+        ],
+      );
+    }
+
+    await this.deviceSessionRepository.delete(deviceSession);
+  }
+
   private _setConfirmationCode(userDocument: TUserDocument) {
     const confirmationCode = crypto.randomUUID();
     const codeExpirationDate = DateUtils.getDatePlusDays(
-      CONFIRMATION_CODE_TTL_DAYS,
+      this.userAuthConfig.confirmationCodeTtlHourse,
     );
 
     userDocument.setEmailConfirmationCode(confirmationCode, codeExpirationDate);
