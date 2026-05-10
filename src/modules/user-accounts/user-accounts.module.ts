@@ -19,15 +19,39 @@ import {
   JWT_RT_SERVICE,
 } from './auth/strategies/jwt/jwt-config';
 import { UserAccountsConfig } from './user-accounts.config';
+import {
+  DeviceSession,
+  DeviceSessionSchema,
+} from './auth/domain/DeviceSession.entity';
+import { DeviceSessionsRepository } from './auth/infrastructure/DeviceSessions.repository';
+import { JwtRefreshStrategy } from './auth/strategies/jwt/JwtRefresh.strategy';
+import { SecurityDevicesQueryRepository } from './security/infrastructure/SecurityDevices.query-repository';
+import { SecurityDevicesController } from './security/api/security.controller';
+import { GetSecurityDevicesQueryHandler } from './security/application/queries/get-security-devices.query';
+import { DeleteSecurityDeviceUseCase } from './security/application/usecases/delete-security-device.command';
+import { SecurityDevicesRepository } from './security/infrastructure/SecurityDevices.repository';
+import { DeleteAllOtherSecurityDeviceUseCase } from './security/application/usecases/delete-all-other-security-devices.command';
+
+const useCases = [
+  DeleteSecurityDeviceUseCase,
+  DeleteAllOtherSecurityDeviceUseCase,
+]
+
+const queryHandlers = [
+  GetSecurityDevicesQueryHandler,
+]
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: DeviceSession.name, schema: DeviceSessionSchema },
+    ]),
     PassportModule,
     JwtModule,
     NotificationModule,
   ],
-  controllers: [UsersController, AuthController],
+  controllers: [UsersController, AuthController, SecurityDevicesController],
   providers: [
     UserAccountsConfig,
     UsersService,
@@ -37,6 +61,9 @@ import { UserAccountsConfig } from './user-accounts.config';
     AuthService,
     LocalStrategy,
     JwtStrategy,
+    JwtRefreshStrategy,
+    SecurityDevicesRepository,
+    SecurityDevicesQueryRepository,
     {
       provide: JWT_AT_SERVICE,
       useFactory: (userAccountsConfig: UserAccountsConfig) => {
@@ -58,6 +85,9 @@ import { UserAccountsConfig } from './user-accounts.config';
       inject: [UserAccountsConfig],
     },
     BasicStrategy,
+    DeviceSessionsRepository,
+    ...useCases,
+    ...queryHandlers,
   ],
   exports: [UsersRepository],
 })

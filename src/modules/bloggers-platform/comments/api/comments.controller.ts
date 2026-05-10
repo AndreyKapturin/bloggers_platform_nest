@@ -33,9 +33,9 @@ export class CommentsController {
   @UseGuards(JwtOptionalAuthGuard)
   async getById(
     @Param('id') id: string,
-    @OptionalUserFromRequest() user: UserInRequestDto | null,
+    @OptionalUserFromRequest() dto: UserInRequestDto | null,
   ) {
-    const query = new GetCommentQuery(id, user?.id ?? null);
+    const query = new GetCommentQuery(id, dto?.userId ?? null);
     return this.queryBus.execute(query);
   }
 
@@ -44,10 +44,14 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   async updateComment(
     @Param('commentId') commentId: string,
-    @Body() dto: HttpCommentDto,
-    @ExtractUserFromRequest() user: UserInRequestDto,
+    @Body() commentDto: HttpCommentDto,
+    @ExtractUserFromRequest() userDto: UserInRequestDto,
   ) {
-    const command = new UpdateCommentCommand(commentId, dto.content, user.id);
+    const command = new UpdateCommentCommand(
+      commentId,
+      commentDto.content,
+      userDto.userId,
+    );
     await this.commandBus.execute(command);
   }
 
@@ -56,10 +60,14 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   async changeLikeStatus(
     @Param('commentId') commentId: string,
-    @Body() dto: HttpLikeStatusDto,
-    @ExtractUserFromRequest() user: UserInRequestDto,
+    @Body() likeDto: HttpLikeStatusDto,
+    @ExtractUserFromRequest() userDto: UserInRequestDto,
   ) {
-    const command = new LikeCommentCommand(commentId, dto.likeStatus, user.id);
+    const command = new LikeCommentCommand(
+      commentId,
+      likeDto.likeStatus,
+      userDto.userId,
+    );
     await this.commandBus.execute(command);
   }
 
@@ -68,9 +76,9 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   async deleteComment(
     @Param('commentId') commentId: string,
-    @ExtractUserFromRequest() user: UserInRequestDto,
+    @ExtractUserFromRequest() dto: UserInRequestDto,
   ) {
-    const command = new DeleteCommentCommand(commentId, user.id);
+    const command = new DeleteCommentCommand(commentId, dto.userId);
     await this.commandBus.execute(command);
   }
 }

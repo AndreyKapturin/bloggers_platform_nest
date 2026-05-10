@@ -4,7 +4,9 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Ip,
   Post,
+  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -13,15 +15,21 @@ import { AuthService } from '../application/auth.service';
 import { LocalAuthGuard } from '../strategies/local/Local.guard';
 import { ExtractUserFromRequest } from '../../../../core/decorators/extract-userId.decorator';
 import { AccessTokenDto } from '../dto/AccessToken.view-dto';
-import { UserInRequestDto } from '../../../../core/dto/UserInRequest.dto';
+import {
+  UserInRequestDto,
+  UserWithDeviceInRequestDto,
+} from '../../../../core/dto/UserInRequest.dto';
 import { HttpEmailDto } from './dto/HttpEmail.dto';
 import { HttpConfirmationCodeDto } from './dto/HttpConfirmationCode.dto';
 import { HttpNewPasswordDto } from './dto/HttpNewPassword.dto';
 import { ViewMeDto } from '../../users/api/dto/ViewMe.dto';
 import { JwtAuthGuard } from '../strategies/jwt/Jwt.guard';
 import { UsersQueryRepository } from '../../users/infrastructure/users.query-repository';
-import { type Response } from 'express';
+import { type Request, type Response } from 'express';
 import { SkipThrottle, ThrottlerGuard } from '@nestjs/throttler';
+import { JwtRefreshAuthGuard } from '../strategies/jwt/JwtRefresh.guard';
+import { LoginDto } from '../application/dto/Login.dto';
+import { ExtractUserWithDeviceFromRequest } from '../../../../core/decorators/extract-user-with-device.decorator';
 
 @UseGuards(ThrottlerGuard)
 @Controller('auth')
@@ -35,9 +43,9 @@ export class AuthController {
   @SkipThrottle()
   @UseGuards(JwtAuthGuard)
   async me(
-    @ExtractUserFromRequest() user: UserInRequestDto,
+    @ExtractUserFromRequest() dto: UserInRequestDto,
   ): Promise<ViewMeDto> {
-    return this.usersQueryRepository.getMe(user.id);
+    return this.usersQueryRepository.getMe(dto.userId);
   }
 
   @Post('registration')
@@ -49,12 +57,15 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
-  @SkipThrottle()
   async login(
+    @Req() req: Request,
+    @Ip() ip: string,
     @Res({ passthrough: true }) response: Response<AccessTokenDto>,
-    @ExtractUserFromRequest() user: UserInRequestDto,
+    @ExtractUserFromRequest() dto: UserInRequestDto,
   ): Promise<AccessTokenDto> {
-    const tokensPair = await this.authService.login(user.id);
+    const deviceName = `${req.useragent!.os} ${req.useragent!.browser}`;
+    const loginDto = new LoginDto(dto.userId, ip, deviceName);
+    const tokensPair = await this.authService.login(loginDto);
     response.cookie('refreshToken', tokensPair.refreshToken, {
       secure: true,
       httpOnly: true,
@@ -88,5 +99,37 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async updatePassword(@Body() dto: HttpNewPasswordDto): Promise<void> {
     await this.authService.updatePassword(dto);
+  }
+
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtRefreshAuthGuard)
+  async refreshToken(
+    @Res({ passthrough: true }) response: Response<AccessTokenDto>,
+    @ExtractUserWithDeviceFromRequest() dto: UserWithDeviceInRequestDto,
+  ): Promise<AccessTokenDto> {
+    const tokensPair = await this.authService.refreshTokens(
+      dto.deviceId,
+      dto.userId,
+    );
+    response.cookie('refreshToken', tokensPair.refreshToken, {
+      secure: true,
+      httpOnly: true,
+    });
+    return new AccessTokenDto(tokensPair.accessToken);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtRefreshAuthGuard)
+  async logount(
+    @Res({ passthrough: true }) response: Response<AccessTokenDto>,
+    @ExtractUserWithDeviceFromRequest() dto: UserWithDeviceInRequestDto,
+  ): Promise<void> {
+    await this.authService.logout(dto.deviceId, dto.userId);
+    response.clearCookie('refreshToken', {
+      secure: true,
+      httpOnly: true,
+    });
   }
 }
