@@ -12,11 +12,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BlogsService } from '../application/blogs.service';
-import { BlogsQueryRepository } from '../infrastructure/blogs.query-repository';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { PostsQueryParamsDto } from '../../posts/api/dto/PostQueryParams.dto';
 import { PostsService } from '../../posts/application/posts.service';
-import { PostsQueryRepository } from '../../posts/infrastructure/Post.query-repository';
 import { ViewPostDto } from '../../posts/api/dto/VIewPost.dto';
 import { BlogPostDtoExtractor } from '../decorators/blog-post-dto-extractor.decorator';
 import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
@@ -33,14 +31,13 @@ import { GetBlogQuery } from '../application/queries/get-blog.query';
 import { HttpUpdateBlogDto } from './dto/HttpUpdateBlog.dto';
 import { HttpCreatePostDto } from '../../posts/api/dto/HttpCreatePost.dto';
 import { GetBlogsQuery } from '../application/queries/get-blogs.query';
+import { GetPostQuery } from '../../posts/application/queries/get-post.query';
 
 @Controller('blogs')
 export class BlogsController {
   constructor(
     private blogsService: BlogsService,
-    private blogsQueryRepository: BlogsQueryRepository,
     private postsServise: PostsService,
-    private postsQueryRepository: PostsQueryRepository,
     private commandBus: CommandBus,
     private queryBus: QueryBus,
   ) {}
@@ -83,7 +80,8 @@ export class BlogsController {
       dto.websiteUrl,
     );
     const blogId = await this.commandBus.execute(command);
-    return await this.blogsQueryRepository.findById(blogId);
+    const query = new GetBlogQuery(blogId);
+    return this.queryBus.execute(query);
   }
 
   @Post(':blogId/posts')
@@ -91,9 +89,9 @@ export class BlogsController {
   async createPostForBlog(
     @BlogPostDtoExtractor() dto: HttpCreatePostDto,
   ): Promise<ViewPostDto> {
-    await this.blogsQueryRepository.findById(dto.blogId);
     const postId = await this.postsServise.createPost(dto);
-    return this.postsQueryRepository.findById(postId);
+    const query = new GetPostQuery(postId, null);
+    return this.queryBus.execute(query);
   }
 
   @Put(':id')
@@ -104,7 +102,8 @@ export class BlogsController {
     @Body() inputUpdateBlogDto: HttpUpdateBlogDto,
   ): Promise<ViewBlogDto> {
     await this.blogsService.updateBlog(id, inputUpdateBlogDto);
-    return await this.blogsQueryRepository.findById(id);
+    const query = new GetBlogQuery(id);
+    return this.queryBus.execute(query);
   }
 
   @Delete(':id')
