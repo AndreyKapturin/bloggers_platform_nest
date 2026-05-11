@@ -37,6 +37,7 @@ import { GetPostQueryHandler } from './posts/application/queries/get-post.query'
 import { GetPostsQueryHandler } from './posts/application/queries/get-posts.query';
 import { CreateBlogUseCase } from './blogs/application/useCases/create-blog.use-case';
 import { GetBlogQueryHandler } from './blogs/application/queries/get-blog.query';
+import { GetBlogsQueryHandler } from './blogs/application/queries/get-blogs.query';
 
 const useCases = [
   CreateBlogUseCase,
@@ -53,6 +54,7 @@ const queries = [
   GetPostQueryHandler,
   GetPostsQueryHandler,
   GetBlogQueryHandler,
+  GetBlogsQueryHandler,
 ];
 
 @Module({

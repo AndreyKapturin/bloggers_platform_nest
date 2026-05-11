@@ -22,7 +22,7 @@ import { BlogPostDtoExtractor } from '../decorators/blog-post-dto-extractor.deco
 import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetPostsQuery } from '../../posts/application/queries/get-posts.query';
-import { OptionalUserFromRequest } from '../../../../core/decorators/optional-user-in-request.decorator'; 
+import { OptionalUserFromRequest } from '../../../../core/decorators/optional-user-in-request.decorator';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/strategies/jwt/JwtOptional.guard';
 import { UserInRequestDto } from '../../../../core/dto/UserInRequest.dto';
 import { HttpCreateBlogDto } from './dto/HttpCreateBlog.dto';
@@ -32,6 +32,7 @@ import { BlogsQueryParamsDto } from './dto/BlogQueryParams.dto';
 import { GetBlogQuery } from '../application/queries/get-blog.query';
 import { HttpUpdateBlogDto } from './dto/HttpUpdateBlog.dto';
 import { HttpCreatePostDto } from '../../posts/api/dto/HttpCreatePost.dto';
+import { GetBlogsQuery } from '../application/queries/get-blogs.query';
 
 @Controller('blogs')
 export class BlogsController {
@@ -68,9 +69,9 @@ export class BlogsController {
 
   @Get()
   async getBlogs(
-    @Query() query: BlogsQueryParamsDto,
+    @Query() queryParams: BlogsQueryParamsDto,
   ): Promise<PaginatedView<ViewBlogDto>> {
-    return await this.blogsQueryRepository.find(query);
+    return this.queryBus.execute(new GetBlogsQuery(queryParams));
   }
 
   @Post()
