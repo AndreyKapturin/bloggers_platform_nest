@@ -32,6 +32,7 @@ import { HttpUpdateBlogDto } from './dto/HttpUpdateBlog.dto';
 import { HttpCreatePostDto } from '../../posts/api/dto/HttpCreatePost.dto';
 import { GetBlogsQuery } from '../application/queries/get-blogs.query';
 import { GetPostQuery } from '../../posts/application/queries/get-post.query';
+import { UpdateBlogCommand } from '../application/useCases/update-blog.use-case';
 
 @Controller('blogs')
 export class BlogsController {
@@ -99,11 +100,15 @@ export class BlogsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateBlog(
     @Param('id') id: string,
-    @Body() inputUpdateBlogDto: HttpUpdateBlogDto,
-  ): Promise<ViewBlogDto> {
-    await this.blogsService.updateBlog(id, inputUpdateBlogDto);
-    const query = new GetBlogQuery(id);
-    return this.queryBus.execute(query);
+    @Body() dto: HttpUpdateBlogDto,
+  ): Promise<void> {
+    const command = new UpdateBlogCommand(
+      id,
+      dto.name,
+      dto.description,
+      dto.websiteUrl,
+    );
+    await this.commandBus.execute(command);
   }
 
   @Delete(':id')
