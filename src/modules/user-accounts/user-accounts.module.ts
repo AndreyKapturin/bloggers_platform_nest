@@ -31,13 +31,40 @@ import { GetSecurityDevicesQueryHandler } from './security/application/queries/g
 import { DeleteSecurityDeviceUseCase } from './security/application/usecases/delete-security-device.command';
 import { SecurityDevicesRepository } from './security/infrastructure/SecurityDevices.repository';
 import { DeleteAllOtherSecurityDeviceUseCase } from './security/application/usecases/delete-all-other-security-devices.command';
+import { CreateUserUseCase } from './users/application/useCases/create-user.use-case';
+import { GetUserQueryHandler } from './users/application/queries/get-user.query';
+import { GetUsersQueryHandler } from './users/application/queries/get-users.query';
+import { DeleteUserUseCase } from './users/application/useCases/delete-user.use-case';
+import { GetMeQueryHandler } from './auth/application/queries/get-me.query';
+import { SendConfirmationCodeUseCase } from './auth/application/useCases/send-confirmation-code.use-case';
+import { RegistrationUseCase } from './auth/application/useCases/registration.use-case';
+import { LoginUseCase } from './auth/application/useCases/login.use-case';
+import { RegistrationConfirmationUseCase } from './auth/application/useCases/registration-confirmation.use-case';
+import { PasswordRecoveryUseCase } from './auth/application/useCases/password-recovery.use-case';
+import { NewPasswordUseCase } from './auth/application/useCases/new-password.use-case';
+import { RefreshTokensUseCase } from './auth/application/useCases/refresh-tokens.use-case';
+import { LogoutUseCase } from './auth/application/useCases/logout.use-case';
+import { JwtTokensService } from './auth/application/JwtTokens.service';
 
 const useCases = [
+  CreateUserUseCase,
+  DeleteUserUseCase,
+  RegistrationUseCase,
+  LoginUseCase,
+  PasswordRecoveryUseCase,
+  NewPasswordUseCase,
+  RefreshTokensUseCase,
+  LogoutUseCase,
+  SendConfirmationCodeUseCase,
+  RegistrationConfirmationUseCase,
   DeleteSecurityDeviceUseCase,
   DeleteAllOtherSecurityDeviceUseCase,
 ]
 
 const queryHandlers = [
+  GetUserQueryHandler,
+  GetUsersQueryHandler,
+  GetMeQueryHandler,
   GetSecurityDevicesQueryHandler,
 ]
 
@@ -84,6 +111,7 @@ const queryHandlers = [
       },
       inject: [UserAccountsConfig],
     },
+    JwtTokensService,
     BasicStrategy,
     DeviceSessionsRepository,
     ...useCases,

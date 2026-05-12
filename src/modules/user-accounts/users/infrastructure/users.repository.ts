@@ -33,6 +33,20 @@ export class UsersRepository {
     return this.UserModel.findOne({ email });
   }
 
+  async findByEmailOrThrow(email: string): Promise<TUserDocument> {
+    const userDocument = await this.findByEmail(email);
+
+    if (!userDocument) {
+      throw new DomainException(
+        DomainExceptionStatus.NotFound,
+        `User with email ${email} not found`,
+        [{ field: 'email', message: `User with email ${email} not found` }],
+      );
+    }
+
+    return userDocument;
+  }
+
   async findByLogin(login: string): Promise<TUserDocument | null> {
     return this.UserModel.findOne({ login });
   }

@@ -104,10 +104,10 @@ describe('registration-confirmation', () => {
     });
   });
 
-  it('should return BAD REQUEST status if email not existed', async () => {
+  it('should return NO CONTENT status if email not existed', async () => {
     const notExistedEmailDto: HttpEmailDto = { email: 'notexisted@mail.ru' };
     await authTestHelper.resendConfirmationCode(notExistedEmailDto, {
-      status: HttpStatus.BAD_REQUEST,
+      status: HttpStatus.NO_CONTENT,
     });
     expect(mockSendConfirmationCode).not.toHaveBeenCalled();
   });
@@ -120,7 +120,7 @@ describe('registration-confirmation', () => {
 
     for (let i = 0; i < requestCount; i++) {
       await authTestHelper.resendConfirmationCode(notExistedEmailDto, {
-        status: HttpStatus.BAD_REQUEST,
+        status: HttpStatus.NO_CONTENT,
       });
     }
 

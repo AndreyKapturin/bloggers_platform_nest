@@ -1,25 +1,36 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { User } from '../domain/user.entity';
-import type { TUserModel } from '../domain/user.entity';
-import { UsersRepository } from '../infrastructure/users.repository';
-import { CryptoService } from '../../../../services/CryptoService';
+import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   DomainException,
   DomainExceptionStatus,
-} from '../../../../core/exceptions/DomainException';
-import { HttpCreateUserDto } from '../api/dto/HttpCreateUser.dto';
+} from '../../../../../core/exceptions/DomainException';
+import { UsersRepository } from '../../infrastructure/users.repository';
+import { CryptoService } from '../../../../../services/CryptoService';
+import { InjectModel } from '@nestjs/mongoose';
+import { User, type TUserModel } from '../../domain/user.entity';
 
-@Injectable()
-export class UsersService {
+export class CreateUserCommand extends Command<string> {
+  constructor(
+    public login: string,
+    public email: string,
+    public password: string,
+  ) {
+    super();
+  }
+}
+
+@CommandHandler(CreateUserCommand)
+export class CreateUserUseCase implements ICommandHandler<
+  CreateUserCommand,
+  string
+> {
   constructor(
     @InjectModel(User.name) private UserModel: TUserModel,
     private usersRepository: UsersRepository,
     private cryptoService: CryptoService,
   ) {}
 
-  async createUser(dto: HttpCreateUserDto): Promise<string> {
-    const { login, email, password } = dto;
+  async execute(command: CreateUserCommand): Promise<string> {
+    const { login, email, password } = command;
 
     const isEmailBusy = await this.usersRepository.findByEmail(email);
 
