@@ -11,7 +11,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ViewUserDto } from './dto/ViewUser.dto';
-import { UsersService } from '../application/users.service';
 import { UserQueryParamsDto } from './dto/UserQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { HttpCreateUserDto } from './dto/HttpCreateUser.dto';
@@ -20,6 +19,7 @@ import { CreateUserCommand } from '../application/useCases/create-user.use-case'
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetUserQuery } from '../application/queries/get-user.query';
 import { GetUsersQuery } from '../application/queries/get-users.query';
+import { DeleteUserCommand } from '../application/useCases/delete-user.use-case';
 
 @Controller('users')
 @UseGuards(BasicAuthGuard)
@@ -27,7 +27,6 @@ export class UsersController {
   constructor(
     private commandBus: CommandBus,
     private queryBus: QueryBus,
-    private usersService: UsersService,
   ) {}
 
   @Get()
@@ -47,6 +46,6 @@ export class UsersController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUser(@Param('id') id: string): Promise<void> {
-    await this.usersService.deleteUser(id);
+    await this.commandBus.execute(new DeleteUserCommand(id));
   }
 }

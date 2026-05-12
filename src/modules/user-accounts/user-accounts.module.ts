@@ -34,9 +34,11 @@ import { DeleteAllOtherSecurityDeviceUseCase } from './security/application/usec
 import { CreateUserUseCase } from './users/application/useCases/create-user.use-case';
 import { GetUserQueryHandler } from './users/application/queries/get-user.query';
 import { GetUsersQueryHandler } from './users/application/queries/get-users.query';
+import { DeleteUserUseCase } from './users/application/useCases/delete-user.use-case';
 
 const useCases = [
   CreateUserUseCase,
+  DeleteUserUseCase,
   DeleteSecurityDeviceUseCase,
   DeleteAllOtherSecurityDeviceUseCase,
 ]
