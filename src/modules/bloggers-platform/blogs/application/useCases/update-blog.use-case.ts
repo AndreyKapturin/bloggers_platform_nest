@@ -2,10 +2,6 @@ import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BlogsRepository } from '../../infrastructure/blogs.repository';
 import { plainToClass } from 'class-transformer';
 import { DomainUpdateBlogDto } from '../../domain/dto/DomainUpdateBlog.dto';
-import {
-  DomainException,
-  DomainExceptionStatus,
-} from '../../../../../core/exceptions/DomainException';
 
 export class UpdateBlogCommand extends Command<void> {
   constructor(
@@ -26,23 +22,10 @@ export class UpdateBlogUseCase implements ICommandHandler<
   constructor(private blogsRepository: BlogsRepository) {}
 
   async execute(command: UpdateBlogCommand): Promise<void> {
-    const blogDocument = await this.blogsRepository.findById(command.blogId);
-
-    if (!blogDocument) {
-      throw new DomainException(
-        DomainExceptionStatus.NotFound,
-        `Blog with id ${command.blogId} not found`,
-        [
-          {
-            field: 'blogId',
-            message: `Blog with id ${command.blogId} not found`,
-          },
-        ],
-      );
-    }
-
+    const blogDocument = await this.blogsRepository.findByIdOrThrow(
+      command.blogId,
+    );
     const updateBlogDto = plainToClass(DomainUpdateBlogDto, command);
-
     blogDocument.update(updateBlogDto);
     await this.blogsRepository.save(blogDocument);
   }

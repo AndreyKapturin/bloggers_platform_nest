@@ -11,7 +11,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { BlogsService } from '../application/blogs.service';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { PostsQueryParamsDto } from '../../posts/api/dto/PostQueryParams.dto';
 import { PostsService } from '../../posts/application/posts.service';
@@ -33,11 +32,11 @@ import { HttpCreatePostDto } from '../../posts/api/dto/HttpCreatePost.dto';
 import { GetBlogsQuery } from '../application/queries/get-blogs.query';
 import { GetPostQuery } from '../../posts/application/queries/get-post.query';
 import { UpdateBlogCommand } from '../application/useCases/update-blog.use-case';
+import { DeleteBlogCommand } from '../application/useCases/delete-blog.use-case';
 
 @Controller('blogs')
 export class BlogsController {
   constructor(
-    private blogsService: BlogsService,
     private postsServise: PostsService,
     private commandBus: CommandBus,
     private queryBus: QueryBus,
@@ -115,6 +114,6 @@ export class BlogsController {
   @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteBlog(@Param('id') id: string): Promise<void> {
-    await this.blogsService.deleteBlog(id);
+    await this.commandBus.execute(new DeleteBlogCommand(id));
   }
 }

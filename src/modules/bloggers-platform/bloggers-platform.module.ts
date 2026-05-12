@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { BlogsController } from './blogs/api/blogs.controller';
-import { BlogsService } from './blogs/application/blogs.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Blog, BlogSchema } from './blogs/domain/blog.entity';
 import { BlogsRepository } from './blogs/infrastructure/blogs.repository';
@@ -39,10 +38,12 @@ import { CreateBlogUseCase } from './blogs/application/useCases/create-blog.use-
 import { GetBlogQueryHandler } from './blogs/application/queries/get-blog.query';
 import { GetBlogsQueryHandler } from './blogs/application/queries/get-blogs.query';
 import { UpdateBlogUseCase } from './blogs/application/useCases/update-blog.use-case';
+import { DeleteBlogUseCase } from './blogs/application/useCases/delete-blog.use-case';
 
 const useCases = [
   CreateBlogUseCase,
   UpdateBlogUseCase,
+  DeleteBlogUseCase,
   CreateCommentUseCase,
   UpdateCommentUseCase,
   DeleteCommentUseCase,
@@ -72,7 +73,6 @@ const queries = [
   ],
   controllers: [BlogsController, PostsController, CommentsController],
   providers: [
-    BlogsService,
     BlogsRepository,
     BlogsQueryRepository,
     PostsService,
