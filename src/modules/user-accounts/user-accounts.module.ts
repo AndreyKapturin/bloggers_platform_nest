@@ -31,8 +31,10 @@ import { GetSecurityDevicesQueryHandler } from './security/application/queries/g
 import { DeleteSecurityDeviceUseCase } from './security/application/usecases/delete-security-device.command';
 import { SecurityDevicesRepository } from './security/infrastructure/SecurityDevices.repository';
 import { DeleteAllOtherSecurityDeviceUseCase } from './security/application/usecases/delete-all-other-security-devices.command';
+import { CreateUserUseCase } from './users/application/useCases/create-user.use-case';
 
 const useCases = [
+  CreateUserUseCase,
   DeleteSecurityDeviceUseCase,
   DeleteAllOtherSecurityDeviceUseCase,
 ]

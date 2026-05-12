@@ -17,11 +17,14 @@ import { UserQueryParamsDto } from './dto/UserQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { HttpCreateUserDto } from './dto/HttpCreateUser.dto';
 import { BasicAuthGuard } from '../../auth/strategies/basic/Basic.guard';
+import { CreateUserCommand } from '../application/useCases/create-user.use-case';
+import { CommandBus } from '@nestjs/cqrs';
 
 @Controller('users')
 @UseGuards(BasicAuthGuard)
 export class UsersController {
   constructor(
+    private commandBus: CommandBus,
     private usersQueryRepository: UsersQueryRepository,
     private usersService: UsersService,
   ) {}
@@ -35,9 +38,14 @@ export class UsersController {
 
   @Post()
   async createUser(
-    @Body() inputCreateUserDto: HttpCreateUserDto,
+    @Body() dto: HttpCreateUserDto,
   ): Promise<ViewUserDto> {
-    const userId = await this.usersService.createUser(inputCreateUserDto);
+    const command = new CreateUserCommand(
+      dto.login,
+      dto.email,
+      dto.password,
+    );
+    const userId = await this.commandBus.execute(command);
     const viewUser = await this.usersQueryRepository.findById(userId);
     return viewUser!;
   }
