@@ -16,7 +16,6 @@ import { PostsService } from '../application/posts.service';
 import { PostsQueryParamsDto } from './dto/PostQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { CommentsQueryParamsDto } from '../../comments/api/dto/CommentsQueryParams.dto';
-import { CommentsQueryRepository } from '../../comments/infrastructure/Comments.query-repository';
 import { ViewCommentDto } from '../../comments/api/dto/ViewComment.dto';
 import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
 import { JwtAuthGuard } from '../../../user-accounts/auth/strategies/jwt/Jwt.guard';
@@ -35,12 +34,12 @@ import { GetPostsQuery } from '../application/queries/get-posts.query';
 import { HttpCreatePostDto } from './dto/HttpCreatePost.dto';
 import { HttpUpdatePostDto } from './dto/HttpUpdatePost.dto';
 import { CreatePostCommand } from '../application/useCases/create-post.use-case';
+import { GetCommentQuery } from '../../comments/application/queries/get-comment-by-id.query';
 
 @Controller('posts')
 export class PostsController {
   constructor(
     private postsService: PostsService,
-    private commentsQueryRepository: CommentsQueryRepository,
     private commandBus: CommandBus,
     private queryBus: QueryBus,
   ) {}
@@ -83,7 +82,9 @@ export class PostsController {
       userDto.userId,
     );
     const commentId = await this.commandBus.execute(command);
-    return this.commentsQueryRepository.findByIdOrThrow(commentId);
+    return this.queryBus.execute(
+      new GetCommentQuery(commentId, userDto.userId),
+    );
   }
 
   @Put(':postId/like-status')
