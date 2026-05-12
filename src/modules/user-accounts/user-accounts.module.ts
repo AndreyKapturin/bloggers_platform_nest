@@ -36,10 +36,14 @@ import { GetUserQueryHandler } from './users/application/queries/get-user.query'
 import { GetUsersQueryHandler } from './users/application/queries/get-users.query';
 import { DeleteUserUseCase } from './users/application/useCases/delete-user.use-case';
 import { GetMeQueryHandler } from './auth/application/queries/get-me.query';
+import { SendConfirmationCodeUseCase } from './auth/application/useCases/send-confirmation-code.use-case';
+import { RegistrationUseCase } from './auth/application/useCases/registration.use-case';
 
 const useCases = [
   CreateUserUseCase,
   DeleteUserUseCase,
+  RegistrationUseCase,
+  SendConfirmationCodeUseCase,
   DeleteSecurityDeviceUseCase,
   DeleteAllOtherSecurityDeviceUseCase,
 ]

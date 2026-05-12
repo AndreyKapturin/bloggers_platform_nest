@@ -5,6 +5,12 @@ export class DateUtils {
     return now;
   };
 
+  static getDatePlusHours = (hours = 0): Date => {
+    const now = new Date();
+    now.setHours(now.getHours() + hours);
+    return now;
+  };
+
   static getDatePlusMinutes = (minutes = 0): Date => {
     const now = new Date();
     now.setMinutes(now.getMinutes() + minutes);

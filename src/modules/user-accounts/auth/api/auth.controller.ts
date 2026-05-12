@@ -29,14 +29,17 @@ import { SkipThrottle, ThrottlerGuard } from '@nestjs/throttler';
 import { JwtRefreshAuthGuard } from '../strategies/jwt/JwtRefresh.guard';
 import { LoginDto } from '../application/dto/Login.dto';
 import { ExtractUserWithDeviceFromRequest } from '../../../../core/decorators/extract-user-with-device.decorator';
-import { QueryBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetMeQuery } from '../application/queries/get-me.query';
+import { RegistrationCommand } from '../application/useCases/registration.use-case';
+import { SendConfirmationCodeCommand } from '../application/useCases/send-confirmation-code.use-case';
 
 @UseGuards(ThrottlerGuard)
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
+    private commandBus: CommandBus,
     private queryBus: QueryBus,
   ) {}
 
@@ -52,7 +55,8 @@ export class AuthController {
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
   async registration(@Body() dto: HttpCreateUserDto): Promise<void> {
-    await this.authService.registration(dto);
+    const command = new RegistrationCommand(dto.login, dto.email, dto.password);
+    await this.commandBus.execute(command);
   }
 
   @Post('login')
@@ -79,7 +83,7 @@ export class AuthController {
   async resendConfirmationEmail(
     @Body() inputEmailDto: HttpEmailDto,
   ): Promise<void> {
-    await this.authService.resendConfirmationEmail(inputEmailDto.email);
+    await this.commandBus.execute(new SendConfirmationCodeCommand(inputEmailDto.email));
   }
 
   @Post('registration-confirmation')
