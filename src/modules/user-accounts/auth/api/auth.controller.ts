@@ -33,6 +33,7 @@ import { GetMeQuery } from '../application/queries/get-me.query';
 import { RegistrationCommand } from '../application/useCases/registration.use-case';
 import { SendConfirmationCodeCommand } from '../application/useCases/send-confirmation-code.use-case';
 import { LoginCommand } from '../application/useCases/login.use-case';
+import { RegistrationConfirmationCommand } from '../application/useCases/registration-confirmation.use-case';
 
 @UseGuards(ThrottlerGuard)
 @Controller('auth')
@@ -93,7 +94,8 @@ export class AuthController {
   async confirmRegistration(
     @Body() dto: HttpConfirmationCodeDto,
   ): Promise<void> {
-    await this.authService.confirmRegistration(dto.code);
+    const command = new RegistrationConfirmationCommand(dto.code);
+    await this.commandBus.execute(command);
   }
 
   @Post('password-recovery')

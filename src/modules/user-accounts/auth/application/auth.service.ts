@@ -56,40 +56,6 @@ export class AuthService {
     return null;
   }
 
-  async confirmRegistration(confirmationCode: string): Promise<void> {
-    const userDocument =
-      await this.usersRepository.findByConfirmationCode(confirmationCode);
-
-    if (!userDocument) {
-      throw new DomainException(
-        DomainExceptionStatus.InvalidData,
-        'User with passed confirmation code not found',
-        [
-          {
-            field: 'code',
-            message: 'User with passed confirmation code not found',
-          },
-        ],
-      );
-    }
-
-    if (userDocument.emailConfirmation.isConfirmed) {
-      throw new DomainException(
-        DomainExceptionStatus.InvalidData,
-        'User already confirmed',
-        [
-          {
-            field: 'code',
-            message: 'User already confirmed',
-          },
-        ],
-      );
-    }
-
-    userDocument.confirmEmail();
-    await this.usersRepository.save(userDocument);
-  }
-
   async recoveryPassword(email: string): Promise<void> {
     const userDocument = await this.usersRepository.findByEmail(email);
 
