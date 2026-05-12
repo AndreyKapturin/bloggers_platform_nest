@@ -18,13 +18,15 @@ import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { HttpCreateUserDto } from './dto/HttpCreateUser.dto';
 import { BasicAuthGuard } from '../../auth/strategies/basic/Basic.guard';
 import { CreateUserCommand } from '../application/useCases/create-user.use-case';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { GetUserQuery } from '../application/queries/get-user.query';
 
 @Controller('users')
 @UseGuards(BasicAuthGuard)
 export class UsersController {
   constructor(
     private commandBus: CommandBus,
+    private queryBus: QueryBus,
     private usersQueryRepository: UsersQueryRepository,
     private usersService: UsersService,
   ) {}
@@ -37,17 +39,10 @@ export class UsersController {
   }
 
   @Post()
-  async createUser(
-    @Body() dto: HttpCreateUserDto,
-  ): Promise<ViewUserDto> {
-    const command = new CreateUserCommand(
-      dto.login,
-      dto.email,
-      dto.password,
-    );
+  async createUser(@Body() dto: HttpCreateUserDto): Promise<ViewUserDto> {
+    const command = new CreateUserCommand(dto.login, dto.email, dto.password);
     const userId = await this.commandBus.execute(command);
-    const viewUser = await this.usersQueryRepository.findById(userId);
-    return viewUser!;
+    return this.queryBus.execute(new GetUserQuery(userId));
   }
 
   @Delete(':id')
