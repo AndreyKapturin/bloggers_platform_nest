@@ -39,11 +39,13 @@ import { GetBlogQueryHandler } from './blogs/application/queries/get-blog.query'
 import { GetBlogsQueryHandler } from './blogs/application/queries/get-blogs.query';
 import { UpdateBlogUseCase } from './blogs/application/useCases/update-blog.use-case';
 import { DeleteBlogUseCase } from './blogs/application/useCases/delete-blog.use-case';
+import { CreatePostUseCase } from './posts/application/useCases/create-post.use-case';
 
 const useCases = [
   CreateBlogUseCase,
   UpdateBlogUseCase,
   DeleteBlogUseCase,
+  CreatePostUseCase,
   CreateCommentUseCase,
   UpdateCommentUseCase,
   DeleteCommentUseCase,

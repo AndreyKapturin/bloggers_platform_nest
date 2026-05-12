@@ -1,45 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Post } from '../domain/Post.entity';
-import type { TPostModel } from '../domain/Post.entity';
 import { PostsRepository } from '../infrastructure/Post.repository';
 import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
 import { DomainUpdatePostDto } from '../domain/dto/DomainUpdatePost.dto';
-import { HttpCreatePostDto } from '../api/dto/HttpCreatePost.dto';
 import { HttpUpdatePostDto } from '../api/dto/HttpUpdatePost.dto';
 
 @Injectable()
 export class PostsService {
   constructor(
-    @InjectModel(Post.name)
-    private PostModel: TPostModel,
     private postsRepository: PostsRepository,
     private blogsRepository: BlogsRepository,
   ) {}
-
-  async createPost(inputCreatePostDto: HttpCreatePostDto): Promise<string> {
-    const blogDocument = await this.blogsRepository.findById(
-      inputCreatePostDto.blogId,
-    );
-
-    if (!blogDocument) {
-      throw new NotFoundException(
-        `Blog with id ${inputCreatePostDto.blogId} not found`,
-      );
-    }
-
-    const newPostDocument = this.PostModel.makeInstance(
-      inputCreatePostDto.title,
-      inputCreatePostDto.content,
-      inputCreatePostDto.shortDescription,
-      inputCreatePostDto.blogId,
-      blogDocument.name,
-    );
-
-    await this.postsRepository.save(newPostDocument);
-
-    return newPostDocument.id;
-  }
 
   async updatePost(
     postId: string,

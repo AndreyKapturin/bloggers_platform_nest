@@ -13,7 +13,6 @@ import {
 } from '@nestjs/common';
 import { ViewPostDto } from './dto/VIewPost.dto';
 import { PostsService } from '../application/posts.service';
-import { PostsQueryRepository } from '../infrastructure/Post.query-repository';
 import { PostsQueryParamsDto } from './dto/PostQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { CommentsQueryParamsDto } from '../../comments/api/dto/CommentsQueryParams.dto';
@@ -35,12 +34,12 @@ import { GetPostQuery } from '../application/queries/get-post.query';
 import { GetPostsQuery } from '../application/queries/get-posts.query';
 import { HttpCreatePostDto } from './dto/HttpCreatePost.dto';
 import { HttpUpdatePostDto } from './dto/HttpUpdatePost.dto';
+import { CreatePostCommand } from '../application/useCases/create-post.use-case';
 
 @Controller('posts')
 export class PostsController {
   constructor(
     private postsService: PostsService,
-    private postsQueryRepository: PostsQueryRepository,
     private commentsQueryRepository: CommentsQueryRepository,
     private commandBus: CommandBus,
     private queryBus: QueryBus,
@@ -115,11 +114,16 @@ export class PostsController {
 
   @Post()
   @UseGuards(BasicAuthGuard)
-  async createPost(
-    @Body() inputCreatePostDto: HttpCreatePostDto,
-  ): Promise<ViewPostDto> {
-    const postId = await this.postsService.createPost(inputCreatePostDto);
-    return this.postsQueryRepository.findById(postId);
+  async createPost(@Body() dto: HttpCreatePostDto): Promise<ViewPostDto> {
+    const command = new CreatePostCommand(
+      dto.blogId,
+      dto.title,
+      dto.shortDescription,
+      dto.content,
+    );
+    const postId = await this.commandBus.execute(command);
+    const query = new GetPostQuery(postId, null);
+    return this.queryBus.execute(query);
   }
 
   @Put(':postId')

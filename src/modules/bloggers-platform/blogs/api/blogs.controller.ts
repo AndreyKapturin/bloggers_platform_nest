@@ -13,7 +13,6 @@ import {
 } from '@nestjs/common';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { PostsQueryParamsDto } from '../../posts/api/dto/PostQueryParams.dto';
-import { PostsService } from '../../posts/application/posts.service';
 import { ViewPostDto } from '../../posts/api/dto/VIewPost.dto';
 import { BlogPostDtoExtractor } from '../decorators/blog-post-dto-extractor.decorator';
 import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
@@ -33,11 +32,11 @@ import { GetBlogsQuery } from '../application/queries/get-blogs.query';
 import { GetPostQuery } from '../../posts/application/queries/get-post.query';
 import { UpdateBlogCommand } from '../application/useCases/update-blog.use-case';
 import { DeleteBlogCommand } from '../application/useCases/delete-blog.use-case';
+import { CreatePostCommand } from '../../posts/application/useCases/create-post.use-case';
 
 @Controller('blogs')
 export class BlogsController {
   constructor(
-    private postsServise: PostsService,
     private commandBus: CommandBus,
     private queryBus: QueryBus,
   ) {}
@@ -89,7 +88,13 @@ export class BlogsController {
   async createPostForBlog(
     @BlogPostDtoExtractor() dto: HttpCreatePostDto,
   ): Promise<ViewPostDto> {
-    const postId = await this.postsServise.createPost(dto);
+    const command = new CreatePostCommand(
+      dto.blogId,
+      dto.title,
+      dto.shortDescription,
+      dto.content,
+    );
+    const postId = await this.commandBus.execute(command);
     const query = new GetPostQuery(postId, null);
     return this.queryBus.execute(query);
   }
