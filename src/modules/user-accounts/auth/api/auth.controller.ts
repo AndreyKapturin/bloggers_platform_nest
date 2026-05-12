@@ -11,7 +11,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { HttpCreateUserDto } from '../../users/api/dto/HttpCreateUser.dto';
-import { AuthService } from '../application/auth.service';
 import { LocalAuthGuard } from '../strategies/local/Local.guard';
 import { ExtractUserFromRequest } from '../../../../core/decorators/extract-userId.decorator';
 import { AccessTokenDto } from '../dto/AccessToken.view-dto';
@@ -37,12 +36,12 @@ import { RegistrationConfirmationCommand } from '../application/useCases/registr
 import { PasswordRecoveryCommand } from '../application/useCases/password-recovery.use-case';
 import { NewPasswordCommand } from '../application/useCases/new-password.use-case';
 import { RefreshTokensCommand } from '../application/useCases/refresh-tokens.use-case';
+import { LogoutCommand } from '../application/useCases/logout.use-case';
 
 @UseGuards(ThrottlerGuard)
 @Controller('auth')
 export class AuthController {
   constructor(
-    private authService: AuthService,
     private commandBus: CommandBus,
     private queryBus: QueryBus,
   ) {}
@@ -137,7 +136,8 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response<AccessTokenDto>,
     @ExtractUserWithDeviceFromRequest() dto: UserWithDeviceInRequestDto,
   ): Promise<void> {
-    await this.authService.logout(dto.deviceId, dto.userId);
+    const command = new LogoutCommand(dto.deviceId, dto.userId);
+    await this.commandBus.execute(command);
     response.clearCookie('refreshToken', {
       secure: true,
       httpOnly: true,
