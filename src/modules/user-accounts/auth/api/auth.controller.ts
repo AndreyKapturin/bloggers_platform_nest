@@ -24,19 +24,20 @@ import { HttpConfirmationCodeDto } from './dto/HttpConfirmationCode.dto';
 import { HttpNewPasswordDto } from './dto/HttpNewPassword.dto';
 import { ViewMeDto } from '../../users/api/dto/ViewMe.dto';
 import { JwtAuthGuard } from '../strategies/jwt/Jwt.guard';
-import { UsersQueryRepository } from '../../users/infrastructure/users.query-repository';
 import { type Request, type Response } from 'express';
 import { SkipThrottle, ThrottlerGuard } from '@nestjs/throttler';
 import { JwtRefreshAuthGuard } from '../strategies/jwt/JwtRefresh.guard';
 import { LoginDto } from '../application/dto/Login.dto';
 import { ExtractUserWithDeviceFromRequest } from '../../../../core/decorators/extract-user-with-device.decorator';
+import { QueryBus } from '@nestjs/cqrs';
+import { GetMeQuery } from '../application/queries/get-me.query';
 
 @UseGuards(ThrottlerGuard)
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private usersQueryRepository: UsersQueryRepository,
+    private queryBus: QueryBus,
   ) {}
 
   @Get('me')
@@ -45,7 +46,7 @@ export class AuthController {
   async me(
     @ExtractUserFromRequest() dto: UserInRequestDto,
   ): Promise<ViewMeDto> {
-    return this.usersQueryRepository.getMe(dto.userId);
+    return this.queryBus.execute(new GetMeQuery(dto.userId));
   }
 
   @Post('registration')

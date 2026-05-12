@@ -35,6 +35,7 @@ import { CreateUserUseCase } from './users/application/useCases/create-user.use-
 import { GetUserQueryHandler } from './users/application/queries/get-user.query';
 import { GetUsersQueryHandler } from './users/application/queries/get-users.query';
 import { DeleteUserUseCase } from './users/application/useCases/delete-user.use-case';
+import { GetMeQueryHandler } from './auth/application/queries/get-me.query';
 
 const useCases = [
   CreateUserUseCase,
@@ -46,6 +47,7 @@ const useCases = [
 const queryHandlers = [
   GetUserQueryHandler,
   GetUsersQueryHandler,
+  GetMeQueryHandler,
   GetSecurityDevicesQueryHandler,
 ]
 
