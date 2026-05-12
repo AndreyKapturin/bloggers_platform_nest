@@ -36,6 +36,7 @@ import { LoginCommand } from '../application/useCases/login.use-case';
 import { RegistrationConfirmationCommand } from '../application/useCases/registration-confirmation.use-case';
 import { PasswordRecoveryCommand } from '../application/useCases/password-recovery.use-case';
 import { NewPasswordCommand } from '../application/useCases/new-password.use-case';
+import { RefreshTokensCommand } from '../application/useCases/refresh-tokens.use-case';
 
 @UseGuards(ThrottlerGuard)
 @Controller('auth')
@@ -120,10 +121,8 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response<AccessTokenDto>,
     @ExtractUserWithDeviceFromRequest() dto: UserWithDeviceInRequestDto,
   ): Promise<AccessTokenDto> {
-    const tokensPair = await this.authService.refreshTokens(
-      dto.deviceId,
-      dto.userId,
-    );
+    const command = new RefreshTokensCommand(dto.deviceId, dto.userId);
+    const tokensPair = await this.commandBus.execute(command);
     response.cookie('refreshToken', tokensPair.refreshToken, {
       secure: true,
       httpOnly: true,
