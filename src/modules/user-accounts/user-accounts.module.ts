@@ -41,6 +41,7 @@ import { RegistrationUseCase } from './auth/application/useCases/registration.us
 import { LoginUseCase } from './auth/application/useCases/login.use-case';
 import { RegistrationConfirmationUseCase } from './auth/application/useCases/registration-confirmation.use-case';
 import { PasswordRecoveryUseCase } from './auth/application/useCases/password-recovery.use-case';
+import { NewPasswordUseCase } from './auth/application/useCases/new-password.use-case';
 
 const useCases = [
   CreateUserUseCase,
@@ -48,6 +49,7 @@ const useCases = [
   RegistrationUseCase,
   LoginUseCase,
   PasswordRecoveryUseCase,
+  NewPasswordUseCase,
   SendConfirmationCodeUseCase,
   RegistrationConfirmationUseCase,
   DeleteSecurityDeviceUseCase,

@@ -6,7 +6,6 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
-import { HttpNewPasswordDto } from '../api/dto/HttpNewPassword.dto';
 import {
   JwtAccessTokenSignPayload,
   JwtRefreshTokenDecodedPayload,
@@ -49,32 +48,6 @@ export class AuthService {
     if (isValidPassword) return userDocument.id;
 
     return null;
-  }
-
-  async updatePassword(newPasswordDto: HttpNewPasswordDto): Promise<void> {
-    const { recoveryCode, newPassword } = newPasswordDto;
-    const userDocument =
-      await this.usersRepository.findByRecoveryCode(recoveryCode);
-
-    if (!userDocument) {
-      throw new DomainException(
-        DomainExceptionStatus.InvalidData,
-        'User for the passed recovery code not found',
-        [
-          {
-            field: 'recoveryCode',
-            message: 'User for the passed recovery code not found',
-          },
-        ],
-      );
-    }
-
-    const passwordHash = await this.cryptoService.hash(newPassword);
-
-    userDocument.updatePasswordHash(passwordHash);
-    userDocument.removeRecoveryCode();
-
-    await this.usersRepository.save(userDocument);
   }
 
   async refreshTokens(

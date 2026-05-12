@@ -35,6 +35,7 @@ import { SendConfirmationCodeCommand } from '../application/useCases/send-confir
 import { LoginCommand } from '../application/useCases/login.use-case';
 import { RegistrationConfirmationCommand } from '../application/useCases/registration-confirmation.use-case';
 import { PasswordRecoveryCommand } from '../application/useCases/password-recovery.use-case';
+import { NewPasswordCommand } from '../application/useCases/new-password.use-case';
 
 @UseGuards(ThrottlerGuard)
 @Controller('auth')
@@ -108,7 +109,8 @@ export class AuthController {
   @Post('new-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updatePassword(@Body() dto: HttpNewPasswordDto): Promise<void> {
-    await this.authService.updatePassword(dto);
+    const command = new NewPasswordCommand(dto.recoveryCode, dto.newPassword);
+    await this.commandBus.execute(command);
   }
 
   @Post('refresh-token')
