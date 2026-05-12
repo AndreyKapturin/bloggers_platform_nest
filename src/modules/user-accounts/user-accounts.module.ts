@@ -44,6 +44,7 @@ import { PasswordRecoveryUseCase } from './auth/application/useCases/password-re
 import { NewPasswordUseCase } from './auth/application/useCases/new-password.use-case';
 import { RefreshTokensUseCase } from './auth/application/useCases/refresh-tokens.use-case';
 import { LogoutUseCase } from './auth/application/useCases/logout.use-case';
+import { JwtTokensService } from './auth/application/JwtTokens.service';
 
 const useCases = [
   CreateUserUseCase,
@@ -110,6 +111,7 @@ const queryHandlers = [
       },
       inject: [UserAccountsConfig],
     },
+    JwtTokensService,
     BasicStrategy,
     DeviceSessionsRepository,
     ...useCases,

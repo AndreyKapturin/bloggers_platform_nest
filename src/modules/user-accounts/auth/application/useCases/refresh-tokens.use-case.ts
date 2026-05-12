@@ -7,15 +7,9 @@ import {
 import {
   JwtAccessTokenSignPayload,
   JwtRefreshTokenSignPayload,
-  JwtRefreshTokenDecodedPayload,
 } from '../../types';
 import { DeviceSessionsRepository } from '../../infrastructure/DeviceSessions.repository';
-import { Inject } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import {
-  JWT_AT_SERVICE,
-  JWT_RT_SERVICE,
-} from '../../strategies/jwt/jwt-config';
+import { JwtTokensService } from '../JwtTokens.service';
 
 export class RefreshTokensCommand extends Command<JwtTokensPair> {
   constructor(
@@ -33,10 +27,7 @@ export class RefreshTokensUseCase implements ICommandHandler<
 > {
   constructor(
     private deviceSessionRepository: DeviceSessionsRepository,
-    @Inject(JWT_AT_SERVICE)
-    private jwtAccessTokenService: JwtService,
-    @Inject(JWT_RT_SERVICE)
-    private jwtRefreshTokenService: JwtService,
+    private jwtTokensService: JwtTokensService,
   ) {}
 
   async execute(command: RefreshTokensCommand): Promise<JwtTokensPair> {
@@ -67,22 +58,18 @@ export class RefreshTokensUseCase implements ICommandHandler<
       deviceId,
     };
 
-    const accessToken =
-      await this.jwtAccessTokenService.signAsync(accessTokenPayload);
-    const refreshToken =
-      await this.jwtRefreshTokenService.signAsync(refreshTokenPayload);
-
-    const { exp, iat } =
-      this.jwtRefreshTokenService.decode<JwtRefreshTokenDecodedPayload>(
-        refreshToken,
-      );
-
-    deviceSession.updateTokenIatAndExp(
-      new Date(iat * 1000),
-      new Date(exp * 1000),
+    const tokensPair = await this.jwtTokensService.createTokensPair(
+      accessTokenPayload,
+      refreshTokenPayload,
     );
 
+    const { iat, exp } = this.jwtTokensService.getTokenExpAndIatDates(
+      tokensPair.refreshToken,
+    );
+
+    deviceSession.updateTokenIatAndExp(iat, exp);
+
     await this.deviceSessionRepository.save(deviceSession);
-    return { accessToken, refreshToken };
+    return tokensPair;
   }
 }

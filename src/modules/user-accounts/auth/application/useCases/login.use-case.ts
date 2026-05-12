@@ -2,14 +2,7 @@ import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   JwtAccessTokenSignPayload,
   JwtRefreshTokenSignPayload,
-  JwtRefreshTokenDecodedPayload,
 } from '../../types';
-import { Inject } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import {
-  JWT_AT_SERVICE,
-  JWT_RT_SERVICE,
-} from '../../strategies/jwt/jwt-config';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   DeviceSession,
@@ -17,6 +10,7 @@ import {
 } from '../../domain/DeviceSession.entity';
 import { DeviceSessionsRepository } from '../../infrastructure/DeviceSessions.repository';
 import { JwtTokensPair } from './types';
+import { JwtTokensService } from '../JwtTokens.service';
 
 export class LoginCommand extends Command<JwtTokensPair> {
   constructor(
@@ -34,13 +28,10 @@ export class LoginUseCase implements ICommandHandler<
   JwtTokensPair
 > {
   constructor(
-    @Inject(JWT_AT_SERVICE)
-    private jwtAccessTokenService: JwtService,
-    @Inject(JWT_RT_SERVICE)
-    private jwtRefreshTokenService: JwtService,
     @InjectModel(DeviceSession.name)
     private DeviceSessionModel: TDeviceSessionModel,
     private deviceSessionRepository: DeviceSessionsRepository,
+    private jwtTokensService: JwtTokensService,
   ) {}
 
   async execute(command: LoginCommand): Promise<JwtTokensPair> {
@@ -51,26 +42,25 @@ export class LoginUseCase implements ICommandHandler<
       deviceId: crypto.randomUUID(),
     };
 
-    const accessToken =
-      await this.jwtAccessTokenService.signAsync(accessTokenPayload);
-    const refreshToken =
-      await this.jwtRefreshTokenService.signAsync(refreshTokenPayload);
+    const tokensPair = await this.jwtTokensService.createTokensPair(
+      accessTokenPayload,
+      refreshTokenPayload,
+    );
 
-    const { exp, iat } =
-      this.jwtRefreshTokenService.decode<JwtRefreshTokenDecodedPayload>(
-        refreshToken,
-      );
+    const { iat, exp } = this.jwtTokensService.getTokenExpAndIatDates(
+      tokensPair.refreshToken,
+    );
 
     const deviceSession = this.DeviceSessionModel.makeInstance({
       userId: refreshTokenPayload.userId,
       deviceId: refreshTokenPayload.deviceId,
       deviceName,
       ip,
-      tokenIat: new Date(iat * 1000),
-      tokenExp: new Date(exp * 1000),
+      tokenIat: iat,
+      tokenExp: exp,
     });
 
     await this.deviceSessionRepository.save(deviceSession);
-    return { accessToken, refreshToken };
+    return tokensPair;
   }
 }
