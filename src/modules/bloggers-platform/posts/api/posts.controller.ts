@@ -35,6 +35,7 @@ import { HttpCreatePostDto } from './dto/HttpCreatePost.dto';
 import { HttpUpdatePostDto } from './dto/HttpUpdatePost.dto';
 import { CreatePostCommand } from '../application/useCases/create-post.use-case';
 import { GetCommentQuery } from '../../comments/application/queries/get-comment-by-id.query';
+import { UpdatePostCommand } from '../application/useCases/update-post.use-case';
 
 @Controller('posts')
 export class PostsController {
@@ -134,7 +135,14 @@ export class PostsController {
     @Param('postId') postId: string,
     @Body() dto: HttpUpdatePostDto,
   ): Promise<void> {
-    await this.postsService.updatePost(postId, dto);
+    const command = new UpdatePostCommand(
+      postId,
+      dto.blogId,
+      dto.title,
+      dto.shortDescription,
+      dto.content,
+    );
+    await this.commandBus.execute(command);
   }
 
   @Delete(':id')
