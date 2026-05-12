@@ -1,9 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { UsersRepository } from '../../users/infrastructure/users.repository';
 import { CryptoService } from '../../../../services/CryptoService';
-import { DateUtils } from '../../../../utils/DateUtils';
 import { JwtService } from '@nestjs/jwt';
-import { EmailService } from '../../../notification/email.service';
 import {
   DomainException,
   DomainExceptionStatus,
@@ -15,7 +13,6 @@ import {
   JwtRefreshTokenSignPayload,
 } from '../types';
 import { JWT_AT_SERVICE, JWT_RT_SERVICE } from '../strategies/jwt/jwt-config';
-import { UserAccountsConfig } from '../../user-accounts.config';
 import { DeviceSessionsRepository } from '../infrastructure/DeviceSessions.repository';
 
 type JwtTokensPair = {
@@ -32,8 +29,6 @@ export class AuthService {
     private jwtAccessTokenService: JwtService,
     @Inject(JWT_RT_SERVICE)
     private jwtRefreshTokenService: JwtService,
-    private emailService: EmailService,
-    private userAuthConfig: UserAccountsConfig,
     private deviceSessionRepository: DeviceSessionsRepository,
   ) {}
 
@@ -54,25 +49,6 @@ export class AuthService {
     if (isValidPassword) return userDocument.id;
 
     return null;
-  }
-
-  async recoveryPassword(email: string): Promise<void> {
-    const userDocument = await this.usersRepository.findByEmail(email);
-
-    if (!userDocument) return;
-
-    const recoveryCode = crypto.randomUUID();
-    const codeExpirationDate = DateUtils.getDatePlusMinutes(
-      this.userAuthConfig.recoveryCodeTtlMinutes,
-    );
-
-    userDocument.setRecoveryCode(recoveryCode, codeExpirationDate);
-
-    await this.usersRepository.save(userDocument);
-
-    this.emailService
-      .sendRecoveryCode(userDocument.email, recoveryCode)
-      .catch((error) => console.log('Send recovery code error: ', error));
   }
 
   async updatePassword(newPasswordDto: HttpNewPasswordDto): Promise<void> {

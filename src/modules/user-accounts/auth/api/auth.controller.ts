@@ -34,6 +34,7 @@ import { RegistrationCommand } from '../application/useCases/registration.use-ca
 import { SendConfirmationCodeCommand } from '../application/useCases/send-confirmation-code.use-case';
 import { LoginCommand } from '../application/useCases/login.use-case';
 import { RegistrationConfirmationCommand } from '../application/useCases/registration-confirmation.use-case';
+import { PasswordRecoveryCommand } from '../application/useCases/password-recovery.use-case';
 
 @UseGuards(ThrottlerGuard)
 @Controller('auth')
@@ -101,7 +102,7 @@ export class AuthController {
   @Post('password-recovery')
   @HttpCode(HttpStatus.NO_CONTENT)
   async recoveryPassword(@Body() dto: HttpEmailDto): Promise<void> {
-    await this.authService.recoveryPassword(dto.email);
+    await this.commandBus.execute(new PasswordRecoveryCommand(dto.email));
   }
 
   @Post('new-password')

@@ -40,12 +40,14 @@ import { SendConfirmationCodeUseCase } from './auth/application/useCases/send-co
 import { RegistrationUseCase } from './auth/application/useCases/registration.use-case';
 import { LoginUseCase } from './auth/application/useCases/login.use-case';
 import { RegistrationConfirmationUseCase } from './auth/application/useCases/registration-confirmation.use-case';
+import { PasswordRecoveryUseCase } from './auth/application/useCases/password-recovery.use-case';
 
 const useCases = [
   CreateUserUseCase,
   DeleteUserUseCase,
   RegistrationUseCase,
   LoginUseCase,
+  PasswordRecoveryUseCase,
   SendConfirmationCodeUseCase,
   RegistrationConfirmationUseCase,
   DeleteSecurityDeviceUseCase,
