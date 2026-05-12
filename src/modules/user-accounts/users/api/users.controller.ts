@@ -11,7 +11,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ViewUserDto } from './dto/ViewUser.dto';
-import { UsersQueryRepository } from '../infrastructure/users.query-repository';
 import { UsersService } from '../application/users.service';
 import { UserQueryParamsDto } from './dto/UserQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
@@ -20,6 +19,7 @@ import { BasicAuthGuard } from '../../auth/strategies/basic/Basic.guard';
 import { CreateUserCommand } from '../application/useCases/create-user.use-case';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetUserQuery } from '../application/queries/get-user.query';
+import { GetUsersQuery } from '../application/queries/get-users.query';
 
 @Controller('users')
 @UseGuards(BasicAuthGuard)
@@ -27,15 +27,14 @@ export class UsersController {
   constructor(
     private commandBus: CommandBus,
     private queryBus: QueryBus,
-    private usersQueryRepository: UsersQueryRepository,
     private usersService: UsersService,
   ) {}
 
   @Get()
   async getAll(
-    @Query() query: UserQueryParamsDto,
+    @Query() queryParams: UserQueryParamsDto,
   ): Promise<PaginatedView<ViewUserDto>> {
-    return this.usersQueryRepository.find(query);
+    return this.queryBus.execute(new GetUsersQuery(queryParams));
   }
 
   @Post()
