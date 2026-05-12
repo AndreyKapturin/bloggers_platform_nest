@@ -1,12 +1,10 @@
 import { Module } from '@nestjs/common';
 import { BlogsController } from './blogs/api/blogs.controller';
-import { BlogsService } from './blogs/application/blogs.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Blog, BlogSchema } from './blogs/domain/blog.entity';
 import { BlogsRepository } from './blogs/infrastructure/blogs.repository';
 import { BlogsQueryRepository } from './blogs/infrastructure/blogs.query-repository';
 import { PostsController } from './posts/api/posts.controller';
-import { PostsService } from './posts/application/posts.service';
 import { Post, PostSchema } from './posts/domain/Post.entity';
 import { PostsQueryRepository } from './posts/infrastructure/Post.query-repository';
 import { PostsRepository } from './posts/infrastructure/Post.repository';
@@ -37,9 +35,20 @@ import { GetPostQueryHandler } from './posts/application/queries/get-post.query'
 import { GetPostsQueryHandler } from './posts/application/queries/get-posts.query';
 import { CreateBlogUseCase } from './blogs/application/useCases/create-blog.use-case';
 import { GetBlogQueryHandler } from './blogs/application/queries/get-blog.query';
+import { GetBlogsQueryHandler } from './blogs/application/queries/get-blogs.query';
+import { UpdateBlogUseCase } from './blogs/application/useCases/update-blog.use-case';
+import { DeleteBlogUseCase } from './blogs/application/useCases/delete-blog.use-case';
+import { CreatePostUseCase } from './posts/application/useCases/create-post.use-case';
+import { UpdatePostUseCase } from './posts/application/useCases/update-post.use-case';
+import { DeletePostUseCase } from './posts/application/useCases/delete-post.use-case';
 
 const useCases = [
   CreateBlogUseCase,
+  UpdateBlogUseCase,
+  DeleteBlogUseCase,
+  CreatePostUseCase,
+  UpdatePostUseCase,
+  DeletePostUseCase,
   CreateCommentUseCase,
   UpdateCommentUseCase,
   DeleteCommentUseCase,
@@ -53,6 +62,7 @@ const queries = [
   GetPostQueryHandler,
   GetPostsQueryHandler,
   GetBlogQueryHandler,
+  GetBlogsQueryHandler,
 ];
 
 @Module({
@@ -68,10 +78,8 @@ const queries = [
   ],
   controllers: [BlogsController, PostsController, CommentsController],
   providers: [
-    BlogsService,
     BlogsRepository,
     BlogsQueryRepository,
-    PostsService,
     PostReactionsRepository,
     PostsRepository,
     PostsQueryRepository,

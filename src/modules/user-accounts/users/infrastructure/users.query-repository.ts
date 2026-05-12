@@ -6,6 +6,10 @@ import { Model, QueryFilter } from 'mongoose';
 import { UserQueryParamsDto } from '../api/dto/UserQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { ViewMeDto } from '../api/dto/ViewMe.dto';
+import {
+  DomainException,
+  DomainExceptionStatus,
+} from '../../../../core/exceptions/DomainException';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -15,6 +19,25 @@ export class UsersQueryRepository {
     const userDocument = await this.UserModel.findById(id);
     if (!userDocument) return null;
     return ViewUserDto.toView(userDocument);
+  }
+
+  async findByIdOrThrow(id: string): Promise<ViewUserDto> {
+    const foundUser = await this.findById(id);
+
+    if (!foundUser) {
+      throw new DomainException(
+        DomainExceptionStatus.NotFound,
+        `User with id ${id} not found`,
+        [
+          {
+            field: 'userId',
+            message: `User with id ${id} not found`,
+          },
+        ],
+      );
+    }
+
+    return foundUser;
   }
 
   async find(
