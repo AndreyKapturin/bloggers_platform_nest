@@ -1,12 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { HttpCreateUserDto } from '../../users/api/dto/HttpCreateUser.dto';
-import { TUserDocument } from '../../users/domain/user.entity';
 import { UsersRepository } from '../../users/infrastructure/users.repository';
 import { CryptoService } from '../../../../services/CryptoService';
 import { DateUtils } from '../../../../utils/DateUtils';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from '../../../notification/email.service';
-import { UsersService } from '../../users/application/users.service';
 import {
   DomainException,
   DomainExceptionStatus,
@@ -19,12 +16,6 @@ import {
 } from '../types';
 import { JWT_AT_SERVICE, JWT_RT_SERVICE } from '../strategies/jwt/jwt-config';
 import { UserAccountsConfig } from '../../user-accounts.config';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  DeviceSession,
-  type TDeviceSessionModel,
-} from '../domain/DeviceSession.entity';
-import { LoginDto } from './dto/Login.dto';
 import { DeviceSessionsRepository } from '../infrastructure/DeviceSessions.repository';
 
 type JwtTokensPair = {
@@ -36,7 +27,6 @@ type JwtTokensPair = {
 export class AuthService {
   constructor(
     private usersRepository: UsersRepository,
-    private usersService: UsersService,
     private cryptoService: CryptoService,
     @Inject(JWT_AT_SERVICE)
     private jwtAccessTokenService: JwtService,
@@ -44,17 +34,8 @@ export class AuthService {
     private jwtRefreshTokenService: JwtService,
     private emailService: EmailService,
     private userAuthConfig: UserAccountsConfig,
-    @InjectModel(DeviceSession.name)
-    private DeviceSessionModel: TDeviceSessionModel,
     private deviceSessionRepository: DeviceSessionsRepository,
   ) {}
-
-  async registration(dto: HttpCreateUserDto): Promise<void> {
-    const userId = await this.usersService.createUser(dto);
-    const userDocument = await this.usersRepository.findById(userId);
-    this._setConfirmationCode(userDocument!);
-    await this.usersRepository.save(userDocument!);
-  }
 
   async validateUser(
     loginOrEmail: string,
@@ -73,70 +54,6 @@ export class AuthService {
     if (isValidPassword) return userDocument.id;
 
     return null;
-  }
-
-  async login(dto: LoginDto): Promise<JwtTokensPair> {
-    const { userId, ip, deviceName } = dto;
-    const accessTokenPayload: JwtAccessTokenSignPayload = { userId };
-    const refreshTokenPayload: JwtRefreshTokenSignPayload = {
-      userId,
-      deviceId: crypto.randomUUID(),
-    };
-    const accessToken =
-      await this.jwtAccessTokenService.signAsync(accessTokenPayload);
-    const refreshToken =
-      await this.jwtRefreshTokenService.signAsync(refreshTokenPayload);
-
-    const { exp, iat } =
-      this.jwtRefreshTokenService.decode<JwtRefreshTokenDecodedPayload>(
-        refreshToken,
-      );
-
-    const deviceSession = this.DeviceSessionModel.makeInstance({
-      userId: refreshTokenPayload.userId,
-      deviceId: refreshTokenPayload.deviceId,
-      deviceName,
-      ip,
-      tokenIat: new Date(iat * 1000),
-      tokenExp: new Date(exp * 1000),
-    });
-
-    await this.deviceSessionRepository.save(deviceSession);
-    return { accessToken, refreshToken };
-  }
-
-  async resendConfirmationEmail(email: string): Promise<void> {
-    const userDocument = await this.usersRepository.findByEmail(email);
-
-    if (!userDocument) {
-      throw new DomainException(
-        DomainExceptionStatus.InvalidData,
-        'User with passed email not found',
-        [
-          {
-            field: 'email',
-            message: 'User with passed email not found',
-          },
-        ],
-      );
-    }
-
-    if (userDocument.emailConfirmation.isConfirmed) {
-      throw new DomainException(
-        DomainExceptionStatus.InvalidData,
-        'Email already confirmed',
-        [
-          {
-            field: 'email',
-            message: 'Email already confirmed',
-          },
-        ],
-      );
-    }
-
-    this._setConfirmationCode(userDocument);
-
-    await this.usersRepository.save(userDocument);
   }
 
   async confirmRegistration(confirmationCode: string): Promise<void> {
@@ -287,18 +204,5 @@ export class AuthService {
     }
 
     await this.deviceSessionRepository.delete(deviceSession);
-  }
-
-  private _setConfirmationCode(userDocument: TUserDocument) {
-    const confirmationCode = crypto.randomUUID();
-    const codeExpirationDate = DateUtils.getDatePlusDays(
-      this.userAuthConfig.confirmationCodeTtlHourse,
-    );
-
-    userDocument.setEmailConfirmationCode(confirmationCode, codeExpirationDate);
-
-    this.emailService
-      .sendConfirmationCode(userDocument.email, confirmationCode)
-      .catch((error) => console.log('Send confirmation code error: ', error));
   }
 }

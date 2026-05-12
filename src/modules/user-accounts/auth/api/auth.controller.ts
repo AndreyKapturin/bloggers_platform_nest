@@ -27,12 +27,12 @@ import { JwtAuthGuard } from '../strategies/jwt/Jwt.guard';
 import { type Request, type Response } from 'express';
 import { SkipThrottle, ThrottlerGuard } from '@nestjs/throttler';
 import { JwtRefreshAuthGuard } from '../strategies/jwt/JwtRefresh.guard';
-import { LoginDto } from '../application/dto/Login.dto';
 import { ExtractUserWithDeviceFromRequest } from '../../../../core/decorators/extract-user-with-device.decorator';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetMeQuery } from '../application/queries/get-me.query';
 import { RegistrationCommand } from '../application/useCases/registration.use-case';
 import { SendConfirmationCodeCommand } from '../application/useCases/send-confirmation-code.use-case';
+import { LoginCommand } from '../application/useCases/login.use-case';
 
 @UseGuards(ThrottlerGuard)
 @Controller('auth')
@@ -69,8 +69,8 @@ export class AuthController {
     @ExtractUserFromRequest() dto: UserInRequestDto,
   ): Promise<AccessTokenDto> {
     const deviceName = `${req.useragent!.os} ${req.useragent!.browser}`;
-    const loginDto = new LoginDto(dto.userId, ip, deviceName);
-    const tokensPair = await this.authService.login(loginDto);
+    const loginCommand = new LoginCommand(dto.userId, ip, deviceName);
+    const tokensPair = await this.commandBus.execute(loginCommand);
     response.cookie('refreshToken', tokensPair.refreshToken, {
       secure: true,
       httpOnly: true,
@@ -83,7 +83,9 @@ export class AuthController {
   async resendConfirmationEmail(
     @Body() inputEmailDto: HttpEmailDto,
   ): Promise<void> {
-    await this.commandBus.execute(new SendConfirmationCodeCommand(inputEmailDto.email));
+    await this.commandBus.execute(
+      new SendConfirmationCodeCommand(inputEmailDto.email),
+    );
   }
 
   @Post('registration-confirmation')
