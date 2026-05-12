@@ -12,7 +12,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ViewPostDto } from './dto/VIewPost.dto';
-import { PostsService } from '../application/posts.service';
 import { PostsQueryParamsDto } from './dto/PostQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { CommentsQueryParamsDto } from '../../comments/api/dto/CommentsQueryParams.dto';
@@ -36,11 +35,11 @@ import { HttpUpdatePostDto } from './dto/HttpUpdatePost.dto';
 import { CreatePostCommand } from '../application/useCases/create-post.use-case';
 import { GetCommentQuery } from '../../comments/application/queries/get-comment-by-id.query';
 import { UpdatePostCommand } from '../application/useCases/update-post.use-case';
+import { DeletePostCommand } from '../application/useCases/delete-post.use-case';
 
 @Controller('posts')
 export class PostsController {
   constructor(
-    private postsService: PostsService,
     private commandBus: CommandBus,
     private queryBus: QueryBus,
   ) {}
@@ -149,6 +148,6 @@ export class PostsController {
   @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePost(@Param('id') id: string): Promise<void> {
-    await this.postsService.deletePost(id);
+    await this.commandBus.execute(new DeletePostCommand(id));
   }
 }

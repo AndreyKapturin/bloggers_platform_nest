@@ -5,7 +5,6 @@ import { Blog, BlogSchema } from './blogs/domain/blog.entity';
 import { BlogsRepository } from './blogs/infrastructure/blogs.repository';
 import { BlogsQueryRepository } from './blogs/infrastructure/blogs.query-repository';
 import { PostsController } from './posts/api/posts.controller';
-import { PostsService } from './posts/application/posts.service';
 import { Post, PostSchema } from './posts/domain/Post.entity';
 import { PostsQueryRepository } from './posts/infrastructure/Post.query-repository';
 import { PostsRepository } from './posts/infrastructure/Post.repository';
@@ -41,6 +40,7 @@ import { UpdateBlogUseCase } from './blogs/application/useCases/update-blog.use-
 import { DeleteBlogUseCase } from './blogs/application/useCases/delete-blog.use-case';
 import { CreatePostUseCase } from './posts/application/useCases/create-post.use-case';
 import { UpdatePostUseCase } from './posts/application/useCases/update-post.use-case';
+import { DeletePostUseCase } from './posts/application/useCases/delete-post.use-case';
 
 const useCases = [
   CreateBlogUseCase,
@@ -48,6 +48,7 @@ const useCases = [
   DeleteBlogUseCase,
   CreatePostUseCase,
   UpdatePostUseCase,
+  DeletePostUseCase,
   CreateCommentUseCase,
   UpdateCommentUseCase,
   DeleteCommentUseCase,
@@ -79,7 +80,6 @@ const queries = [
   providers: [
     BlogsRepository,
     BlogsQueryRepository,
-    PostsService,
     PostReactionsRepository,
     PostsRepository,
     PostsQueryRepository,
