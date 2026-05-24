@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthController } from './auth/api/auth.controller';
-import { User, UserSchema } from './users/domain/user.entity';
 import { UsersController } from './users/api/users.controller';
-import { UsersService } from './users/application/users.service';
 import { UsersRepository } from './users/infrastructure/users.repository';
 import { UsersQueryRepository } from './users/infrastructure/users.query-repository';
 import { CryptoService } from '../../services/CryptoService';
@@ -45,6 +43,8 @@ import { NewPasswordUseCase } from './auth/application/useCases/new-password.use
 import { RefreshTokensUseCase } from './auth/application/useCases/refresh-tokens.use-case';
 import { LogoutUseCase } from './auth/application/useCases/logout.use-case';
 import { JwtTokensService } from './auth/application/JwtTokens.service';
+import { RecoveryCodesRepository } from './users/infrastructure/recovery-codes.repository';
+import { EmailConfirmationCodesRepository } from './users/infrastructure/email-confirmation-codes.repository';
 
 const useCases = [
   CreateUserUseCase,
@@ -71,7 +71,6 @@ const queryHandlers = [
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: User.name, schema: UserSchema },
       { name: DeviceSession.name, schema: DeviceSessionSchema },
     ]),
     PassportModule,
@@ -81,9 +80,10 @@ const queryHandlers = [
   controllers: [UsersController, AuthController, SecurityDevicesController],
   providers: [
     UserAccountsConfig,
-    UsersService,
     UsersRepository,
     UsersQueryRepository,
+    RecoveryCodesRepository,
+    EmailConfirmationCodesRepository,
     CryptoService,
     AuthService,
     LocalStrategy,

@@ -1,4 +1,4 @@
-import { TUserDocument } from '../../domain/user.entity';
+import { TUserModel } from '../../domain/user.entity';
 
 export class ViewUserDto {
   id!: string;
@@ -6,12 +6,12 @@ export class ViewUserDto {
   email!: string;
   createdAt!: string;
 
-  static toView(userDocument: TUserDocument): ViewUserDto {
+  static toView(userModel: TUserModel): ViewUserDto {
     return {
-      id: userDocument.id,
-      email: userDocument.email,
-      login: userDocument.login,
-      createdAt: userDocument.createdAt.toISOString(),
+      id: userModel.id,
+      email: userModel.email,
+      login: userModel.login,
+      createdAt: userModel.createdAt.toISOString(),
     };
   }
 }

@@ -4,6 +4,7 @@ import {
   DomainExceptionStatus,
 } from '../../../../../core/exceptions/DomainException';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
+import { EmailConfirmationCodesRepository } from '../../../users/infrastructure/email-confirmation-codes.repository';
 
 export class RegistrationConfirmationCommand extends Command<void> {
   constructor(public confirmationCode: string) {
@@ -16,14 +17,17 @@ export class RegistrationConfirmationUseCase implements ICommandHandler<
   RegistrationConfirmationCommand,
   void
 > {
-  constructor(private usersRepository: UsersRepository) {}
+  constructor(
+    private usersRepository: UsersRepository,
+    private emailConfirmationCodesRepository: EmailConfirmationCodesRepository,
+  ) {}
 
   async execute(command: RegistrationConfirmationCommand): Promise<void> {
-    const userDocument = await this.usersRepository.findByConfirmationCode(
+    const user = await this.usersRepository.findByConfirmationCode(
       command.confirmationCode,
     );
 
-    if (!userDocument) {
+    if (!user) {
       throw new DomainException(
         DomainExceptionStatus.InvalidData,
         'User with passed confirmation code not found',
@@ -36,7 +40,7 @@ export class RegistrationConfirmationUseCase implements ICommandHandler<
       );
     }
 
-    if (userDocument.emailConfirmation.isConfirmed) {
+    if (user.isConfirmed) {
       throw new DomainException(
         DomainExceptionStatus.InvalidData,
         'User already confirmed',
@@ -49,7 +53,7 @@ export class RegistrationConfirmationUseCase implements ICommandHandler<
       );
     }
 
-    userDocument.confirmEmail();
-    await this.usersRepository.save(userDocument);
+    await this.usersRepository.updateConfirmationStatus(user.id, true);
+    await this.emailConfirmationCodesRepository.delete(command.confirmationCode);
   }
 }

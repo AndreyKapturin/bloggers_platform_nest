@@ -5,8 +5,6 @@ import {
 } from '../../../../../core/exceptions/DomainException';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { CryptoService } from '../../../../../services/CryptoService';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, type TUserModel } from '../../domain/user.entity';
 
 export class CreateUserCommand extends Command<string> {
   constructor(
@@ -24,7 +22,6 @@ export class CreateUserUseCase implements ICommandHandler<
   string
 > {
   constructor(
-    @InjectModel(User.name) private UserModel: TUserModel,
     private usersRepository: UsersRepository,
     private cryptoService: CryptoService,
   ) {}
@@ -64,14 +61,12 @@ export class CreateUserUseCase implements ICommandHandler<
 
     const passwordHash = await this.cryptoService.hash(password);
 
-    const newUserDocument = this.UserModel.makeInstanse({
+    const userId = await this.usersRepository.create({
       login,
       email,
       passwordHash,
     });
 
-    await this.usersRepository.save(newUserDocument);
-
-    return newUserDocument.id;
+    return userId;
   }
 }

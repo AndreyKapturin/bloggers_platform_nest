@@ -1,11 +1,14 @@
 import { Controller, Delete, HttpCode, HttpStatus } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Controller('testing')
 export class TestingController {
   constructor(
     @InjectConnection() private readonly databaseConnection: Connection,
+    @InjectDataSource() private dataSource: DataSource,
   ) {}
 
   @Delete('all-data')
@@ -16,6 +19,11 @@ export class TestingController {
     const promises = collections.map((collection) =>
       this.databaseConnection.collection(collection.name).deleteMany({}),
     );
+
+    await this.dataSource.query(
+      `TRUNCATE TABLE "users" RESTART IDENTITY CASCADE;`, // emailConfirmationCodes, passwordRecoveryCodes
+    );
+
     await Promise.all(promises);
 
     return {

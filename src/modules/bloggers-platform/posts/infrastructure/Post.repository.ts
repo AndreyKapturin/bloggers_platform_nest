@@ -9,7 +9,6 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
-import type { TUserDocument } from '../../../user-accounts/users/domain/user.entity';
 
 @Injectable()
 export class PostsRepository {
