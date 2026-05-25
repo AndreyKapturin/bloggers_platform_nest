@@ -30,7 +30,19 @@ export class SendConfirmationCodeUseCase implements ICommandHandler<
   async execute(command: SendConfirmationCodeCommand): Promise<void> {
     const user = await this.usersRepository.findByEmail(command.email);
 
-    if (!user) return;
+    if (!user) {
+      throw new DomainException(
+        DomainExceptionStatus.InvalidData,
+        'User with passed email not exist',
+        [
+          {
+            field: 'email',
+            message: 'User with passed email not exist',
+          },
+        ],
+      );
+    };
+    
     if (user.isConfirmed) {
       throw new DomainException(
         DomainExceptionStatus.InvalidData,
