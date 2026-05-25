@@ -3,14 +3,10 @@ import {
   JwtAccessTokenSignPayload,
   JwtRefreshTokenSignPayload,
 } from '../../types';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  DeviceSession,
-  type TDeviceSessionModel,
-} from '../../domain/DeviceSession.entity';
-import { DeviceSessionsRepository } from '../../infrastructure/DeviceSessions.repository';
 import { JwtTokensPair } from './types';
 import { JwtTokensService } from '../JwtTokens.service';
+import { DeviceSessionsRepository } from '../../infrastructure/DeviceSessions.repository';
+import { DomainCreateDeviceSessionDto } from '../../domain/dto/DomainCreateDeviceSession.dto';
 
 export class LoginCommand extends Command<JwtTokensPair> {
   constructor(
@@ -28,8 +24,6 @@ export class LoginUseCase implements ICommandHandler<
   JwtTokensPair
 > {
   constructor(
-    @InjectModel(DeviceSession.name)
-    private DeviceSessionModel: TDeviceSessionModel,
     private deviceSessionRepository: DeviceSessionsRepository,
     private jwtTokensService: JwtTokensService,
   ) {}
@@ -51,14 +45,14 @@ export class LoginUseCase implements ICommandHandler<
       tokensPair.refreshToken,
     );
 
-    const deviceSession = this.DeviceSessionModel.makeInstance({
-      userId: refreshTokenPayload.userId,
-      deviceId: refreshTokenPayload.deviceId,
+    const deviceSession = new DomainCreateDeviceSessionDto(
+      refreshTokenPayload.userId,
+      refreshTokenPayload.deviceId,
       deviceName,
       ip,
-      tokenIat: iat,
-      tokenExp: exp,
-    });
+      iat,
+      exp,
+    );
 
     await this.deviceSessionRepository.save(deviceSession);
     return tokensPair;

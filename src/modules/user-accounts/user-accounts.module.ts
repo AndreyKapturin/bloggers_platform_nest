@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { AuthController } from './auth/api/auth.controller';
 import { UsersController } from './users/api/users.controller';
 import { UsersRepository } from './users/infrastructure/users.repository';
@@ -17,10 +16,6 @@ import {
   JWT_RT_SERVICE,
 } from './auth/strategies/jwt/jwt-config';
 import { UserAccountsConfig } from './user-accounts.config';
-import {
-  DeviceSession,
-  DeviceSessionSchema,
-} from './auth/domain/DeviceSession.entity';
 import { DeviceSessionsRepository } from './auth/infrastructure/DeviceSessions.repository';
 import { JwtRefreshStrategy } from './auth/strategies/jwt/JwtRefresh.strategy';
 import { SecurityDevicesQueryRepository } from './security/infrastructure/SecurityDevices.query-repository';
@@ -70,9 +65,6 @@ const queryHandlers = [
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: DeviceSession.name, schema: DeviceSessionSchema },
-    ]),
     PassportModule,
     JwtModule,
     NotificationModule,
