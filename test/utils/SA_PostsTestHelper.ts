@@ -1,159 +1,67 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
 import request from 'supertest';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
-import { faker } from '@faker-js/faker';
 import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/VIewPost.dto';
-import { HttpLikeStatusDto } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
 import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
 import { ResponseWithBody } from './generics';
 import { HttpCreatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreatePost.dto';
-import { LIKE_STATUSES_REG_EXP } from './reg-exp';
 import { NewestLike } from '../../src/modules/bloggers-platform/posts/domain/Post.entity';
 import { HttpUpdatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpUpdatePost.dto';
 import { HttpCreateBlogPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreateBlogPost.dto';
 import { PostsQueryParamsDto } from '../../src/modules/bloggers-platform/posts/api/dto/PostQueryParams.dto';
+import { PostsDtoFabrics } from './PostDtoFabrics';
 
-const expectedNewestLike: NewestLike = {
+export const expectedNewestLike: NewestLike = {
   login: expect.any(String),
   userId: expect.any(String),
   addedAt: expect.any(String),
 };
 
-export class PostsTestHelper {
+export class SA_PostsTestHelper {
+  private BASE_URL = '/sa/blogs';
+
   constructor(private app: INestApplication) {}
 
   createBlogPostInputDto(): HttpCreateBlogPostDto {
-    const title = faker.lorem.words({ min: 1, max: 2 });
-    const shortDescription = faker.lorem.sentence({ min: 3, max: 10 });
-    const content = faker.lorem.sentence({ min: 5, max: 45 });
-    return {
-      title,
-      shortDescription,
-      content,
-    };
+    return PostsDtoFabrics.createBlogPostInputDto();
   }
 
   createInputDto(blogId: string): HttpCreatePostDto {
-    return {
-      ...this.createBlogPostInputDto(),
-      blogId,
-    };
+    return PostsDtoFabrics.createInputDto(blogId);
   }
 
   createExpectedPost(overrdieFields: Partial<ViewPostDto> = {}) {
-    const expectedPost: ViewPostDto = {
-      id: expect.any(String),
-      title: expect.any(String),
-      shortDescription: expect.any(String),
-      content: expect.any(String),
-      blogName: expect.any(String),
-      blogId: expect.any(String),
-      createdAt: expect.any(String),
-      extendedLikesInfo: {
-        likesCount: expect.any(Number),
-        dislikesCount: expect.any(Number),
-        myStatus: expect.stringMatching(LIKE_STATUSES_REG_EXP),
-        newestLikes: expect.arrayOf(expectedNewestLike),
-      },
-      ...overrdieFields,
-    };
-    return expectedPost;
-  }
-
-  async setLikeStatus(
-    id: string,
-    dto: HttpLikeStatusDto,
-    options?: { status?: HttpStatus; accessToken?: string },
-  ) {
-    const likeRequest = request(this.app.getHttpServer())
-      .put(`/posts/${id}/like-status`)
-      .send(dto)
-      .expect(options?.status ?? HttpStatus.NO_CONTENT);
-
-    if (options?.accessToken) {
-      likeRequest.auth(options.accessToken, { type: 'bearer' });
-    }
-
-    return likeRequest;
-  }
-
-  async getPost(
-    id: string,
-    options?: { status?: HttpStatus; accessToken?: string },
-  ): Promise<ResponseWithBody<ViewPostDto>> {
-    const getRequest = request(this.app.getHttpServer())
-      .get(`/posts/${id}`)
-      .expect(options?.status ?? HttpStatus.OK);
-
-    if (options?.accessToken) {
-      getRequest.auth(options.accessToken, { type: 'bearer' });
-    }
-
-    return getRequest;
-  }
-
-  async getPosts(options?: {
-    accessToken?: string;
-    filter?: Partial<PostsQueryParamsDto>;
-  }): Promise<ResponseWithBody<PaginatedView<ViewPostDto>>> {
-    const getRequest = request(this.app.getHttpServer())
-      .get('/posts')
-      .expect(HttpStatus.OK);
-
-    if (options?.accessToken) {
-      getRequest.auth(options.accessToken, { type: 'bearer' });
-    }
-
-    if (options?.filter) {
-      getRequest.query(options.filter);
-    }
-
-    return getRequest;
+    return PostsDtoFabrics.createExpectedPost(overrdieFields);
   }
 
   async getBlogPosts(
     blogId: string,
     options?: {
-      accessToken?: string;
+      status?: HttpStatus;
+      auth?: boolean;
       filter?: Partial<PostsQueryParamsDto>;
     },
   ): Promise<ResponseWithBody<PaginatedView<ViewPostDto>>> {
-    const getRequest = request(this.app.getHttpServer())
-      .get(`/blogs/${blogId}/posts`)
-      .expect(HttpStatus.OK);
-
-    if (options?.accessToken) {
-      getRequest.auth(options.accessToken, { type: 'bearer' });
-    }
-
-    if (options?.filter) {
-      getRequest.query(options.filter);
-    }
-
-    return getRequest;
-  }
-
-  async createPost(
-    dto: HttpCreatePostDto,
-    options?: { status?: HttpStatus; auth?: boolean },
-  ): Promise<ResponseWithBody<ViewPostDto>> {
     const innerOptions = {
-      status: HttpStatus.CREATED,
+      status: HttpStatus.OK,
       auth: true,
-      ...options,
+      ...(options ?? {}),
     };
 
-    const createPostRequest = request(this.app.getHttpServer())
-      .post('/posts')
-      .send(dto)
+    const getRequest = request(this.app.getHttpServer())
+      .get(`${this.BASE_URL}/${blogId}/posts`)
       .expect(innerOptions.status);
 
     if (innerOptions.auth) {
-      createPostRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
+      getRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
     }
 
-    return createPostRequest;
+    if (innerOptions?.filter) {
+      getRequest.query(innerOptions.filter);
+    }
+
+    return getRequest;
   }
 
   async createBlogPost(
@@ -168,7 +76,7 @@ export class PostsTestHelper {
     };
 
     const createPostRequest = request(this.app.getHttpServer())
-      .post(`/blogs/${blogId}/posts`)
+      .post(`${this.BASE_URL}/${blogId}/posts`)
       .send(dto)
       .expect(innerOptions.status);
 
@@ -180,8 +88,8 @@ export class PostsTestHelper {
   }
 
   async createRandomPost(blogId: string): Promise<ViewPostDto> {
-    const dto = this.createInputDto(blogId);
-    const createPostResponse = await this.createPost(dto);
+    const dto = this.createBlogPostInputDto();
+    const createPostResponse = await this.createBlogPost(blogId, dto);
     return createPostResponse.body;
   }
 
@@ -198,7 +106,8 @@ export class PostsTestHelper {
     return responses;
   }
 
-  async updatePost(
+  async updateBlogPost(
+    blogId: string,
     postId: string,
     dto: HttpUpdatePostDto,
     options?: { status?: HttpStatus; auth?: boolean },
@@ -210,7 +119,7 @@ export class PostsTestHelper {
     };
 
     const updatePostRequest = request(this.app.getHttpServer())
-      .put(`/posts/${postId}`)
+      .put(`${this.BASE_URL}/${blogId}/posts/${postId}`)
       .send(dto)
       .expect(innerOptions.status);
 
@@ -222,6 +131,7 @@ export class PostsTestHelper {
   }
 
   async deletePost(
+    blogId: string,
     postId: string,
     options?: { status?: HttpStatus; auth?: boolean },
   ) {
@@ -232,7 +142,7 @@ export class PostsTestHelper {
     };
 
     const deletePostRequest = request(this.app.getHttpServer())
-      .delete(`/posts/${postId}`)
+      .delete(`${this.BASE_URL}/${blogId}/posts/${postId}`)
       .expect(innerOptions.status);
 
     if (innerOptions.auth) {

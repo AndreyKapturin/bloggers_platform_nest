@@ -1,21 +1,35 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Blog } from '../domain/blog.entity';
-import type { TBlogDocument, TBlogModel } from '../domain/blog.entity';
+import { TBlogModel } from '../domain/blog.entity';
 import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { DomainCreateBlogDto } from '../domain/dto/DomainCreateBlog.dto';
+import { DomainUpdateBlogDto } from '../domain/dto/DomainUpdateBlog.dto';
 
 @Injectable()
 export class BlogsRepository {
-  constructor(@InjectModel(Blog.name) private BlogModel: TBlogModel) {}
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
 
-  async findById(id: string): Promise<TBlogDocument | null> {
-    return this.BlogModel.findById(id);
+  async findById(id: string): Promise<TBlogModel | null> {
+    const rows = await this.dataSource.query<TBlogModel[]>(
+      `SELECT
+        "id",
+        "name",
+        "description",
+        "websiteUrl",
+        "createdAt"
+      FROM "blogs"
+      WHERE "id" = $1
+      LIMIT 1;`,
+      [id],
+    );
+    return rows[0] ?? null;
   }
 
-  async findByIdOrThrow(id: string): Promise<TBlogDocument> {
+  async findByIdOrThrow(id: string): Promise<TBlogModel> {
     const foundBlog = await this.findById(id);
 
     if (!foundBlog) {
@@ -34,12 +48,31 @@ export class BlogsRepository {
     return foundBlog;
   }
 
-  async save(blogDocument: TBlogDocument): Promise<void> {
-    await blogDocument.save();
+  async create(dto: DomainCreateBlogDto): Promise<string> {
+    const rows = await this.dataSource.query<{ id: string }>(
+      `INSERT INTO "blogs"
+        ("name", "description", "websiteUrl")
+      VALUES ($1, $2, $3)
+      RETURNING "id";`,
+      [dto.name, dto.description, dto.websiteUrl],
+    );
+    return rows[0].id;
+  }
+  
+  async update(dto: DomainUpdateBlogDto): Promise<void> {
+    await this.dataSource.query(
+      `UPDATE "blogs"
+      SET
+	      "name" = $1,
+	      "description" = $2,
+	      "websiteUrl" = $3
+      WHERE
+	    "id" = $4;`,
+      [dto.name, dto.description, dto.websiteUrl, dto.blogId],
+    );
   }
 
-  async delete(blogDocument: TBlogDocument): Promise<boolean> {
-    const deleteResult = await blogDocument.deleteOne();
-    return deleteResult.deletedCount === 1;
+  async delete(id: string): Promise<void> {
+    await this.dataSource.query(`DELETE FROM "blogs" WHERE "id" = $1;`, [id]);
   }
 }

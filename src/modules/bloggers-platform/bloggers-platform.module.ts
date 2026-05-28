@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BlogsController } from './blogs/api/blogs.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Blog, BlogSchema } from './blogs/domain/blog.entity';
 import { BlogsRepository } from './blogs/infrastructure/blogs.repository';
 import { BlogsQueryRepository } from './blogs/infrastructure/blogs.query-repository';
 import { PostsController } from './posts/api/posts.controller';
@@ -41,6 +40,7 @@ import { DeleteBlogUseCase } from './blogs/application/useCases/delete-blog.use-
 import { CreatePostUseCase } from './posts/application/useCases/create-post.use-case';
 import { UpdatePostUseCase } from './posts/application/useCases/update-post.use-case';
 import { DeletePostUseCase } from './posts/application/useCases/delete-post.use-case';
+import { SA_BlogsController } from './blogs/api/blogs.sa-controller';
 
 const useCases = [
   CreateBlogUseCase,
@@ -68,7 +68,6 @@ const queries = [
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostSchema },
       { name: Comment.name, schema: CommentSchema },
       { name: CommentReaction.name, schema: CommentReactionSchema },
@@ -76,7 +75,12 @@ const queries = [
     ]),
     UserAccountsModule,
   ],
-  controllers: [BlogsController, PostsController, CommentsController],
+  controllers: [
+    BlogsController,
+    SA_BlogsController,
+    PostsController,
+    CommentsController,
+  ],
   providers: [
     BlogsRepository,
     BlogsQueryRepository,

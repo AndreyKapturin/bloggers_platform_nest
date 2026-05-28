@@ -21,7 +21,14 @@ export class TestingController {
     );
 
     await this.dataSource.query(
-      `TRUNCATE TABLE "users" RESTART IDENTITY CASCADE;`, // emailConfirmationCodes, passwordRecoveryCodes
+      `
+      TRUNCATE TABLE "emailConfirmationCodes", 
+      "passwordRecoveryCodes",
+      "deviceSessions",
+      "users",
+      "blogs",
+      "posts" RESTART IDENTITY CASCADE;
+    `,
     );
 
     await Promise.all(promises);

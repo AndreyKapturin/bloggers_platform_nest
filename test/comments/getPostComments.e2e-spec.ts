@@ -6,8 +6,8 @@ import { UsersTestHelper } from '../utils/UsersTestHelper';
 import { faker } from '@faker-js/faker';
 import { CommentsTestHelper } from '../utils/CommentsTestHelper';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
-import { BlogsTestHelper } from '../utils/BlogsTestHelper';
-import { PostsTestHelper } from '../utils/PostsTestHelper';
+import { SA_BlogsTestHelper } from '../utils/SA_BlogsTestHelper';
+import { SA_PostsTestHelper } from '../utils/SA_PostsTestHelper';
 import { SortDirection } from '../../src/core/dto/BaseQueryParams.dto';
 import { CommentsSortBy } from '../../src/modules/bloggers-platform/comments/api/dto/CommentsQueryParams.dto';
 import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/ViewComment.dto';
@@ -15,8 +15,8 @@ import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api
 describe('get post comments', () => {
   let app: INestApplication;
 
-  let blogsTestHelper: BlogsTestHelper;
-  let postsTestHelper: PostsTestHelper;
+  let blogsTestHelper: SA_BlogsTestHelper;
+  let postsTestHelper: SA_PostsTestHelper;
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
   let commentsTestHelper: CommentsTestHelper;
@@ -34,8 +34,8 @@ describe('get post comments', () => {
     await app.init();
     await cleanDatabase(app);
 
-    blogsTestHelper = new BlogsTestHelper(app);
-    postsTestHelper = new PostsTestHelper(app);
+    blogsTestHelper = new SA_BlogsTestHelper(app);
+    postsTestHelper = new SA_PostsTestHelper(app);
     usersTestHelper = new UsersTestHelper(app);
     authTestHelper = new AuthTestHelper(app, usersTestHelper);
     commentsTestHelper = new CommentsTestHelper(app);
