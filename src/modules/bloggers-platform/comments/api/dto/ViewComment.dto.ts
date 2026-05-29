@@ -1,4 +1,4 @@
-import { TCommentDocument } from '../../domain/comment.entity';
+import { TExtendedCommentModel } from '../../domain/comment.entity';
 import { LikeStatus } from '../../../dto/HttpLikeStatus.dto';
 
 export class ViewCommentDto {
@@ -17,17 +17,20 @@ export class ViewCommentDto {
     public createdAt: string,
   ) {}
 
-  static toView(commentDocument: TCommentDocument): ViewCommentDto {
+  static toView(extendedComment: TExtendedCommentModel): ViewCommentDto {
     return new this(
-      commentDocument.id,
-      commentDocument.content,
-      commentDocument.commentatorInfo,
+      extendedComment.id,
+      extendedComment.content,
       {
-        likesCount: commentDocument.likesInfo.likesCount,
-        dislikesCount: commentDocument.likesInfo.dislikesCount,
-        myStatus: LikeStatus.None
+        userId: extendedComment.userId,
+        userLogin: extendedComment.userLogin,
       },
-      commentDocument.createdAt.toISOString(),
+      {
+        likesCount: extendedComment.likesCount,
+        dislikesCount: extendedComment.dislikesCount,
+        myStatus: LikeStatus.None,
+      },
+      extendedComment.createdAt.toISOString(),
     );
   }
 }

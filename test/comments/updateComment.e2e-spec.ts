@@ -125,7 +125,7 @@ describe('update comment', () => {
   });
 
   it(`shouldn't update comment. Return NOF FOUND status if comment not exist`, async () => {
-    const notExistCommentId = faker.database.mongodbObjectId().toString();
+    const notExistCommentId = crypto.randomUUID();
 
     await commentsTestHelper.updateComment(
       notExistCommentId,

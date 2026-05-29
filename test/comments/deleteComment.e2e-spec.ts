@@ -71,7 +71,7 @@ describe('delete comment', () => {
   });
 
   it(`shouldn't delete comment. Return NOT FOUND status if comment not exist`, async () => {
-    const notExistCommentId = faker.database.mongodbObjectId().toString();
+    const notExistCommentId = crypto.randomUUID();
     await commentsTestHelper.deleteComment(notExistCommentId, accessToken, {
       status: HttpStatus.NOT_FOUND,
     });

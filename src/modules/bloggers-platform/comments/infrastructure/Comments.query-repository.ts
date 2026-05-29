@@ -1,24 +1,44 @@
-import { InjectModel } from '@nestjs/mongoose';
-import { Comment, type TCommentModel } from '../domain/comment.entity';
+import { TExtendedCommentModel } from '../domain/comment.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ViewCommentDto } from '../api/dto/ViewComment.dto';
 import { CommentsQueryParamsDto } from '../api/dto/CommentsQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
-import { QueryFilter } from 'mongoose';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class CommentsQueryRepository {
-  constructor(
-    @InjectModel(Comment.name)
-    private CommentModel: TCommentModel,
-  ) {}
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
+
+  async findById(id: string): Promise<ViewCommentDto | null> {
+    const rows = await this.dataSource.query<TExtendedCommentModel>(
+      `SELECT
+        "c"."id",
+        "c"."content",
+        "c"."postId",
+        "c"."createdAt",
+        "c"."userId",
+        "u"."login" AS "userLogin",
+        COUNT(CASE WHEN "cr"."status" = 'Like' THEN 1 END)::integer AS "likesCount",
+        COUNT(CASE WHEN "cr"."status" = 'Dislike' THEN 1 END)::integer AS "dislikesCount"
+      FROM "comments" "c"
+      LEFT JOIN "users" "u" ON "u"."id" = "c"."userId"
+      LEFT JOIN "commentReactions" "cr" ON "cr"."commentId" = "c"."id"
+      WHERE "c"."id" = $1
+      GROUP BY "c"."id", "c"."content", "c"."postId", "c"."createdAt", "c"."userId", "u"."login"
+      LIMIT 1;`,
+      [id],
+    );
+
+    return rows[0] ? ViewCommentDto.toView(rows[0]) : null;
+  }
 
   async findByIdOrThrow(id: string): Promise<ViewCommentDto> {
-    const commentDocument = await this.CommentModel.findById(id);
-    if (!commentDocument) {
+    const viewComment = await this.findById(id);
+    if (!viewComment) {
       throw new NotFoundException(`Comment with id ${id} not found`);
     }
-    return ViewCommentDto.toView(commentDocument);
+    return viewComment;
   }
 
   async findForPost(
@@ -27,16 +47,40 @@ export class CommentsQueryRepository {
   ): Promise<PaginatedView<ViewCommentDto>> {
     const { pageNumber, pageSize, skip, sortBy, sortDirection } = query;
 
-    const filter: QueryFilter<Comment> = { postId };
+    const getPostCommentsSql = `
+      SELECT
+        "c"."id",
+        "c"."content",
+        "c"."postId",
+        "c"."createdAt",
+        "c"."userId",
+        "u"."login" AS "userLogin",
+        COUNT(CASE WHEN "cr"."status" = 'Like' THEN 1 END)::integer AS "likesCount",
+        COUNT(CASE WHEN "cr"."status" = 'Dislike' THEN 1 END)::integer AS "dislikesCount"
+      FROM "comments" "c"
+      LEFT JOIN "users" "u" ON "u"."id" = "c"."userId"
+      LEFT JOIN "commentReactions" "cr" ON "cr"."commentId" = "c"."id"
+      WHERE "c"."postId" = $1
+      GROUP BY "c"."id", "c"."content", "c"."postId", "c"."createdAt", "c"."userId", "u"."login"
+      ORDER BY "${sortBy}" ${sortDirection}
+      OFFSET $2 LIMIT $3`;
 
-    const commentDocuments = await this.CommentModel.find(filter)
-      .sort({ [sortBy]: sortDirection })
-      .skip(skip)
-      .limit(pageSize);
+    const extendedComments = await this.dataSource.query<
+      TExtendedCommentModel[]
+    >(getPostCommentsSql, [postId, skip, pageSize]);
 
-    const totalCount = await this.CommentModel.countDocuments(filter);
-    const viewComments = commentDocuments.map((commentDocument) =>
-      ViewCommentDto.toView(commentDocument),
+    const getTotalCountSql = `
+      SELECT
+        COUNT(*)::integer as "totalCount"
+      FROM "comments"
+      WHERE "postId" = $1;`;
+
+    const [{ totalCount }] = await this.dataSource.query<
+      { totalCount: number }[]
+    >(getTotalCountSql, [postId]);
+
+    const viewComments = extendedComments.map((extendedComment) =>
+      ViewCommentDto.toView(extendedComment),
     );
     const paginatedViewComments = PaginatedView.toView(
       pageNumber,

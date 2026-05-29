@@ -3,7 +3,6 @@ import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
-import { faker } from '@faker-js/faker';
 import { CommentsTestHelper } from '../utils/CommentsTestHelper';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { SA_BlogsTestHelper } from '../utils/SA_BlogsTestHelper';

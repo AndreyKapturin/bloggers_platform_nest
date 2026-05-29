@@ -27,7 +27,10 @@ export class TestingController {
       "deviceSessions",
       "users",
       "blogs",
-      "posts" RESTART IDENTITY CASCADE;
+      "posts",
+      "comments",
+      "commentReactions"
+      RESTART IDENTITY CASCADE;
     `,
     );
 

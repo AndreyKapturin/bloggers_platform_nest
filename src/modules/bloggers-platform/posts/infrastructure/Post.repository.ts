@@ -45,7 +45,7 @@ export class PostsRepository {
   }
 
   async create(dto: DomainCreatePostDto): Promise<string> {
-    const rows = await this.dataSource.query<{ id: string }>(
+    const rows = await this.dataSource.query<{ id: string }[]>(
       `INSERT INTO "posts"
 	      ("title", "shortDescription", "content", "blogId")
       VALUES ($1, $2, $3, $4)
