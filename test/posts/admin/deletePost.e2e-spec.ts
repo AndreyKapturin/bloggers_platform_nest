@@ -42,7 +42,7 @@ describe('delete post', () => {
   });
 
   it(`shouldn't delete post. Return NOT FOUND if post not exist`, async () => {
-    const notExistedPostId = faker.database.mongodbObjectId().toString();
+    const notExistedPostId = crypto.randomUUID();
     await sa_postsTestHelper.deletePost(blogId, notExistedPostId, {
       status: HttpStatus.NOT_FOUND,
     });

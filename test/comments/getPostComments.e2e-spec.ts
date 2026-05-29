@@ -113,7 +113,7 @@ describe('get post comments', () => {
   });
 
   it(`should return NOT FOUND status if post not exist`, async () => {
-    const unexistedCommentId = faker.database.mongodbObjectId().toString();
+    const unexistedCommentId = crypto.randomUUID();
     await commentsTestHelper.getPostComments(unexistedCommentId, {
       status: HttpStatus.NOT_FOUND,
     });

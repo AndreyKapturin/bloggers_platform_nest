@@ -289,7 +289,7 @@ describe('update post for blog', () => {
   });
 
   it(`shouldn't update post. Return NOT FOUND if post not exist`, async () => {
-    const notExistedPostId = faker.database.mongodbObjectId().toString();
+    const notExistedPostId = crypto.randomUUID();
     const dto = sa_postsTestHelper.createInputDto(blog.id);
     await sa_postsTestHelper.updateBlogPost(blog.id, notExistedPostId, dto, {
       status: HttpStatus.NOT_FOUND,

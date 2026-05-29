@@ -1,4 +1,4 @@
-export class DomainUpdatePostDto {
+export class DomainCreatePostDto {
   constructor(
     public title: string,
     public shortDescription: string,

@@ -28,25 +28,16 @@ export class UpdatePostUseCase implements ICommandHandler<
 
   async execute(command: UpdatePostCommand): Promise<void> {
     await this.blogsRepository.findByIdOrThrow(command.paramsBlogId);
-
-    const postDocument = await this.postsRepository.findByIdOrThrow(
-      command.postId,
-    );
-
-    const blogDocument = await this.blogsRepository.findByIdOrThrow(
-      command.blogId,
-    );
+    await this.postsRepository.findByIdOrThrow(command.postId);
+    await this.blogsRepository.findByIdOrThrow(command.blogId);
 
     const updatePostDto = new DomainUpdatePostDto(
       command.title,
       command.shortDescription,
       command.content,
       command.blogId,
-      blogDocument.name,
     );
 
-    postDocument.update(updatePostDto);
-
-    await this.postsRepository.save(postDocument);
+    await this.postsRepository.update(command.postId, updatePostDto);
   }
 }

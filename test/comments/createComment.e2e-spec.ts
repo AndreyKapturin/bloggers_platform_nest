@@ -125,7 +125,7 @@ describe('create comment', () => {
   });
 
   it(`shouldn't create comment. Return NOT FOUND status if post not exist`, async () => {
-    const unexistedPostId = faker.database.mongodbObjectId().toString();
+    const unexistedPostId = crypto.randomUUID();
     await commentsTestHelper.createComment(
       unexistedPostId,
       accessToken,

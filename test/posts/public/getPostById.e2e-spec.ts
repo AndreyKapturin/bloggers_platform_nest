@@ -56,7 +56,7 @@ describe('get post by id', () => {
   });
 
   it('should return NOT FOUND if post with passed id not exist', async () => {
-    const undexistedPostId = faker.database.mongodbObjectId().toString();
+    const undexistedPostId = crypto.randomUUID();
     await public_postsTestHelper.getPost(undexistedPostId, {
       status: HttpStatus.NOT_FOUND,
     });

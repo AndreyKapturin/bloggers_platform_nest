@@ -4,7 +4,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { BlogsRepository } from './blogs/infrastructure/blogs.repository';
 import { BlogsQueryRepository } from './blogs/infrastructure/blogs.query-repository';
 import { PostsController } from './posts/api/posts.controller';
-import { Post, PostSchema } from './posts/domain/Post.entity';
 import { PostsQueryRepository } from './posts/infrastructure/Post.query-repository';
 import { PostsRepository } from './posts/infrastructure/Post.repository';
 import { CommentsService } from './comments/application/comments.service';
@@ -24,7 +23,7 @@ import {
 import { CommentReactionRepository } from './comments/infrastructure/CommentReaction.repository';
 import { GetCommentQueryHandler } from './comments/application/queries/get-comment-by-id.query';
 import { GetPostCommentsQueryHandler } from './comments/application/queries/get-comments-for-post.query';
-import { LikePostUseCase } from './posts/application/useCases/like-post.use-case';
+// import { LikePostUseCase } from './posts/application/useCases/like-post.use-case';
 import { PostReactionsRepository } from './posts/infrastructure/PostReactions.repository';
 import {
   PostReaction,
@@ -53,7 +52,7 @@ const useCases = [
   UpdateCommentUseCase,
   DeleteCommentUseCase,
   LikeCommentUseCase,
-  LikePostUseCase,
+  // LikePostUseCase,
 ];
 
 const queries = [
@@ -68,7 +67,6 @@ const queries = [
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Post.name, schema: PostSchema },
       { name: Comment.name, schema: CommentSchema },
       { name: CommentReaction.name, schema: CommentReactionSchema },
       { name: PostReaction.name, schema: PostReactionSchema },
