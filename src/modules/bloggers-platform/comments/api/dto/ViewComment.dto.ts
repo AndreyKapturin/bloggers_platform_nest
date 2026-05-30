@@ -28,7 +28,7 @@ export class ViewCommentDto {
       {
         likesCount: extendedComment.likesCount,
         dislikesCount: extendedComment.dislikesCount,
-        myStatus: LikeStatus.None,
+        myStatus: extendedComment.myStatus,
       },
       extendedComment.createdAt.toISOString(),
     );

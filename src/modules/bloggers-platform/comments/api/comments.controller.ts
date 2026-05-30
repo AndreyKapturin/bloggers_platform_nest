@@ -16,8 +16,8 @@ import { UpdateCommentCommand } from '../application/useCases/update-comment.use
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { JwtAuthGuard } from '../../../user-accounts/auth/strategies/jwt/Jwt.guard';
 import { DeleteCommentCommand } from '../application/useCases/delete-comment.use-case';
-// import { HttpLikeStatusDto } from '../../dto/HttpLikeStatus.dto';
-// import { LikeCommentCommand } from '../application/useCases/like-comment.use-case';
+import { HttpLikeStatusDto } from '../../dto/HttpLikeStatus.dto';
+import { LikeCommentCommand } from '../application/useCases/like-comment.use-case';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/strategies/jwt/JwtOptional.guard';
 import { GetCommentQuery } from '../application/queries/get-comment-by-id.query';
 import { OptionalUserFromRequest } from '../../../../core/decorators/optional-user-in-request.decorator';
@@ -55,21 +55,21 @@ export class CommentsController {
     await this.commandBus.execute(command);
   }
 
-  // @Put(':commentId/like-status')
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // @UseGuards(JwtAuthGuard)
-  // async changeLikeStatus(
-  //   @Param('commentId') commentId: string,
-  //   @Body() likeDto: HttpLikeStatusDto,
-  //   @ExtractUserFromRequest() userDto: UserInRequestDto,
-  // ) {
-  //   const command = new LikeCommentCommand(
-  //     commentId,
-  //     likeDto.likeStatus,
-  //     userDto.userId,
-  //   );
-  //   await this.commandBus.execute(command);
-  // }
+  @Put(':commentId/like-status')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  async changeLikeStatus(
+    @Param('commentId') commentId: string,
+    @Body() likeDto: HttpLikeStatusDto,
+    @ExtractUserFromRequest() userDto: UserInRequestDto,
+  ) {
+    const command = new LikeCommentCommand(
+      commentId,
+      likeDto.likeStatus,
+      userDto.userId,
+    );
+    await this.commandBus.execute(command);
+  }
 
   @Delete(':commentId')
   @HttpCode(HttpStatus.NO_CONTENT)

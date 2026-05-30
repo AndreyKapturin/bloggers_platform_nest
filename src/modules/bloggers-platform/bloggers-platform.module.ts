@@ -14,12 +14,7 @@ import { UserAccountsModule } from '../user-accounts/user-accounts.module';
 import { CreateCommentUseCase } from './comments/application/useCases/create-comment.use-case';
 import { UpdateCommentUseCase } from './comments/application/useCases/update-comment.use-case';
 import { DeleteCommentUseCase } from './comments/application/useCases/delete-comment.use-case';
-// import { LikeCommentUseCase } from './comments/application/useCases/like-comment.use-case';
-import {
-  CommentReaction,
-  CommentReactionSchema,
-} from './comments/domain/comment-reaction.entity';
-import { CommentReactionRepository } from './comments/infrastructure/CommentReaction.repository';
+import { LikeCommentUseCase } from './comments/application/useCases/like-comment.use-case';
 import { GetCommentQueryHandler } from './comments/application/queries/get-comment-by-id.query';
 import { GetPostCommentsQueryHandler } from './comments/application/queries/get-comments-for-post.query';
 // import { LikePostUseCase } from './posts/application/useCases/like-post.use-case';
@@ -50,7 +45,7 @@ const useCases = [
   CreateCommentUseCase,
   UpdateCommentUseCase,
   DeleteCommentUseCase,
-  // LikeCommentUseCase,
+  LikeCommentUseCase,
   // LikePostUseCase,
 ];
 
@@ -66,7 +61,6 @@ const queries = [
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: CommentReaction.name, schema: CommentReactionSchema },
       { name: PostReaction.name, schema: PostReactionSchema },
     ]),
     UserAccountsModule,
@@ -86,7 +80,6 @@ const queries = [
     CommentsService,
     CommentsRepository,
     CommentsQueryRepository,
-    CommentReactionRepository,
     ...useCases,
     ...queries,
   ],

@@ -1,4 +1,7 @@
-import { TCommentModel } from '../domain/comment.entity';
+import {
+  TCommentModel,
+  TCommentUserReactionModel,
+} from '../domain/comment.entity';
 import { Injectable } from '@nestjs/common';
 import {
   DomainException,
@@ -7,6 +10,7 @@ import {
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { DomainCreateCommentDto } from '../domain/dto/DomainCreateComment.dto';
+import { LikeStatus } from '../../dto/HttpLikeStatus.dto';
 
 @Injectable()
 export class CommentsRepository {
@@ -40,6 +44,50 @@ export class CommentsRepository {
     }
 
     return commentDocument;
+  }
+
+  async findUserReaction(
+    commentId: string,
+    userId: string,
+  ): Promise<TCommentUserReactionModel | null> {
+    const rows = await this.dataSource.query<TCommentUserReactionModel[]>(
+      `SELECT
+        "userId",
+        "commentId",
+        "status",
+        "createdAt"
+      FROM "commentReactions"
+      WHERE "commentId" = $1 AND "userId" = $2
+      LIMIT 1;`,
+      [commentId, userId],
+    );
+    return rows[0] ?? null;
+  }
+
+  async createReactionStatus(
+    commentId: string,
+    userId: string,
+    newLikeStatus: LikeStatus,
+  ): Promise<void> {
+    await this.dataSource.query(
+      `INSERT INTO "commentReactions"
+        ("commentId", "userId", "status")
+      VALUES ($1, $2, $3);`,
+      [commentId, userId, newLikeStatus],
+    );
+  }
+
+  async changeReactionStatus(
+    commentId: string,
+    userId: string,
+    newLikeStatus: LikeStatus,
+  ): Promise<void> {
+    await this.dataSource.query(
+      `UPDATE "commentReactions"
+        SET "status" = $1
+      WHERE "commentId" = $2 AND "userId" = $3;`,
+      [newLikeStatus, commentId, userId],
+    );
   }
 
   async create(dto: DomainCreateCommentDto): Promise<string> {

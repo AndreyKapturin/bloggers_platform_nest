@@ -258,7 +258,7 @@ DROP TABLE "comments" CASCADE;
 
 INSERT INTO "comments"
 	("content", "postId", "userId")
-VALUES ('Comment for post', '117c27fd-19cf-4b1b-a1aa-d7637e8b2a18', '28b4025f-c045-46ec-8217-f9e125532990');
+VALUES ('Comment 2 for post', '117c27fd-19cf-4b1b-a1aa-d7637e8b2a18', '28b4025f-c045-46ec-8217-f9e125532990');
 
 SELECT * FROM "comments";
 
@@ -291,7 +291,7 @@ SELECT
 	"u"."login" AS "userLogin",
 	COUNT(CASE WHEN "cr"."status" = 'Like' THEN 1 END) AS "likesCount",
 	COUNT(CASE WHEN "cr"."status" = 'Dislike' THEN 1 END) AS "dislikesCount",
-	CASE WHEN "ur"."status" IS NULL THEN 'None' ELSE "ur"."status" END AS "mySatus"
+	CASE WHEN "ur"."status" IS NULL THEN 'None' ELSE "ur"."status" END AS "myStatus"
 FROM "comments" "c"
 LEFT JOIN "users" "u" ON "u"."id" = "c"."userId"
 LEFT JOIN "commentReactions" "cr" ON "cr"."commentId" = "c"."id"
@@ -307,13 +307,19 @@ SELECT
 	"c"."createdAt",
 	"c"."userId",
 	"u"."login" AS "userLogin",
-	COUNT(CASE WHEN "cr"."status" = 'Like' THEN 1 END) AS "likesCount",
-	COUNT(CASE WHEN "cr"."status" = 'Dislike' THEN 1 END) AS "dislikesCount"
+	COUNT(CASE WHEN "cr"."status" = 'Like' THEN 1 END)::integer AS "likesCount",
+	COUNT(CASE WHEN "cr"."status" = 'Dislike' THEN 1 END)::integer AS "dislikesCount",
+	CASE WHEN "ur"."status" IS NULL THEN 'None' ELSE "ur"."status" END AS "myStatus"
 FROM "comments" "c"
 LEFT JOIN "users" "u" ON "u"."id" = "c"."userId"
 LEFT JOIN "commentReactions" "cr" ON "cr"."commentId" = "c"."id"
-WHERE "c"."postId" = ''
-GROUP BY "c"."id", "c"."content", "c"."postId", "c"."createdAt", "c"."userId", "u"."login"
+LEFT JOIN "commentReactions" "ur" ON
+	"ur"."userId" = NULL AND
+	"ur"."commentId" = "c"."id"
+WHERE "c"."postId" = '117c27fd-19cf-4b1b-a1aa-d7637e8b2a18'
+GROUP BY "c"."id", "c"."content", "c"."postId", "c"."createdAt", "c"."userId", "u"."login", "ur"."status"
+ORDER BY "c"."createdAt" DESC
+LIMIT 10 OFFSET 0;
 
 -- Comment reaction
 CREATE TABLE "commentReactions" (
@@ -330,7 +336,8 @@ INSERT INTO
 	"commentReactions" ("userId", "commentId", "status")
 VALUES
 	-- ('28b4025f-c045-46ec-8217-f9e125532990', 'bdc98e03-1007-49bb-aad0-9e8846ea3ff7', 'Dislike');
-	('ec4a2c0f-b2fd-444a-a6a3-7eca624ef6b4', 'bdc98e03-1007-49bb-aad0-9e8846ea3ff7', 'Like');
+	-- ('ec4a2c0f-b2fd-444a-a6a3-7eca624ef6b4', 'bdc98e03-1007-49bb-aad0-9e8846ea3ff7', 'Like');
+	('ec4a2c0f-b2fd-444a-a6a3-7eca624ef6b4', '0749a88d-3b32-4142-97cf-daa1dce5c3de', 'Like');
 
 -- '28b4025f-c045-46ec-8217-f9e125532990'
 -- 'ec4a2c0f-b2fd-444a-a6a3-7eca624ef6b4'
