@@ -1,7 +1,6 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CommentsRepository } from '../../infrastructure/Comments.repository';
 import { LikeStatus } from '../../../dto/HttpLikeStatus.dto';
-import { TCommentUserReactionModel } from '../../domain/comment.entity';
 
 export class LikeCommentCommand extends Command<void> {
   constructor(
@@ -29,11 +28,8 @@ export class LikeCommentUseCase implements ICommandHandler<
       userId,
     );
 
-    let reaction: TCommentUserReactionModel;
-
     if (oldReaction) {
       if (oldReaction.status === newLikeStatus) return;
-      reaction = oldReaction;
       this.commentsRepository.changeReactionStatus(
         commentId,
         userId,
@@ -41,7 +37,7 @@ export class LikeCommentUseCase implements ICommandHandler<
       );
     } else {
       if (newLikeStatus === LikeStatus.None) return;
-      await this.commentsRepository.createReactionStatus(
+      await this.commentsRepository.createReaction(
         commentId,
         userId,
         newLikeStatus,

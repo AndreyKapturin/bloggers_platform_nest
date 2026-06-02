@@ -1,4 +1,4 @@
-import { Prop, Schema } from '@nestjs/mongoose';
+import { LikeStatus } from '../../dto/HttpLikeStatus.dto';
 
 export const DB_POST_CONSTRAINTS = {
   TITLE_MAX_LENGTH: 30,
@@ -15,36 +15,52 @@ export type TPostModel = {
   createdAt: Date;
 };
 
-export type TPostWithBlogName = {
+export type TPostReactionModel = {
+  postId: string;
+  userId: string;
+  status: LikeStatus;
+  addedAt: Date;
+};
+
+export type TExtendedPost = {
   id: string;
   title: string;
   shortDescription: string;
   content: string;
   blogId: string;
   blogName: string;
+  likesCount: number;
+  dislikesCount: number;
+  myStatus: LikeStatus;
   createdAt: Date;
 };
 
-@Schema({ _id: false })
-export class NewestLike {
-  @Prop({ type: Date, required: true })
-  addedAt!: Date;
+export type TExtendedPostWithLikes = TExtendedPost & {
+  newestLikes: TViewNewestLike[];
+};
 
-  @Prop({ type: String, required: true })
-  userId!: string;
+export type TPostUserReactionModel = {
+  userId: string;
+  commentId: string;
+  status: LikeStatus;
+  addedAt: Date;
+};
 
-  @Prop({ type: String, required: true })
-  login!: string;
-}
+export type TNewestLike = {
+  postId: string;
+  userId: string;
+  login: string;
+  addedAt: Date;
+};
 
-@Schema({ _id: false })
-export class ExtendedLikesInfo {
-  @Prop({ type: Number, default: 0 })
-  likesCount!: number;
+export type TViewNewestLike = {
+  userId: string;
+  login: string;
+  addedAt: Date;
+};
 
-  @Prop({ type: Number, default: 0 })
-  dislikesCount!: number;
-
-  @Prop({ type: () => [NewestLike], default: [] })
-  newestLikes!: NewestLike[];
-}
+export type TExtendedLikesInfo = {
+  likesCount: number;
+  dislikesCount: number;
+  newestLikes: TViewNewestLike[];
+};

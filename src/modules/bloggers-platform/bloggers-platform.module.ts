@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { BlogsController } from './blogs/api/blogs.controller';
-import { MongooseModule } from '@nestjs/mongoose';
 import { BlogsRepository } from './blogs/infrastructure/blogs.repository';
 import { BlogsQueryRepository } from './blogs/infrastructure/blogs.query-repository';
 import { PostsController } from './posts/api/posts.controller';
@@ -17,12 +16,7 @@ import { DeleteCommentUseCase } from './comments/application/useCases/delete-com
 import { LikeCommentUseCase } from './comments/application/useCases/like-comment.use-case';
 import { GetCommentQueryHandler } from './comments/application/queries/get-comment-by-id.query';
 import { GetPostCommentsQueryHandler } from './comments/application/queries/get-comments-for-post.query';
-// import { LikePostUseCase } from './posts/application/useCases/like-post.use-case';
-import { PostReactionsRepository } from './posts/infrastructure/PostReactions.repository';
-import {
-  PostReaction,
-  PostReactionSchema,
-} from './posts/domain/post-reaction.entity';
+import { LikePostUseCase } from './posts/application/useCases/like-post.use-case';
 import { GetPostQueryHandler } from './posts/application/queries/get-post.query';
 import { GetPostsQueryHandler } from './posts/application/queries/get-posts.query';
 import { CreateBlogUseCase } from './blogs/application/useCases/create-blog.use-case';
@@ -46,7 +40,7 @@ const useCases = [
   UpdateCommentUseCase,
   DeleteCommentUseCase,
   LikeCommentUseCase,
-  // LikePostUseCase,
+  LikePostUseCase,
 ];
 
 const queries = [
@@ -59,12 +53,7 @@ const queries = [
 ];
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: PostReaction.name, schema: PostReactionSchema },
-    ]),
-    UserAccountsModule,
-  ],
+  imports: [UserAccountsModule],
   controllers: [
     BlogsController,
     SA_BlogsController,
@@ -74,7 +63,6 @@ const queries = [
   providers: [
     BlogsRepository,
     BlogsQueryRepository,
-    PostReactionsRepository,
     PostsRepository,
     PostsQueryRepository,
     CommentsService,

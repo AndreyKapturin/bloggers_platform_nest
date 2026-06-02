@@ -5,13 +5,32 @@ import {
 } from '../../../../core/exceptions/DomainException';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { TPostModel } from '../domain/Post.entity';
+import { TPostModel, TPostUserReactionModel } from '../domain/Post.entity';
 import { DomainCreatePostDto } from '../domain/dto/DomainCreatePost.dto';
 import { DomainUpdatePostDto } from '../domain/dto/DomainUpdatePost.dto';
+import { LikeStatus } from '../../dto/HttpLikeStatus.dto';
 
 @Injectable()
 export class PostsRepository {
   constructor(@InjectDataSource() private dataSource: DataSource) {}
+
+  async findUserReaction(
+    postId: string,
+    userId: string,
+  ): Promise<TPostUserReactionModel | null> {
+    const rows = await this.dataSource.query<TPostUserReactionModel>(
+      `SELECT
+        "postId",
+        "userId",
+        "status",
+        "addedAt"
+      FROM "postReactions"
+      WHERE "postId" = $1 AND "userId" = $2
+      LIMIT 1;`,
+      [postId, userId],
+    );
+    return rows[0] ?? null;
+  }
 
   async findById(id: string): Promise<TPostModel | null> {
     const rows = await this.dataSource.query<TPostModel>(
@@ -55,6 +74,19 @@ export class PostsRepository {
     return rows[0].id;
   }
 
+  async createReaction(
+    postId: string,
+    userId: string,
+    newLikeStatus: LikeStatus,
+  ): Promise<void> {
+    await this.dataSource.query(
+      `INSERT INTO 
+          "postReactions" ("postId", "userId", "status")
+        VALUES ($1, $2, $3);`,
+      [postId, userId, newLikeStatus],
+    );
+  }
+
   async update(postId: string, dto: DomainUpdatePostDto): Promise<void> {
     await this.dataSource.query(
       `UPDATE "posts"
@@ -65,6 +97,19 @@ export class PostsRepository {
         "blogId" = $4
       WHERE "id" = $5;`,
       [dto.title, dto.shortDescription, dto.content, dto.blogId, postId],
+    );
+  }
+
+  async changeReactionStatus(
+    postId: string,
+    userId: string,
+    newLikeStatus: LikeStatus,
+  ): Promise<void> {
+    await this.dataSource.query(
+      `UPDATE "postReactions"
+      SET "status" = $3
+      WHERE "postId" = $1 AND "userId" = $2;`,
+      [postId, userId, newLikeStatus],
     );
   }
 

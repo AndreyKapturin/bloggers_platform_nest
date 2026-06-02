@@ -4,15 +4,8 @@ import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/V
 import { HttpLikeStatusDto } from '../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
 import { ResponseWithBody } from './generics';
-import { NewestLike } from '../../src/modules/bloggers-platform/posts/domain/Post.entity';
 import { PostsQueryParamsDto } from '../../src/modules/bloggers-platform/posts/api/dto/PostQueryParams.dto';
 import { BlogsDtoFabrics } from './BlogDtoFabrics';
-
-const expectedNewestLike: NewestLike = {
-  login: expect.any(String),
-  userId: expect.any(String),
-  addedAt: expect.any(String),
-};
 
 export class Public_PostsTestHelper {
   private BASE_URL = '/posts';

@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS "users" (
 INSERT INTO
 	"users" ("login", "email", "passwordHash")
 VALUES
-	-- ('User 1', 'user_1@mail.ru', 'dsfsdfsdfsdfsdfadsfads');
-	-- ('User 2', 'user_2@mail.ru', 'dsfsdfsdfsdfsdfadsfads');
+	('User 1', 'user_1@mail.ru', 'dsfsdfsdfsdfsdfadsfads'),
+	('User 2', 'user_2@mail.ru', 'dsfsdfsdfsdfsdfadsfads'),
 	('User 3', 'user_3@mail.ru', 'dsfsdfsdfsdfsdfadsfads');
 
 SELECT * FROM "users";
@@ -215,7 +215,11 @@ DROP TABLE "posts";
 
 INSERT INTO "posts"
 	("title", "shortDescription", "content", "blogId")
-VALUES ('Post 1', 'Post 1 short description', 'Content for post 1 of blog 1', '4854bbb5-429d-44cf-a7d5-979de2a3fa23');
+VALUES
+	('Post 1', 'Post 1 short description', 'Content for post 1 of blog 1', '3948dfad-817c-48fb-8776-453f9e7bee42'),
+	('Post 2', 'Post 2 short description', 'Content for post 2 of blog 1', '3948dfad-817c-48fb-8776-453f9e7bee42');
+
+SELECT * FROM "posts";
 
 UPDATE "posts"
 SET
@@ -226,7 +230,7 @@ SET
 WHERE
 	"id" = 'fdnjfkalskdjfhkljadshkfjl';
 
-SELECT * FROM "posts";
+
 
 SELECT 
 	"p"."id",
@@ -238,6 +242,35 @@ SELECT
 	"p"."createdAt"
 FROM "posts" "p"
 LEFT JOIN "blogs" "b" ON "b"."id" = "p"."blogId"
+ORDER BY "createdAt" DESC
+LIMIT 10 OFFSET 0;
+
+SELECT 
+	"p"."id",
+	"p"."title",
+	"p"."shortDescription",
+	"p"."content",
+	"p"."blogId",
+	"b"."name" AS "blogName",
+	"p"."createdAt",
+	COUNT(CASE WHEN "pr"."status" = 'Like' THEN 1 END)::integer AS "likesCount",
+	COUNT(CASE WHEN "pr"."status" = 'Dislike' THEN 1 END)::integer AS "dislikesCount",
+	CASE WHEN "ur"."status" IS NULL THEN 'None' ELSE "ur"."status" END AS "myStatus"
+FROM "posts" "p"
+LEFT JOIN "blogs" "b" ON "b"."id" = "p"."blogId"
+LEFT JOIN "postReactions" "pr" ON "pr"."postId" = "p"."id"
+LEFT JOIN "postReactions" "ur" ON
+	"ur"."postId" = "p"."id" AND
+	"ur"."userId" = 'bae0dd1d-f32e-4e61-9df1-06cd85214bf4' -- SELECT "id", "login" FROM "users";
+GROUP BY
+	"p"."id",
+	"p"."title",
+	"p"."shortDescription",
+	"p"."content",
+	"p"."blogId",
+	"b"."name",
+	"p"."createdAt",
+	"ur"."status"
 ORDER BY "createdAt" DESC
 LIMIT 10 OFFSET 0;
 
@@ -353,3 +386,109 @@ SELECT
 	"createdAt"
 FROM "commentReactions"
 WHERE "userId" = '' AND "commentId" = '';
+
+-- Post reaction
+
+CREATE TABLE "postReactions" (
+	"postId" UUID NOT NULL REFERENCES "posts"("id") ON DELETE CASCADE,
+	"userId" UUID NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+	"status" Reaction NOT NULL,
+	"addedAt" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	UNIQUE ("postId", "userId")
+);
+
+DROP TABLE "postReactions";
+
+INSERT INTO
+	"postReactions" ("postId", "userId", "status")
+VALUES
+	(
+		'655f3cdb-00d4-41e2-8e4a-257b5f50beb3', -- SELECT "id", "title" FROM "posts";
+		'bae0dd1d-f32e-4e61-9df1-06cd85214bf4', -- SELECT "id", "login" FROM "users";
+		'Like'
+	);
+
+SELECT * FROM "postReactions";
+
+SELECT
+	"postId",
+	"userId",
+	"status",
+	"addedAt"
+FROM "postReactions"
+WHERE "postId" = '' AND "userId" = '';
+
+UPDATE "postReactions"
+SET "status" = 'Dislike'
+WHERE "postId" = '8d942ec0-dbf8-434e-8a9d-4fb98bfe79a5' AND "userId" = 'bae0dd1d-f32e-4e61-9df1-06cd85214bf4';
+
+
+-- USAGE 
+
+INSERT INTO
+	"users" ("login", "email", "passwordHash")
+VALUES
+	-- ('Test user 1', 't_user_1@mail.ru', 'dsfsdfsdfsdfsdfadsfads'),
+	('Test user 2', 't_user_2@mail.ru', 'dsfsdfsdfsdfsdfadsfads'),
+	('Test user 3', 't_user_3@mail.ru', 'dsfsdfsdfsdfsdfadsfads'),
+	('Test user 4', 't_user_4@mail.ru', 'dsfsdfsdfsdfsdfadsfads');
+
+SELECT * FROM "users";
+INSERT INTO "blogs"
+	("name", "description", "websiteUrl")
+VALUES ('Test blog 1', 'Blog 1 description', 'blog_1.com')
+RETURNING "id";
+
+SELECT * FROM "blogs";
+
+INSERT INTO "posts"
+	("title", "shortDescription", "content", "blogId")
+VALUES
+	('Test post 1', 'Post 1 short description', 'Content for post 1 of blog 1', '3f4c42d0-128f-4c05-9824-d2bff896bb67'),
+	('Test post 2', 'Post 2 short description', 'Content for post 2 of blog 2', '3f4c42d0-128f-4c05-9824-d2bff896bb67'),
+	('Test post 3', 'Post 3 short description', 'Content for post 3 of blog 3', '3f4c42d0-128f-4c05-9824-d2bff896bb67'),
+	('Test post 4', 'Post 4 short description', 'Content for post 4 of blog 4', '3f4c42d0-128f-4c05-9824-d2bff896bb67'),
+	('Test post 5', 'Post 5 short description', 'Content for post 5 of blog 5', '3f4c42d0-128f-4c05-9824-d2bff896bb67');
+
+SELECT * FROM "posts";
+
+INSERT INTO
+	"postReactions" ("postId", "userId", "status")
+VALUES
+	-- ('4ad2d825-2118-403f-92cc-a090a3d7b230', 'bf9f8a25-82a5-4244-9c4d-6fd52b41beeb', 'Like' ), -- p1 u1 l
+	-- ('4ad2d825-2118-403f-92cc-a090a3d7b230', '397c1a44-e2f7-4bd3-804b-b1f12e059acb', 'Like' ), -- p1 u2 l
+	-- ('4ad2d825-2118-403f-92cc-a090a3d7b230', '42f72bc2-ebf9-4043-8e88-30b69d08d3c8', 'Like' ), -- p1 u3 l
+	-- ('4ad2d825-2118-403f-92cc-a090a3d7b230', '8d407297-e301-4a6d-be2c-bd0ac98112eb', 'Like' ), -- p1 u4 l
+	-- ('cbf3502a-fa5f-4815-a290-48a026b9942b', 'bf9f8a25-82a5-4244-9c4d-6fd52b41beeb', 'Dislike' ), -- p2 u1 d
+	-- ('d5d9bfa4-6703-4517-9c84-bdb1b5251fb2', 'bf9f8a25-82a5-4244-9c4d-6fd52b41beeb', 'Dislike' ) -- p3 u1 d
+	-- ('d5d9bfa4-6703-4517-9c84-bdb1b5251fb2', '397c1a44-e2f7-4bd3-804b-b1f12e059acb', 'Like' ) -- p3 u2 d
+	-- ('35f786cf-6adc-4dd1-a785-ef3abc5e17cf', '42f72bc2-ebf9-4043-8e88-30b69d08d3c8', 'Like' )
+	('c40d1901-870d-4b75-abde-a2fd50de63a0', '8d407297-e301-4a6d-be2c-bd0ac98112eb', 'Like' ),
+	('c40d1901-870d-4b75-abde-a2fd50de63a0', '42f72bc2-ebf9-4043-8e88-30b69d08d3c8', 'Like' )
+
+SELECT * FROM "postReactions";
+
+
+
+SELECT
+	"l"."postId",
+	"l"."userId",
+	"l"."userLogin",
+	"l"."addedAt"
+FROM "posts" "p"
+LEFT JOIN LATERAL (
+	SELECT
+		"pr"."postId",
+		"pr"."userId",
+		"u"."login" AS "userLogin",
+		"pr"."addedAt"
+	FROM "postReactions" "pr"
+	LEFT JOIN "users" "u" ON "u"."id" = "pr"."userId"
+	WHERE "pr"."postId" = "p"."id" AND "pr"."status" = 'Like'
+	LIMIT 3
+) "l" ON TRUE
+WHERE "p"."id" = ANY (ARRAY [
+	'4ad2d825-2118-403f-92cc-a090a3d7b230'::uuid,
+	'cbf3502a-fa5f-4815-a290-48a026b9942b'::uuid
+	]
+) AND "l"."postId" IS NOT NULL;

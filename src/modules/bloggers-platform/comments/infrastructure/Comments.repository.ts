@@ -64,7 +64,7 @@ export class CommentsRepository {
     return rows[0] ?? null;
   }
 
-  async createReactionStatus(
+  async createReaction(
     commentId: string,
     userId: string,
     newLikeStatus: LikeStatus,

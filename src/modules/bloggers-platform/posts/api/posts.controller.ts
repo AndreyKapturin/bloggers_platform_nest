@@ -25,7 +25,7 @@ import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/strategies/jwt
 import { OptionalUserFromRequest } from '../../../../core/decorators/optional-user-in-request.decorator';
 import { GetPostCommentsQuery } from '../../comments/application/queries/get-comments-for-post.query';
 import { HttpLikeStatusDto } from '../../dto/HttpLikeStatus.dto';
-// import { LikePostCommand } from '../application/useCases/like-post.use-case';
+import { LikePostCommand } from '../application/useCases/like-post.use-case';
 import { GetPostQuery } from '../application/queries/get-post.query';
 import { GetPostsQuery } from '../application/queries/get-posts.query';
 import { GetCommentQuery } from '../../comments/application/queries/get-comment-by-id.query';
@@ -80,21 +80,21 @@ export class PostsController {
     );
   }
 
-  // @Put(':postId/like-status')
-  // @UseGuards(JwtAuthGuard)
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // async changeLikeStatus(
-  //   @Param('postId') postId: string,
-  //   @Body() likeDto: HttpLikeStatusDto,
-  //   @ExtractUserFromRequest() userDto: UserInRequestDto,
-  // ): Promise<void> {
-  //   const command = new LikePostCommand(
-  //     userDto.userId,
-  //     postId,
-  //     likeDto.likeStatus,
-  //   );
-  //   await this.commandBus.execute(command);
-  // }
+  @Put(':postId/like-status')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async changeLikeStatus(
+    @Param('postId') postId: string,
+    @Body() likeDto: HttpLikeStatusDto,
+    @ExtractUserFromRequest() userDto: UserInRequestDto,
+  ): Promise<void> {
+    const command = new LikePostCommand(
+      userDto.userId,
+      postId,
+      likeDto.likeStatus,
+    );
+    await this.commandBus.execute(command);
+  }
 
   @Get()
   @UseGuards(JwtOptionalAuthGuard)
