@@ -5,14 +5,13 @@ import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/V
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
 import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
 import { ResponseWithBody } from './generics';
-import { HttpCreatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreatePost.dto';
-import { NewestLike } from '../../src/modules/bloggers-platform/posts/domain/Post.entity';
-import { HttpUpdatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpUpdatePost.dto';
+import { TViewNewestLike } from '../../src/modules/bloggers-platform/posts/domain/Post.entity';
 import { HttpCreateBlogPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreateBlogPost.dto';
 import { PostsQueryParamsDto } from '../../src/modules/bloggers-platform/posts/api/dto/PostQueryParams.dto';
 import { PostsDtoFabrics } from './PostDtoFabrics';
+import { HttpUpdateBlogPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpUpdateBlogPost.dto';
 
-export const expectedNewestLike: NewestLike = {
+export const expectedNewestLike: TViewNewestLike = {
   login: expect.any(String),
   userId: expect.any(String),
   addedAt: expect.any(String),
@@ -27,7 +26,7 @@ export class SA_PostsTestHelper {
     return PostsDtoFabrics.createBlogPostInputDto();
   }
 
-  createInputDto(blogId: string): HttpCreatePostDto {
+  createInputDto(blogId: string): HttpCreateBlogPostDto {
     return PostsDtoFabrics.createInputDto(blogId);
   }
 
@@ -109,7 +108,7 @@ export class SA_PostsTestHelper {
   async updateBlogPost(
     blogId: string,
     postId: string,
-    dto: HttpUpdatePostDto,
+    dto: HttpUpdateBlogPostDto,
     options?: { status?: HttpStatus; auth?: boolean },
   ) {
     const innerOptions = {

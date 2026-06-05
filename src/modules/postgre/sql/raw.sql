@@ -1,3 +1,4 @@
+
 -- INIT
 CREATE TYPE Reaction AS ENUM ('Like', 'Dislike', 'None');
 

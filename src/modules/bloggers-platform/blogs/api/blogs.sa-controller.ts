@@ -14,7 +14,6 @@ import {
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { PostsQueryParamsDto } from '../../posts/api/dto/PostQueryParams.dto';
 import { ViewPostDto } from '../../posts/api/dto/VIewPost.dto';
-import { BlogPostDtoExtractor } from '../decorators/blog-post-dto-extractor.decorator';
 import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetPostsQuery } from '../../posts/application/queries/get-posts.query';
@@ -27,15 +26,15 @@ import { ViewBlogDto } from './dto/Blog.view-dto';
 import { BlogsQueryParamsDto } from './dto/BlogQueryParams.dto';
 import { GetBlogQuery } from '../application/queries/get-blog.query';
 import { HttpUpdateBlogDto } from './dto/HttpUpdateBlog.dto';
-import { HttpCreatePostDto } from '../../posts/api/dto/HttpCreatePost.dto';
 import { GetBlogsQuery } from '../application/queries/get-blogs.query';
 import { GetPostQuery } from '../../posts/application/queries/get-post.query';
 import { UpdateBlogCommand } from '../application/useCases/update-blog.use-case';
 import { DeleteBlogCommand } from '../application/useCases/delete-blog.use-case';
 import { CreatePostCommand } from '../../posts/application/useCases/create-post.use-case';
-import { HttpUpdatePostDto } from '../../posts/api/dto/HttpUpdatePost.dto';
 import { UpdatePostCommand } from '../../posts/application/useCases/update-post.use-case';
 import { DeletePostCommand } from '../../posts/application/useCases/delete-post.use-case';
+import { HttpCreateBlogPostDto } from '../../posts/api/dto/HttpCreateBlogPost.dto';
+import { HttpUpdateBlogPostDto } from '../../posts/api/dto/HttpUpdateBlogPost.dto';
 
 @Controller('sa/blogs')
 @UseGuards(BasicAuthGuard)
@@ -82,10 +81,11 @@ export class SA_BlogsController {
 
   @Post(':blogId/posts')
   async createPostForBlog(
-    @BlogPostDtoExtractor() dto: HttpCreatePostDto,
+    @Param('blogId') blogId: string,
+    @Body() dto: HttpCreateBlogPostDto,
   ): Promise<ViewPostDto> {
     const command = new CreatePostCommand(
-      dto.blogId,
+      blogId,
       dto.title,
       dto.shortDescription,
       dto.content,
@@ -100,7 +100,7 @@ export class SA_BlogsController {
   async updatePostForBlog(
     @Param('blogId') blogId: string,
     @Param('postId') postId: string,
-    @Body() dto: HttpUpdatePostDto,
+    @Body() dto: HttpUpdateBlogPostDto,
   ): Promise<void> {
     const command = new UpdatePostCommand(
       postId,
@@ -108,7 +108,6 @@ export class SA_BlogsController {
       dto.title,
       dto.shortDescription,
       dto.content,
-      dto.blogId,
     );
     await this.commandBus.execute(command);
   }
@@ -131,7 +130,6 @@ export class SA_BlogsController {
     @Param('id') id: string,
     @Body() dto: HttpUpdateBlogDto,
   ): Promise<void> {
-    
     const command = new UpdateBlogCommand(
       id,
       dto.name,

@@ -10,7 +10,6 @@ export class UpdatePostCommand extends Command<void> {
     public title: string,
     public shortDescription: string,
     public content: string,
-    public blogId: string,
   ) {
     super();
   }
@@ -29,13 +28,11 @@ export class UpdatePostUseCase implements ICommandHandler<
   async execute(command: UpdatePostCommand): Promise<void> {
     await this.blogsRepository.findByIdOrThrow(command.paramsBlogId);
     await this.postsRepository.findByIdOrThrow(command.postId);
-    await this.blogsRepository.findByIdOrThrow(command.blogId);
 
     const updatePostDto = new DomainUpdatePostDto(
       command.title,
       command.shortDescription,
       command.content,
-      command.blogId,
     );
 
     await this.postsRepository.update(command.postId, updatePostDto);

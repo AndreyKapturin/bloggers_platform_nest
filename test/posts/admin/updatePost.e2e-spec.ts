@@ -4,11 +4,10 @@ import { cleanDatabase } from '../../utils/cleanDatabase';
 import { initApp } from '../../utils/initApp';
 import { SA_BlogsTestHelper } from '../../utils/SA_BlogsTestHelper';
 import { SA_PostsTestHelper } from '../../utils/SA_PostsTestHelper';
-import { HttpUpdatePostDto } from '../../../src/modules/bloggers-platform/posts/api/dto/HttpUpdatePost.dto';
 import { ViewBlogDto } from '../../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
 import { DB_POST_CONSTRAINTS } from '../../../src/modules/bloggers-platform/posts/domain/Post.entity';
-import { faker } from '@faker-js/faker';
 import { Public_PostsTestHelper } from '../../utils/Public_PostsTestHelper';
+import { HttpUpdateBlogPostDto } from '../../../src/modules/bloggers-platform/posts/api/dto/HttpUpdateBlogPost.dto';
 
 describe('update post for blog', () => {
   let app: INestApplication;
@@ -43,9 +42,8 @@ describe('update post for blog', () => {
     );
     const postId = createPostResponse.body.id;
 
-    const inputUpdatePost: HttpUpdatePostDto = {
+    const inputUpdatePost: HttpUpdateBlogPostDto = {
       ...createBlogPostDto,
-      blogId: blog.id,
       title: 'updated title',
       shortDescription: 'updated short description',
       content: 'updated content',
@@ -62,25 +60,6 @@ describe('update post for blog', () => {
     expect(getPostAfterUpdateResponse.body.content).toBe(
       inputUpdatePost.content,
     );
-  });
-
-  it('should update blog name if blogId was changed', async () => {
-    const anotherBlog = await sa_blogsTestHelper.createRandomBlog();
-    const post = await sa_postsTestHelper.createRandomPost(blog.id);
-
-    const inputUpdatePost: HttpUpdatePostDto = {
-      title: post.title,
-      shortDescription: post.shortDescription,
-      content: post.content,
-      blogId: anotherBlog.id,
-    };
-
-    await sa_postsTestHelper.updateBlogPost(blog.id, post.id, inputUpdatePost);
-
-    const getPostAfterUpdateResponse = await public_postsTestHelper.getPost(
-      post.id,
-    );
-    expect(getPostAfterUpdateResponse.body.blogName).toBe(anotherBlog.name);
   });
 
   it(`shouldn't update post. Return BAD_REQUEST if title is empty string`, async () => {
@@ -112,7 +91,7 @@ describe('update post for blog', () => {
     await sa_postsTestHelper.updateBlogPost(
       blog.id,
       post.id,
-      { ...dto, title: 123 } as unknown as HttpUpdatePostDto,
+      { ...dto, title: 123 } as unknown as HttpUpdateBlogPostDto,
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -159,7 +138,7 @@ describe('update post for blog', () => {
     await sa_postsTestHelper.updateBlogPost(
       blog.id,
       post.id,
-      { ...dto, shortDescription: true } as unknown as HttpUpdatePostDto,
+      { ...dto, shortDescription: true } as unknown as HttpUpdateBlogPostDto,
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -206,7 +185,7 @@ describe('update post for blog', () => {
     await sa_postsTestHelper.updateBlogPost(
       blog.id,
       post.id,
-      { ...dto, content: {} } as unknown as HttpUpdatePostDto,
+      { ...dto, content: {} } as unknown as HttpUpdateBlogPostDto,
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -222,61 +201,16 @@ describe('update post for blog', () => {
     );
   });
 
-  it(`shouldn't update post. Return BAD_REQUEST if blogId is empty string`, async () => {
-    const post = await sa_postsTestHelper.createRandomPost(blog.id);
-    const dto = sa_postsTestHelper.createInputDto(blog.id);
-    await sa_postsTestHelper.updateBlogPost(
-      blog.id,
-      post.id,
-      { ...dto, blogId: '' },
-      { status: HttpStatus.BAD_REQUEST },
-    );
-  });
-
-  it(`shouldn't update post. Return BAD_REQUEST if blogId is not a string`, async () => {
-    const post = await sa_postsTestHelper.createRandomPost(blog.id);
-    const dto = sa_postsTestHelper.createInputDto(blog.id);
-    await sa_postsTestHelper.updateBlogPost(
-      blog.id,
-      post.id,
-      { ...dto, blogId: 123 } as unknown as HttpUpdatePostDto,
-      { status: HttpStatus.BAD_REQUEST },
-    );
-  });
-
-  it(`shouldn't update post. Return BAD_REQUEST if blogId is not provided`, async () => {
-    const post = await sa_postsTestHelper.createRandomPost(blog.id);
-    const dto = sa_postsTestHelper.createInputDto(blog.id);
-    const { blogId: _, ...dtoWithoutBlogId } = dto;
-    await sa_postsTestHelper.updateBlogPost(
-      blog.id,
-      post.id,
-      dtoWithoutBlogId as unknown as HttpUpdatePostDto,
-      { status: HttpStatus.BAD_REQUEST },
-    );
-  });
-
-  it(`shouldn't update post. Return BAD_REQUEST if blogId is a string of spaces`, async () => {
-    const post = await sa_postsTestHelper.createRandomPost(blog.id);
-    const dto = sa_postsTestHelper.createInputDto(blog.id);
-    await sa_postsTestHelper.updateBlogPost(
-      blog.id,
-      post.id,
-      { ...dto, blogId: ' '.repeat(5) },
-      { status: HttpStatus.BAD_REQUEST },
-    );
-  });
-
   it(`shouldn't update post. Return BAD_REQUEST if multiple fields are invalid`, async () => {
     const post = await sa_postsTestHelper.createRandomPost(blog.id);
     const updatePostResponse = await sa_postsTestHelper.updateBlogPost(
       blog.id,
       post.id,
-      { title: '', shortDescription: '', content: '', blogId: '' },
+      { title: '', shortDescription: '', content: '' },
       { status: HttpStatus.BAD_REQUEST },
     );
     expect(updatePostResponse.body.errorsMessages).toBeInstanceOf(Array);
-    expect(updatePostResponse.body.errorsMessages).toHaveLength(4);
+    expect(updatePostResponse.body.errorsMessages).toHaveLength(3);
   });
 
   it(`shouldn't update post. Return UNAUTHORIZED if not admin auth`, async () => {
@@ -303,17 +237,5 @@ describe('update post for blog', () => {
     await sa_postsTestHelper.updateBlogPost(notExistedBlogId, post.id, dto, {
       status: HttpStatus.NOT_FOUND,
     });
-  });
-
-  it(`shouldn't update post. Return NOT FOUND if blog not exist`, async () => {
-    const post = await sa_postsTestHelper.createRandomPost(blog.id);
-    const notExistedBlogId = crypto.randomUUID();
-    const dto = sa_postsTestHelper.createInputDto(notExistedBlogId);
-    await sa_postsTestHelper.updateBlogPost(
-      blog.id,
-      post.id,
-      { ...dto, blogId: notExistedBlogId },
-      { status: HttpStatus.NOT_FOUND },
-    );
   });
 });

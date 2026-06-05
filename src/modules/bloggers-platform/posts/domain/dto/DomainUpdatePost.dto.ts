@@ -3,6 +3,5 @@ export class DomainUpdatePostDto {
     public title: string,
     public shortDescription: string,
     public content: string,
-    public blogId: string,
   ) {}
 }

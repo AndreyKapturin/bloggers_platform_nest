@@ -93,10 +93,9 @@ export class PostsRepository {
       SET
         "title" = $1,
         "shortDescription" = $2,
-        "content" = $3,
-        "blogId" = $4
-      WHERE "id" = $5;`,
-      [dto.title, dto.shortDescription, dto.content, dto.blogId, postId],
+        "content" = $3
+      WHERE "id" = $4;`,
+      [dto.title, dto.shortDescription, dto.content, postId],
     );
   }
 
