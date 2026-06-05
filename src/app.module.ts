@@ -2,7 +2,6 @@
 import { configModule } from './modules/config/config.module';
 import { DynamicModule, Module } from '@nestjs/common';
 import { UserAccountsModule } from './modules/user-accounts/user-accounts.module';
-import { MongooseModule } from '@nestjs/mongoose';
 import { BloggersPlatformModule } from './modules/bloggers-platform/bloggers-platform.module';
 import { TestingController } from './modules/testing/testing.controller';
 import { TestingModule } from './modules/testing/testing.module';
@@ -31,15 +30,6 @@ import { PgConfig } from './modules/postgre/postgre.config';
       },
     }),
 
-    MongooseModule.forRootAsync({
-      inject: [CoreConfig],
-      useFactory: (coreConfig: CoreConfig) => {
-        const uri = coreConfig.mongoUri;
-        return {
-          uri,
-        };
-      },
-    }),
     ThrottlerModule.forRootAsync({
       inject: [CoreConfig],
       useFactory: (coreConfig: CoreConfig) => {
