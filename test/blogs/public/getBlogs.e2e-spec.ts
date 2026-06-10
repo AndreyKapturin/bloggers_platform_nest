@@ -39,7 +39,9 @@ describe('get blogs for public user', () => {
       page: 1,
       pageSize: DEFAULT_PAGE_SIZE,
       totalCount: totalBlogsCount,
-      items: expect.arrayContaining([public_blogsTestHelper.createExpectedBlog()]),
+      items: expect.arrayContaining([
+        public_blogsTestHelper.createExpectedBlog(),
+      ]),
     };
     expect(getBlogsResponse.body).toEqual(expectedBlogs);
   });
@@ -56,6 +58,44 @@ describe('get blogs for public user', () => {
     expect(response.body.page).toBe(pageNumber);
     expect(response.body.pageSize).toBe(pageSize);
     expect(response.body.items).toHaveLength(pageSize);
+  });
+
+  it('should filter by searchNameTerm and sort by name asc/desc lower case', async () => {
+    const names = ['Tim', 'Tima', 'timm', 'Timma'];
+
+    for (const name of names) {
+      await sa_blogsTestHelper.createBlog({
+        name,
+        description: 'desc',
+        websiteUrl: 'https://example.com',
+      });
+    }
+
+    const getAscSortResponse = await public_blogsTestHelper.getBlogsWithQuery({
+      searchNameTerm: 'Tim',
+      sortBy: BlogsSortBy.Name,
+      sortDirection: SortDirection.Asc,
+    });
+
+    expect(getAscSortResponse.body.totalCount).toBe(4);
+    expect(getAscSortResponse.body.items.map((b) => b.name)).toEqual([
+      'Tim',
+      'Tima',
+      'Timma',
+      'timm',
+    ]);
+
+    const getDescResponse = await public_blogsTestHelper.getBlogsWithQuery({
+      searchNameTerm: 'Tim',
+      sortBy: BlogsSortBy.Name,
+    });
+
+    expect(getDescResponse.body.items.map((b) => b.name)).toEqual([
+      'timm',
+      'Timma',
+      'Tima',
+      'Tim',
+    ]);
   });
 
   it('should filter by searchNameTerm and sort by name asc/desc', async () => {
