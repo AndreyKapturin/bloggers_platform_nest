@@ -564,4 +564,30 @@ describe('like post', () => {
     expect(postsUser1ExtendedLikes[0].dislikesCount).toBe(1);
     expect(postsUser1ExtendedLikes[0].myStatus).toBe(LikeStatus.None);
   });
+
+  it('newest likes includes only "Like" reactions', async () => {
+    const blog = await sa_blogsTestHelper.createRandomBlog();
+    const post = await sa_postsTestHelper.createRandomPost(blog.id);
+
+    const accessToken1 = await authTestHelper.createUserAndGetAccessToken();
+    const accessToken2 = await authTestHelper.createUserAndGetAccessToken();
+    const accessToken3 = await authTestHelper.createUserAndGetAccessToken();
+
+    await public_postsTestHelper.setLikeStatus(post.id, inputDislike, {
+      accessToken: accessToken1,
+    });
+    await public_postsTestHelper.setLikeStatus(post.id, inputDislike, {
+      accessToken: accessToken2,
+    });
+    await public_postsTestHelper.setLikeStatus(post.id, inputLike, {
+      accessToken: accessToken3,
+    });
+
+    const postAfterReactions = await public_postsTestHelper.getPost(post.id);
+
+    expect(postAfterReactions.body.extendedLikesInfo.dislikesCount).toBe(2);
+    expect(postAfterReactions.body.extendedLikesInfo.likesCount).toBe(1);
+    expect(postAfterReactions.body.extendedLikesInfo.newestLikes).toBeInstanceOf(Array);
+    expect(postAfterReactions.body.extendedLikesInfo.newestLikes).toHaveLength(1);
+  });
 });

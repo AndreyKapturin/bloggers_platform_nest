@@ -202,7 +202,7 @@ export class PostsQueryRepository {
         "pr"."addedAt"
       FROM "postReactions" "pr"
       LEFT JOIN "users" "u" ON "u"."id" = "pr"."userId"
-      WHERE "pr"."postId" = $1
+      WHERE "pr"."postId" = $1 AND "pr"."status" = 'Like'
       ORDER BY "pr"."addedAt" DESC
       LIMIT 3;`,
       [postId],
