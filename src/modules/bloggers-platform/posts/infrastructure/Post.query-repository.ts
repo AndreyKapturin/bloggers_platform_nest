@@ -228,6 +228,7 @@ export class PostsQueryRepository {
         FROM "postReactions" "pr"
         LEFT JOIN "users" "u" ON "u"."id" = "pr"."userId"
         WHERE "pr"."postId" = "p"."id" AND "pr"."status" = 'Like'
+        ORDER BY "pr"."addedAt" DESC
         LIMIT 3
       ) "l" ON TRUE
       WHERE "p"."id" = ANY ($1) AND "l"."postId" IS NOT NULL;`,
@@ -240,9 +241,16 @@ export class PostsQueryRepository {
       let likes: TViewNewestLike[] = acc[nl.postId]
         ? acc[nl.postId]
         : (acc[nl.postId] = []);
-      const { postId, ...likeInfo } = nl;
-      if (nl.postId) likes.push(likeInfo);
+      if (nl.postId) likes.push(this._mapNewestLikesToView(nl));
       return acc;
     }, {});
+  }
+
+  private _mapNewestLikesToView(newestLike: TNewestLike): TViewNewestLike {
+    return {
+      login: newestLike.login,
+      userId: newestLike.userId,
+      addedAt: newestLike.addedAt.toISOString(),
+    };
   }
 }

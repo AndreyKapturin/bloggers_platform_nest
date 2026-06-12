@@ -15,6 +15,7 @@ import { TViewNewestLike } from '../../../src/modules/bloggers-platform/posts/do
 import { MockThrottlerToggle } from '../../utils/MockThrottlerToggle';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { Public_PostsTestHelper } from '../../utils/Public_PostsTestHelper';
+import { HttpLoginDto } from '../../../src/modules/user-accounts/auth/api/dto/HttpLogin.dto';
 
 describe('like post', () => {
   let app: INestApplication;
@@ -481,90 +482,6 @@ describe('like post', () => {
     );
   });
 
-  it('should return paginated posts with correct likes', async () => {
-    const blog = await sa_blogsTestHelper.createRandomBlog();
-    const posts = await sa_postsTestHelper.createRandomPosts(blog.id, 3);
-
-    const postIds = posts.map((post) => post.id);
-
-    const usersDtos = [
-      usersTestHelper.createInputDto(),
-      usersTestHelper.createInputDto(),
-      usersTestHelper.createInputDto(),
-      usersTestHelper.createInputDto(),
-    ];
-
-    for (const inputUser of usersDtos) {
-      await usersTestHelper.createUser(inputUser);
-    }
-
-    const accessTokens: string[] = [];
-
-    for (const userDto of usersDtos) {
-      const token = await authTestHelper.loginAndGetAccessToken({
-        loginOrEmail: userDto.email,
-        password: userDto.password,
-      });
-      accessTokens.push(token);
-    }
-
-    await public_postsTestHelper.setLikeStatus(postIds[0], inputLike, {
-      accessToken: accessTokens[0],
-    });
-
-    await public_postsTestHelper.setLikeStatus(postIds[0], inputLike, {
-      accessToken: accessTokens[1],
-    });
-
-    await public_postsTestHelper.setLikeStatus(postIds[0], inputDislike, {
-      accessToken: accessTokens[2],
-    });
-
-    await public_postsTestHelper.setLikeStatus(postIds[1], inputDislike, {
-      accessToken: accessTokens[0],
-    });
-
-    await public_postsTestHelper.setLikeStatus(postIds[1], inputDislike, {
-      accessToken: accessTokens[1],
-    });
-
-    await public_postsTestHelper.setLikeStatus(postIds[1], inputLike, {
-      accessToken: accessTokens[2],
-    });
-
-    await public_postsTestHelper.setLikeStatus(postIds[2], inputDislike, {
-      accessToken: accessTokens[3],
-    });
-
-    await public_postsTestHelper.setLikeStatus(postIds[2], inputLike, {
-      accessToken: accessTokens[2],
-    });
-
-    await public_postsTestHelper.setLikeStatus(postIds[2], inputLike, {
-      accessToken: accessTokens[1],
-    });
-
-    const getPostsUser1Response = await public_postsTestHelper.getPosts({
-      accessToken: accessTokens[0],
-    });
-
-    const postsUser1ExtendedLikes = getPostsUser1Response.body.items.map(
-      (post) => post.extendedLikesInfo,
-    );
-
-    expect(postsUser1ExtendedLikes[2].likesCount).toBe(2);
-    expect(postsUser1ExtendedLikes[2].dislikesCount).toBe(1);
-    expect(postsUser1ExtendedLikes[2].myStatus).toBe(LikeStatus.Like);
-
-    expect(postsUser1ExtendedLikes[1].likesCount).toBe(1);
-    expect(postsUser1ExtendedLikes[1].dislikesCount).toBe(2);
-    expect(postsUser1ExtendedLikes[1].myStatus).toBe(LikeStatus.Dislike);
-
-    expect(postsUser1ExtendedLikes[0].likesCount).toBe(2);
-    expect(postsUser1ExtendedLikes[0].dislikesCount).toBe(1);
-    expect(postsUser1ExtendedLikes[0].myStatus).toBe(LikeStatus.None);
-  });
-
   it('newest likes includes only "Like" reactions', async () => {
     const blog = await sa_blogsTestHelper.createRandomBlog();
     const post = await sa_postsTestHelper.createRandomPost(blog.id);
@@ -587,7 +504,233 @@ describe('like post', () => {
 
     expect(postAfterReactions.body.extendedLikesInfo.dislikesCount).toBe(2);
     expect(postAfterReactions.body.extendedLikesInfo.likesCount).toBe(1);
-    expect(postAfterReactions.body.extendedLikesInfo.newestLikes).toBeInstanceOf(Array);
-    expect(postAfterReactions.body.extendedLikesInfo.newestLikes).toHaveLength(1);
+    expect(
+      postAfterReactions.body.extendedLikesInfo.newestLikes,
+    ).toBeInstanceOf(Array);
+    expect(postAfterReactions.body.extendedLikesInfo.newestLikes).toHaveLength(
+      1,
+    );
+  });
+
+  it('should return paginated posts with correct likes', async () => {
+    await cleanDatabase(app);
+    const blog = await sa_blogsTestHelper.createRandomBlog();
+    const posts = await sa_postsTestHelper.createRandomPosts(blog.id, 6);
+
+    const postId1 = posts[0].id;
+    const postId2 = posts[1].id;
+    const postId3 = posts[2].id;
+    const postId4 = posts[3].id;
+    const postId5 = posts[4].id;
+    const postId6 = posts[5].id;
+
+    const user1InputDto = usersTestHelper.createInputDto();
+    const user2InputDto = usersTestHelper.createInputDto();
+    const user3InputDto = usersTestHelper.createInputDto();
+    const user4InputDto = usersTestHelper.createInputDto();
+
+    const user1 = (await usersTestHelper.createUser(user1InputDto)).body;
+    const user2 = (await usersTestHelper.createUser(user2InputDto)).body;
+    const user3 = (await usersTestHelper.createUser(user3InputDto)).body;
+    const user4 = (await usersTestHelper.createUser(user4InputDto)).body;
+
+    const user1LoginDto: HttpLoginDto = {
+      loginOrEmail: user1InputDto.email,
+      password: user1InputDto.password,
+    };
+
+    const user2LoginDto: HttpLoginDto = {
+      loginOrEmail: user2InputDto.email,
+      password: user2InputDto.password,
+    };
+
+    const user3LoginDto: HttpLoginDto = {
+      loginOrEmail: user3InputDto.email,
+      password: user3InputDto.password,
+    };
+
+    const user4LoginDto: HttpLoginDto = {
+      loginOrEmail: user4InputDto.email,
+      password: user4InputDto.password,
+    };
+
+    const accessToken1 =
+      await authTestHelper.loginAndGetAccessToken(user1LoginDto);
+    const accessToken2 =
+      await authTestHelper.loginAndGetAccessToken(user2LoginDto);
+    const accessToken3 =
+      await authTestHelper.loginAndGetAccessToken(user3LoginDto);
+    const accessToken4 =
+      await authTestHelper.loginAndGetAccessToken(user4LoginDto);
+
+    await public_postsTestHelper.setLikeStatus(postId1, inputLike, {
+      accessToken: accessToken1,
+    });
+    await public_postsTestHelper.setLikeStatus(postId1, inputLike, {
+      accessToken: accessToken2,
+    });
+
+    await public_postsTestHelper.setLikeStatus(postId2, inputLike, {
+      accessToken: accessToken2,
+    });
+    await public_postsTestHelper.setLikeStatus(postId2, inputLike, {
+      accessToken: accessToken3,
+    });
+
+    await public_postsTestHelper.setLikeStatus(postId3, inputDislike, {
+      accessToken: accessToken1,
+    });
+
+    await public_postsTestHelper.setLikeStatus(postId4, inputLike, {
+      accessToken: accessToken1,
+    });
+    await public_postsTestHelper.setLikeStatus(postId4, inputLike, {
+      accessToken: accessToken4,
+    });
+    await public_postsTestHelper.setLikeStatus(postId4, inputLike, {
+      accessToken: accessToken2,
+    });
+    await public_postsTestHelper.setLikeStatus(postId4, inputLike, {
+      accessToken: accessToken3,
+    });
+
+    await public_postsTestHelper.setLikeStatus(postId5, inputLike, {
+      accessToken: accessToken2,
+    });
+    await public_postsTestHelper.setLikeStatus(postId5, inputDislike, {
+      accessToken: accessToken3,
+    });
+
+    await public_postsTestHelper.setLikeStatus(postId6, inputLike, {
+      accessToken: accessToken1,
+    });
+    await public_postsTestHelper.setLikeStatus(postId6, inputDislike, {
+      accessToken: accessToken2,
+    });
+
+    const postsAfterReactionsForUser1 = await public_postsTestHelper.getPosts({
+      accessToken: accessToken1,
+    });
+
+    const body = postsAfterReactionsForUser1.body;
+
+    expect(body.totalCount).toBe(6);
+
+    const expectedPost1 = public_postsTestHelper.createExpectedPost({
+      id: postId1,
+      extendedLikesInfo: {
+        likesCount: 2,
+        dislikesCount: 0,
+        myStatus: LikeStatus.Like,
+        newestLikes: [
+          {
+            login: user2.login,
+            userId: user2.id,
+            addedAt: expect.any(String),
+          },
+          {
+            login: user1.login,
+            userId: user1.id,
+            addedAt: expect.any(String),
+          },
+        ],
+      },
+    });
+    expect(body.items[5]).toEqual(expectedPost1);
+
+    const expectedPost2 = public_postsTestHelper.createExpectedPost({
+      id: postId2,
+      extendedLikesInfo: {
+        likesCount: 2,
+        dislikesCount: 0,
+        myStatus: LikeStatus.None,
+        newestLikes: [
+          {
+            login: user3.login,
+            userId: user3.id,
+            addedAt: expect.any(String),
+          },
+          {
+            login: user2.login,
+            userId: user2.id,
+            addedAt: expect.any(String),
+          },
+        ],
+      },
+    });
+    expect(body.items[4]).toEqual(expectedPost2);
+
+    const expectedPost3 = public_postsTestHelper.createExpectedPost({
+      id: postId3,
+      extendedLikesInfo: {
+        likesCount: 0,
+        dislikesCount: 1,
+        myStatus: LikeStatus.Dislike,
+        newestLikes: [],
+      },
+    });
+
+    expect(body.items[3]).toEqual(expectedPost3);
+
+    const expectedPost4 = public_postsTestHelper.createExpectedPost({
+      id: postId4,
+      extendedLikesInfo: {
+        likesCount: 4,
+        dislikesCount: 0,
+        myStatus: LikeStatus.Like,
+        newestLikes: [
+          {
+            login: user3.login,
+            userId: user3.id,
+            addedAt: expect.any(String),
+          },
+          {
+            login: user2.login,
+            userId: user2.id,
+            addedAt: expect.any(String),
+          },
+          {
+            login: user4.login,
+            userId: user4.id,
+            addedAt: expect.any(String),
+          },
+        ],
+      },
+    });
+    expect(body.items[2]).toEqual(expectedPost4);
+
+    const expectedPost5 = public_postsTestHelper.createExpectedPost({
+      id: postId5,
+      extendedLikesInfo: {
+        likesCount: 1,
+        dislikesCount: 1,
+        myStatus: LikeStatus.None,
+        newestLikes: [
+          {
+            login: user2.login,
+            userId: user2.id,
+            addedAt: expect.any(String),
+          },
+        ],
+      },
+    });
+    expect(body.items[1]).toEqual(expectedPost5);
+
+    const expectedPost6 = public_postsTestHelper.createExpectedPost({
+      id: postId6,
+      extendedLikesInfo: {
+        likesCount: 1,
+        dislikesCount: 1,
+        myStatus: LikeStatus.Like,
+        newestLikes: [
+          {
+            login: user1.login,
+            userId: user1.id,
+            addedAt: expect.any(String),
+          },
+        ],
+      },
+    });
+    expect(body.items[0]).toEqual(expectedPost6);
   });
 });

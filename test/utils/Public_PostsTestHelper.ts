@@ -5,7 +5,7 @@ import { HttpLikeStatusDto } from '../../src/modules/bloggers-platform/dto/HttpL
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
 import { ResponseWithBody } from './generics';
 import { PostsQueryParamsDto } from '../../src/modules/bloggers-platform/posts/api/dto/PostQueryParams.dto';
-import { BlogsDtoFabrics } from './BlogDtoFabrics';
+import { PostsDtoFabrics } from './PostDtoFabrics';
 
 export class Public_PostsTestHelper {
   private BASE_URL = '/posts';
@@ -13,7 +13,7 @@ export class Public_PostsTestHelper {
   constructor(private app: INestApplication) {}
 
   createExpectedPost(overrdieFields: Partial<ViewPostDto> = {}) {
-    return BlogsDtoFabrics.createExpectedBlog(overrdieFields);
+    return PostsDtoFabrics.createExpectedPost(overrdieFields);
   }
 
   async setLikeStatus(

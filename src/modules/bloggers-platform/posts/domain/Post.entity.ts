@@ -56,7 +56,7 @@ export type TNewestLike = {
 export type TViewNewestLike = {
   userId: string;
   login: string;
-  addedAt: Date;
+  addedAt: string;
 };
 
 export type TExtendedLikesInfo = {
