@@ -21,7 +21,7 @@ import { GetUserQuery } from '../application/queries/get-user.query';
 import { GetUsersQuery } from '../application/queries/get-users.query';
 import { DeleteUserCommand } from '../application/useCases/delete-user.use-case';
 
-@Controller('users')
+@Controller('sa/users')
 @UseGuards(BasicAuthGuard)
 export class UsersController {
   constructor(

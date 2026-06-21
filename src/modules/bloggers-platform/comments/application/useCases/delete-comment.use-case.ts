@@ -27,11 +27,10 @@ export class DeleteCommentUseCase implements ICommandHandler<
 
   async execute(command: DeleteCommentCommand): Promise<void> {
     const { commentId, userId } = command;
-    const commentDocument =
-      await this.commentsRepository.findByIdOrThrow(commentId);
+    const comment = await this.commentsRepository.findByIdOrThrow(commentId);
     const userDocument = await this.usersRepository.findByIdOrThrow(userId);
 
-    if (commentDocument.commentatorInfo.userId !== userDocument.id) {
+    if (comment.userId !== userDocument.id) {
       throw new DomainException(
         DomainExceptionStatus.PermissionError,
         `Attempt to delete another user's comment`,
@@ -44,6 +43,6 @@ export class DeleteCommentUseCase implements ICommandHandler<
       );
     }
 
-    await this.commentsRepository.delete(commentDocument);
+    await this.commentsRepository.delete(commentId);
   }
 }

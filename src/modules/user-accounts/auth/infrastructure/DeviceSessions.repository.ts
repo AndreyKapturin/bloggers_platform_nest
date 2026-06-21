@@ -1,34 +1,77 @@
 import { Injectable } from '@nestjs/common';
-import {
-  DeviceSession,
-  type TDeviceSessionDocument,
-  type TDeviceSessionModel,
-} from '../domain/DeviceSession.entity';
-import { InjectModel } from '@nestjs/mongoose';
+import { TDeviceSessionModel } from '../domain/DeviceSession.entity';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { DomainCreateDeviceSessionDto } from '../domain/dto/DomainCreateDeviceSession.dto';
 
 @Injectable()
 export class DeviceSessionsRepository {
-  constructor(
-    @InjectModel(DeviceSession.name)
-    private DeviceSessionModel: TDeviceSessionModel,
-  ) {}
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
 
-  async save(deviceSessionDocument: TDeviceSessionDocument): Promise<void> {
-    await deviceSessionDocument.save();
+  async save(deviceSessionModel: DomainCreateDeviceSessionDto): Promise<void> {
+    await this.dataSource.query(
+      `INSERT INTO
+	      "deviceSessions" 
+      (
+        "userId",
+        "deviceId",
+        "deviceName",
+        "ip",
+        "tokenIat",
+        "tokenExp"
+      )
+      VALUES ($1,$2,$3,$4,$5,$6);`,
+      [
+        deviceSessionModel.userId,
+        deviceSessionModel.deviceId,
+        deviceSessionModel.deviceName,
+        deviceSessionModel.ip,
+        deviceSessionModel.tokenIat,
+        deviceSessionModel.tokenExp,
+      ],
+    );
   }
 
   async findByDeviceIdAndUserId(
     deviceId: string,
     userId: string,
-  ): Promise<TDeviceSessionDocument | null> {
-    const deviceSession = await this.DeviceSessionModel.findOne({
-      deviceId,
-      userId,
-    });
-    return deviceSession;
+  ): Promise<TDeviceSessionModel | null> {
+    const rows = await this.dataSource.query<TDeviceSessionModel[]>(
+      `SELECT
+        "userId",
+        "deviceId",
+        "deviceName",
+        "ip",
+        "tokenIat",
+        "tokenExp"
+      FROM "deviceSessions" 
+      WHERE "deviceId" = $1 AND "userId" = $2
+      LIMIT 1`,
+      [deviceId, userId],
+    );
+
+    return rows[0] ?? null;
   }
 
-  async delete(deviceSessionDocument: TDeviceSessionDocument): Promise<void> {
-    await deviceSessionDocument.deleteOne();
+  async updateTokenIatAndExp(
+    deviceId: string,
+    userId: string,
+    tokenIat: Date,
+    tokenExp: Date,
+  ): Promise<void> {
+    await this.dataSource.query<TDeviceSessionModel[]>(
+      `UPDATE "deviceSessions" 
+      SET "tokenIat" = $1, "tokenExp" = $2
+      WHERE "deviceId" = $3 AND "userId" = $4`,
+      [tokenIat, tokenExp, deviceId, userId],
+    );
+  }
+
+  async delete(deviceId: string): Promise<void> {
+    await this.dataSource.query<TDeviceSessionModel[]>(
+      `DELETE FROM "deviceSessions" 
+      WHERE "deviceId" = $1`,
+      [deviceId],
+    );
   }
 }

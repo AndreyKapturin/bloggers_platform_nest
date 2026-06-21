@@ -27,8 +27,10 @@ export class DeleteAllOtherSecurityDeviceUseCase implements ICommandHandler<
       },
     );
 
-    for (const activeSession of activeDeviceSessionsWithoutThisDevice) {
-      await this.deviceSessionRepository.delete(activeSession);
-    }
+    const deviceIds = activeDeviceSessionsWithoutThisDevice.map(
+      (ad) => ad.deviceId,
+    );
+
+    await this.deviceSessionRepository.deleteMany(deviceIds);
   }
 }

@@ -67,9 +67,12 @@ export class RefreshTokensUseCase implements ICommandHandler<
       tokensPair.refreshToken,
     );
 
-    deviceSession.updateTokenIatAndExp(iat, exp);
-
-    await this.deviceSessionRepository.save(deviceSession);
+    await this.deviceSessionRepository.updateTokenIatAndExp(
+      deviceId,
+      userId,
+      iat,
+      exp,
+    );
     return tokensPair;
   }
 }

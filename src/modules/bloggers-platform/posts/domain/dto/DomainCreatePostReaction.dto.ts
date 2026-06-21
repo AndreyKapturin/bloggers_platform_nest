@@ -4,7 +4,6 @@ export class DomainCreatePostReaction {
   constructor(
     public postId: string,
     public userId: string,
-    public login: string,
     public status: LikeStatus,
   ) {}
 }

@@ -5,6 +5,7 @@ import {
 } from '../../../../../core/exceptions/DomainException';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CryptoService } from '../../../../../services/CryptoService';
+import { RecoveryCodesRepository } from '../../../users/infrastructure/recovery-codes.repository';
 
 export class NewPasswordCommand extends Command<void> {
   constructor(
@@ -22,15 +23,16 @@ export class NewPasswordUseCase implements ICommandHandler<
 > {
   constructor(
     private usersRepository: UsersRepository,
+    private recoveryCodesRepository: RecoveryCodesRepository,
     private cryptoService: CryptoService,
   ) {}
 
   async execute(command: NewPasswordCommand): Promise<void> {
     const { recoveryCode, newPassword } = command;
-    const userDocument =
+    const user =
       await this.usersRepository.findByRecoveryCode(recoveryCode);
 
-    if (!userDocument) {
+    if (!user) {
       throw new DomainException(
         DomainExceptionStatus.InvalidData,
         'User for the passed recovery code not found',
@@ -45,9 +47,7 @@ export class NewPasswordUseCase implements ICommandHandler<
 
     const passwordHash = await this.cryptoService.hash(newPassword);
 
-    userDocument.updatePasswordHash(passwordHash);
-    userDocument.removeRecoveryCode();
-
-    await this.usersRepository.save(userDocument);
+    await this.usersRepository.updatePasswordHash(user.id, passwordHash);
+    await this.recoveryCodesRepository.delete(recoveryCode);
   }
 }

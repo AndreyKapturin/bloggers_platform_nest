@@ -7,8 +7,8 @@ import { faker } from '@faker-js/faker';
 import { CommentsTestHelper } from '../utils/CommentsTestHelper';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
 import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/ViewComment.dto';
-import { BlogsTestHelper } from '../utils/BlogsTestHelper';
-import { PostsTestHelper } from '../utils/PostsTestHelper';
+import { SA_BlogsTestHelper } from '../utils/SA_BlogsTestHelper';
+import { SA_PostsTestHelper } from '../utils/SA_PostsTestHelper';
 import { HttpCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/HttpComment.dto';
 import { COMMENT_CONTENT_CONSTRAINTS } from '../../src/modules/bloggers-platform/comments/domain/comment.entity';
 import { overrideAccessTokenJwtService } from '../utils/overrideAccessTokenJwtService';
@@ -16,8 +16,8 @@ import { overrideAccessTokenJwtService } from '../utils/overrideAccessTokenJwtSe
 describe('update comment', () => {
   let app: INestApplication;
 
-  let blogsTestHelper: BlogsTestHelper;
-  let postsTestHelper: PostsTestHelper;
+  let blogsTestHelper: SA_BlogsTestHelper;
+  let postsTestHelper: SA_PostsTestHelper;
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
   let commentsTestHelper: CommentsTestHelper;
@@ -33,8 +33,8 @@ describe('update comment', () => {
     await app.init();
     await cleanDatabase(app);
 
-    blogsTestHelper = new BlogsTestHelper(app);
-    postsTestHelper = new PostsTestHelper(app);
+    blogsTestHelper = new SA_BlogsTestHelper(app);
+    postsTestHelper = new SA_PostsTestHelper(app);
     usersTestHelper = new UsersTestHelper(app);
     authTestHelper = new AuthTestHelper(app, usersTestHelper);
     commentsTestHelper = new CommentsTestHelper(app);
@@ -125,7 +125,7 @@ describe('update comment', () => {
   });
 
   it(`shouldn't update comment. Return NOF FOUND status if comment not exist`, async () => {
-    const notExistCommentId = faker.database.mongodbObjectId().toString();
+    const notExistCommentId = crypto.randomUUID();
 
     await commentsTestHelper.updateComment(
       notExistCommentId,

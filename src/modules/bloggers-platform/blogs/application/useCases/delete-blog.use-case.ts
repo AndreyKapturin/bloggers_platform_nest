@@ -15,9 +15,7 @@ export class DeleteBlogUseCase implements ICommandHandler<
   constructor(private blogsRepository: BlogsRepository) {}
 
   async execute(command: DeleteBlogCommand): Promise<void> {
-    const blogDocument = await this.blogsRepository.findByIdOrThrow(
-      command.blogId,
-    );
-    await this.blogsRepository.delete(blogDocument);
+    await this.blogsRepository.findByIdOrThrow(command.blogId);
+    await this.blogsRepository.delete(command.blogId);
   }
 }

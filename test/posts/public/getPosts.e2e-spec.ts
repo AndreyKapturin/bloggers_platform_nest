@@ -1,21 +1,23 @@
 import { INestApplication } from '@nestjs/common';
-import { setupApp } from '../../src/core/setupApp';
-import { cleanDatabase } from '../utils/cleanDatabase';
-import { initApp } from '../utils/initApp';
-import { BlogsTestHelper } from '../utils/BlogsTestHelper';
-import { PostsTestHelper } from '../utils/PostsTestHelper';
-import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
+import { setupApp } from '../../../src/core/setupApp';
+import { cleanDatabase } from '../../utils/cleanDatabase';
+import { initApp } from '../../utils/initApp';
+import { SA_BlogsTestHelper } from '../../utils/SA_BlogsTestHelper';
+import { SA_PostsTestHelper } from '../../utils/SA_PostsTestHelper';
+import { ViewBlogDto } from '../../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
 import {
   DEFAULT_PAGE_SIZE,
   SortDirection,
-} from '../../src/core/dto/BaseQueryParams.dto';
-import { PostsSortBy } from '../../src/modules/bloggers-platform/posts/api/dto/PostQueryParams.dto';
+} from '../../../src/core/dto/BaseQueryParams.dto';
+import { PostsSortBy } from '../../../src/modules/bloggers-platform/posts/api/dto/PostQueryParams.dto';
+import { Public_PostsTestHelper } from '../../utils/Public_PostsTestHelper';
 
 describe('get posts', () => {
   let app: INestApplication;
 
-  let blogsTestHelper: BlogsTestHelper;
-  let postsTestHelper: PostsTestHelper;
+  let sa_blogsTestHelper: SA_BlogsTestHelper;
+  let sa_postsTestHelper: SA_PostsTestHelper;
+  let public_postsTestHelper: Public_PostsTestHelper;
 
   let blog: ViewBlogDto;
 
@@ -24,13 +26,14 @@ describe('get posts', () => {
     setupApp(app);
     await app.init();
 
-    blogsTestHelper = new BlogsTestHelper(app);
-    postsTestHelper = new PostsTestHelper(app);
+    sa_blogsTestHelper = new SA_BlogsTestHelper(app);
+    sa_postsTestHelper = new SA_PostsTestHelper(app);
+    public_postsTestHelper = new Public_PostsTestHelper(app);
   });
 
   beforeEach(async () => {
     await cleanDatabase(app);
-    blog = await blogsTestHelper.createRandomBlog();
+    blog = await sa_blogsTestHelper.createRandomBlog();
   });
 
   afterAll(async () => {
@@ -41,20 +44,20 @@ describe('get posts', () => {
     const totalPostsCount = 3;
 
     for (let i = 0; i < totalPostsCount; i++) {
-      await postsTestHelper.createBlogPost(
+      await sa_postsTestHelper.createBlogPost(
         blog.id,
-        postsTestHelper.createBlogPostInputDto(),
+        sa_postsTestHelper.createBlogPostInputDto(),
       );
     }
 
-    const response = await postsTestHelper.getPosts();
+    const response = await public_postsTestHelper.getPosts();
 
     expect(response.body).toEqual({
       pagesCount: Math.ceil(totalPostsCount / DEFAULT_PAGE_SIZE),
       page: 1,
       pageSize: DEFAULT_PAGE_SIZE,
       totalCount: totalPostsCount,
-      items: expect.arrayContaining([postsTestHelper.createExpectedPost()]),
+      items: expect.arrayContaining([sa_postsTestHelper.createExpectedPost()]),
     });
   });
 
@@ -64,13 +67,13 @@ describe('get posts', () => {
     const totalPostsCount = 11;
 
     for (let i = 0; i < totalPostsCount; i++) {
-      await postsTestHelper.createBlogPost(
+      await sa_postsTestHelper.createBlogPost(
         blog.id,
-        postsTestHelper.createBlogPostInputDto(),
+        sa_postsTestHelper.createBlogPostInputDto(),
       );
     }
 
-    const response = await postsTestHelper.getPosts({
+    const response = await public_postsTestHelper.getPosts({
       filter: {
         pageNumber,
         pageSize,
@@ -87,12 +90,12 @@ describe('get posts', () => {
     const titles = [`${uniq}-a`, `${uniq}-c`, `${uniq}-b`];
 
     for (const title of titles) {
-      const dto = postsTestHelper.createBlogPostInputDto();
+      const dto = sa_postsTestHelper.createBlogPostInputDto();
       dto.title = title;
-      await postsTestHelper.createBlogPost(blog.id, dto);
+      await sa_postsTestHelper.createBlogPost(blog.id, dto);
     }
 
-    const getAscSortedPostsResponse = await postsTestHelper.getPosts({
+    const getAscSortedPostsResponse = await public_postsTestHelper.getPosts({
       filter: {
         sortBy: PostsSortBy.Title,
         sortDirection: SortDirection.Asc,
@@ -106,7 +109,7 @@ describe('get posts', () => {
     let expectedTitles = [`${uniq}-a`, `${uniq}-b`, `${uniq}-c`];
     expect(titlesFormResponse).toEqual(expectedTitles);
 
-    const getDescSortedPostsResponse = await postsTestHelper.getPosts({
+    const getDescSortedPostsResponse = await public_postsTestHelper.getPosts({
       filter: {
         sortBy: PostsSortBy.Title,
       },
@@ -125,17 +128,17 @@ describe('get posts', () => {
     const blogNames = [`${uniq}a`, `${uniq}c`, `${uniq}b`];
 
     for (const blogName of blogNames) {
-      const blogDto = blogsTestHelper.createInputDto();
+      const blogDto = sa_blogsTestHelper.createInputDto();
       blogDto.name = blogName;
 
-      const createdBlogResponse = await blogsTestHelper.createBlog(blogDto);
-      await postsTestHelper.createBlogPost(
+      const createdBlogResponse = await sa_blogsTestHelper.createBlog(blogDto);
+      await sa_postsTestHelper.createBlogPost(
         createdBlogResponse.body.id,
-        postsTestHelper.createBlogPostInputDto(),
+        sa_postsTestHelper.createBlogPostInputDto(),
       );
     }
 
-    const getAscSortedPostsResponse = await postsTestHelper.getPosts({
+    const getAscSortedPostsResponse = await public_postsTestHelper.getPosts({
       filter: {
         sortBy: PostsSortBy.BlogName,
         sortDirection: SortDirection.Asc,
@@ -149,7 +152,7 @@ describe('get posts', () => {
     let expectedTitles = [`${uniq}a`, `${uniq}b`, `${uniq}c`];
     expect(titlesFromResponse).toEqual(expectedTitles);
 
-    const getDescSortedPostsResponse = await postsTestHelper.getPosts({
+    const getDescSortedPostsResponse = await public_postsTestHelper.getPosts({
       filter: {
         sortBy: PostsSortBy.BlogName,
       },
@@ -168,19 +171,19 @@ describe('get posts', () => {
     const firstTitle = `${uniq}-first`;
     const secondTitle = `${uniq}-second`;
 
-    await postsTestHelper.createBlogPost(blog.id, {
-      ...postsTestHelper.createBlogPostInputDto(),
+    await sa_postsTestHelper.createBlogPost(blog.id, {
+      ...sa_postsTestHelper.createBlogPostInputDto(),
       title: firstTitle,
     });
 
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    await postsTestHelper.createBlogPost(blog.id, {
-      ...postsTestHelper.createBlogPostInputDto(),
+    await sa_postsTestHelper.createBlogPost(blog.id, {
+      ...sa_postsTestHelper.createBlogPostInputDto(),
       title: secondTitle,
     });
 
-    const getAscSortedPostsResponse = await postsTestHelper.getPosts({
+    const getAscSortedPostsResponse = await public_postsTestHelper.getPosts({
       filter: {
         sortBy: PostsSortBy.CreatedAt,
         sortDirection: SortDirection.Asc,
@@ -195,7 +198,7 @@ describe('get posts', () => {
 
     expect(titlesFromResponse).toEqual(expectedTitles);
 
-    const getDescSortedPostsResponse = await postsTestHelper.getPosts({
+    const getDescSortedPostsResponse = await public_postsTestHelper.getPosts({
       filter: {
         sortBy: PostsSortBy.CreatedAt,
       },

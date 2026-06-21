@@ -22,11 +22,8 @@ export class UpdateBlogUseCase implements ICommandHandler<
   constructor(private blogsRepository: BlogsRepository) {}
 
   async execute(command: UpdateBlogCommand): Promise<void> {
-    const blogDocument = await this.blogsRepository.findByIdOrThrow(
-      command.blogId,
-    );
+    await this.blogsRepository.findByIdOrThrow(command.blogId);
     const updateBlogDto = plainToClass(DomainUpdateBlogDto, command);
-    blogDocument.update(updateBlogDto);
-    await this.blogsRepository.save(blogDocument);
+    await this.blogsRepository.update(updateBlogDto);
   }
 }

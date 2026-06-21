@@ -1,5 +1,8 @@
 import { LikeStatus } from '../../../dto/HttpLikeStatus.dto';
-import { NewestLike, TPostDocument } from '../../domain/Post.entity';
+import {
+  TExtendedPostWithLikes,
+  TViewNewestLike,
+} from '../../domain/Post.entity';
 
 export class ViewPostDto {
   id!: string;
@@ -13,26 +16,23 @@ export class ViewPostDto {
     likesCount: number;
     dislikesCount: number;
     myStatus: LikeStatus;
-    newestLikes: NewestLike[];
+    newestLikes: TViewNewestLike[];
   };
 
-  static toView(
-    postDocument: TPostDocument,
-    myStatus = LikeStatus.None,
-  ): ViewPostDto {
+  static toView(post: TExtendedPostWithLikes): ViewPostDto {
     return {
-      id: postDocument.id,
-      title: postDocument.title,
-      shortDescription: postDocument.shortDescription,
-      content: postDocument.content,
-      blogId: postDocument.blogId,
-      blogName: postDocument.blogName,
-      createdAt: postDocument.createdAt.toISOString(),
+      id: post.id,
+      title: post.title,
+      shortDescription: post.shortDescription,
+      content: post.content,
+      blogId: post.blogId,
+      blogName: post.blogName,
+      createdAt: post.createdAt.toISOString(),
       extendedLikesInfo: {
-        likesCount: postDocument.extendedLikesInfo.likesCount,
-        dislikesCount: postDocument.extendedLikesInfo.dislikesCount,
-        myStatus,
-        newestLikes: postDocument.extendedLikesInfo.newestLikes,
+        likesCount: post.likesCount,
+        dislikesCount: post.dislikesCount,
+        myStatus: post.myStatus,
+        newestLikes: post.newestLikes,
       },
     };
   }

@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ViewUserDto } from '../api/dto/ViewUser.dto';
-import { User } from '../domain/user.entity';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, QueryFilter } from 'mongoose';
+import { TUserModel } from '../domain/user.entity';
 import { UserQueryParamsDto } from '../api/dto/UserQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { ViewMeDto } from '../api/dto/ViewMe.dto';
@@ -10,15 +8,21 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class UsersQueryRepository {
-  constructor(@InjectModel(User.name) private UserModel: Model<User>) {}
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
 
   async findById(id: string): Promise<ViewUserDto | null> {
-    const userDocument = await this.UserModel.findById(id);
-    if (!userDocument) return null;
-    return ViewUserDto.toView(userDocument);
+    const rows = await this.dataSource.query<TUserModel[]>(
+      `SELECT * FROM "users" WHERE "id" = $1 LIMIT 1;`,
+      [id],
+    );
+    if (!rows[0]) return null;
+
+    return ViewUserDto.toView(rows[0]);
   }
 
   async findByIdOrThrow(id: string): Promise<ViewUserDto> {
@@ -53,26 +57,62 @@ export class UsersQueryRepository {
       searchLoginTerm,
     } = usersQueryDto;
 
-    const filter: QueryFilter<User> = {};
+    const whereParams: (string | number)[] = [];
+    const conditions: string[] = [];
 
-    if (searchLoginTerm || searchEmailTerm) {
-      filter.$or = [];
-      if (searchLoginTerm) {
-        filter.$or.push({ login: { $regex: searchLoginTerm, $options: 'i' } });
-      }
-      if (searchEmailTerm) {
-        filter.$or.push({ email: { $regex: searchEmailTerm, $options: 'i' } });
-      }
+    const fromPart = `FROM "users"`;
+    let wherePart = '';
+
+    if (searchLoginTerm) {
+      whereParams.push(`%${searchLoginTerm}%`);
+      conditions.push(`"login" ILIKE $${whereParams.length}`);
     }
 
-    const userDocuments = await this.UserModel.find(filter)
-      .sort({ [sortBy]: sortDirection })
-      .skip(skip)
-      .limit(pageSize);
+    if (searchEmailTerm) {
+      whereParams.push(`%${searchEmailTerm}%`);
+      conditions.push(`"email" ILIKE $${whereParams.length}`);
+    }
 
-    const totalCount = await this.UserModel.countDocuments(filter);
+    if (conditions.length > 0) {
+      wherePart += 'WHERE ' + conditions.join(' OR ');
+    }
 
-    const viewUserDocuments = userDocuments.map((ud) => ViewUserDto.toView(ud));
+    const params = [...whereParams];
+    
+    const orderPath = `ORDER BY "${sortBy}" ${sortDirection}`;
+
+    params.push(pageSize);
+    const limitPart = `LIMIT $${params.length}`;
+
+    params.push(skip);
+    const offsetPart = `OFFSET $${params.length}`;
+
+    const getUsersSql = `
+      SELECT
+        "id",
+        "login",
+        "email",
+        "createdAt",
+        "isConfirmed"
+      ${fromPart}
+      ${wherePart}
+      ${orderPath}
+      ${limitPart}
+      ${offsetPart}`;
+
+    const rows = await this.dataSource.query<TUserModel[]>(getUsersSql, params);
+
+    const getTotalCountSql = `
+      SELECT
+        COUNT(*)::integer as "totalCount"
+      ${fromPart}
+      ${wherePart};`;
+
+    const [{ totalCount }] = await this.dataSource.query<
+      { totalCount: number }[]
+    >(getTotalCountSql, whereParams);
+
+    const viewUserDocuments = rows.map((user) => ViewUserDto.toView(user));
     const paginatedViewUserDocuments = PaginatedView.toView(
       pageNumber,
       pageSize,
@@ -83,8 +123,11 @@ export class UsersQueryRepository {
   }
 
   async getMe(id: string): Promise<ViewMeDto> {
-    const userDocument = await this.UserModel.findById(id);
-    if (!userDocument) throw new Error('User not found. Check JwtAuthGuard!');
-    return ViewMeDto.toView(userDocument);
+    const rows = await this.dataSource.query<TUserModel[]>(
+      `SELECT * FROM "users" WHERE "id" = $1 LIMIT 1;`,
+      [id],
+    );
+    if (!rows[0]) throw new Error('User not found. Check JwtAuthGuard!');
+    return ViewMeDto.toView(rows[0]);
   }
 }

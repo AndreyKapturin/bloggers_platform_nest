@@ -6,8 +6,8 @@ import { UsersTestHelper } from '../utils/UsersTestHelper';
 import { faker } from '@faker-js/faker';
 import { CommentsTestHelper } from '../utils/CommentsTestHelper';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
-import { BlogsTestHelper } from '../utils/BlogsTestHelper';
-import { PostsTestHelper } from '../utils/PostsTestHelper';
+import { SA_BlogsTestHelper } from '../utils/SA_BlogsTestHelper';
+import { SA_PostsTestHelper } from '../utils/SA_PostsTestHelper';
 import { ViewUserDto } from '../../src/modules/user-accounts/users/api/dto/ViewUser.dto';
 import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpLogin.dto';
 import { COMMENT_CONTENT_CONSTRAINTS } from '../../src/modules/bloggers-platform/comments/domain/comment.entity';
@@ -17,8 +17,8 @@ import { overrideAccessTokenJwtService } from '../utils/overrideAccessTokenJwtSe
 describe('create comment', () => {
   let app: INestApplication;
 
-  let blogsTestHelper: BlogsTestHelper;
-  let postsTestHelper: PostsTestHelper;
+  let blogsTestHelper: SA_BlogsTestHelper;
+  let postsTestHelper: SA_PostsTestHelper;
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
   let commentsTestHelper: CommentsTestHelper;
@@ -35,8 +35,8 @@ describe('create comment', () => {
     await app.init();
     await cleanDatabase(app);
 
-    blogsTestHelper = new BlogsTestHelper(app);
-    postsTestHelper = new PostsTestHelper(app);
+    blogsTestHelper = new SA_BlogsTestHelper(app);
+    postsTestHelper = new SA_PostsTestHelper(app);
     usersTestHelper = new UsersTestHelper(app);
     authTestHelper = new AuthTestHelper(app, usersTestHelper);
     commentsTestHelper = new CommentsTestHelper(app);
@@ -125,7 +125,7 @@ describe('create comment', () => {
   });
 
   it(`shouldn't create comment. Return NOT FOUND status if post not exist`, async () => {
-    const unexistedPostId = faker.database.mongodbObjectId().toString();
+    const unexistedPostId = crypto.randomUUID();
     await commentsTestHelper.createComment(
       unexistedPostId,
       accessToken,
