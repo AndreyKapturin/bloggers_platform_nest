@@ -26,6 +26,8 @@ import { PgConfig } from './modules/postgre/postgre.config';
           database: config.database,
           username: config.user,
           password: config.password,
+          autoLoadEntities: true,
+          synchronize: config.synchronize,
         };
       },
     }),
