@@ -28,11 +28,10 @@ export class UpdateCommentUseCase implements ICommandHandler<
 
   async execute(command: UpdateCommentCommand): Promise<void> {
     const { commentId, userId, content } = command;
-    const commentDocument =
-      await this.commentsRepository.findByIdOrThrow(commentId);
+    const comment = await this.commentsRepository.findByIdOrThrow(commentId);
     const userDocument = await this.usersRepository.findByIdOrThrow(userId);
 
-    if (commentDocument.commentatorInfo.userId !== userDocument.id) {
+    if (comment.userId !== userDocument.id) {
       throw new DomainException(
         DomainExceptionStatus.PermissionError,
         `Attempt to update another user's comment`,
@@ -45,8 +44,6 @@ export class UpdateCommentUseCase implements ICommandHandler<
       );
     }
 
-    commentDocument.setContent(content);
-
-    await this.commentsRepository.save(commentDocument);
+    await this.commentsRepository.update(commentId, content);
   }
 }

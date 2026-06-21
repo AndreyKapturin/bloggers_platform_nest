@@ -7,6 +7,7 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../../core/exceptions/DomainException';
+import { EmailConfirmationCodesRepository } from '../../../users/infrastructure/email-confirmation-codes.repository';
 
 export class SendConfirmationCodeCommand extends Command<void> {
   constructor(public email: string) {
@@ -22,14 +23,27 @@ export class SendConfirmationCodeUseCase implements ICommandHandler<
   constructor(
     private userAccountsConfig: UserAccountsConfig,
     private usersRepository: UsersRepository,
+    private emailConfirmationCodesRepository: EmailConfirmationCodesRepository,
     private emailService: EmailService,
   ) {}
 
   async execute(command: SendConfirmationCodeCommand): Promise<void> {
-    const userDocument = await this.usersRepository.findByEmail(command.email);
+    const user = await this.usersRepository.findByEmail(command.email);
 
-    if (!userDocument) return;
-    if (userDocument.emailConfirmation.isConfirmed) {
+    if (!user) {
+      throw new DomainException(
+        DomainExceptionStatus.InvalidData,
+        'User with passed email not exist',
+        [
+          {
+            field: 'email',
+            message: 'User with passed email not exist',
+          },
+        ],
+      );
+    };
+    
+    if (user.isConfirmed) {
       throw new DomainException(
         DomainExceptionStatus.InvalidData,
         'Email already confirmed',
@@ -47,12 +61,14 @@ export class SendConfirmationCodeUseCase implements ICommandHandler<
       this.userAccountsConfig.confirmationCodeTtlHourse,
     );
 
-    userDocument.setEmailConfirmationCode(confirmationCode, codeExpirationDate);
-
-    await this.usersRepository.save(userDocument);
-
+    await this.emailConfirmationCodesRepository.saveOrUpdate(
+      user.id,
+      confirmationCode,
+      codeExpirationDate
+    ) 
+    
     this.emailService
-      .sendConfirmationCode(userDocument.email, confirmationCode)
+      .sendConfirmationCode(user.email, confirmationCode)
       .catch((error) => console.log('Send confirmation code error: ', error));
   }
 }

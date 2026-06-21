@@ -3,11 +3,10 @@ import { setupApp } from '../../src/core/setupApp';
 import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
-import { faker } from '@faker-js/faker';
 import { CommentsTestHelper } from '../utils/CommentsTestHelper';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
-import { BlogsTestHelper } from '../utils/BlogsTestHelper';
-import { PostsTestHelper } from '../utils/PostsTestHelper';
+import { SA_BlogsTestHelper } from '../utils/SA_BlogsTestHelper';
+import { SA_PostsTestHelper } from '../utils/SA_PostsTestHelper';
 import { ViewCommentDto } from '../../src/modules/bloggers-platform/comments/api/dto/ViewComment.dto';
 import { ViewUserDto } from '../../src/modules/user-accounts/users/api/dto/ViewUser.dto';
 import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpLogin.dto';
@@ -15,8 +14,8 @@ import { HttpLoginDto } from '../../src/modules/user-accounts/auth/api/dto/HttpL
 describe('get comment by id', () => {
   let app: INestApplication;
 
-  let blogsTestHelper: BlogsTestHelper;
-  let postsTestHelper: PostsTestHelper;
+  let blogsTestHelper: SA_BlogsTestHelper;
+  let postsTestHelper: SA_PostsTestHelper;
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
   let commentsTestHelper: CommentsTestHelper;
@@ -31,8 +30,8 @@ describe('get comment by id', () => {
     await app.init();
     await cleanDatabase(app);
 
-    blogsTestHelper = new BlogsTestHelper(app);
-    postsTestHelper = new PostsTestHelper(app);
+    blogsTestHelper = new SA_BlogsTestHelper(app);
+    postsTestHelper = new SA_PostsTestHelper(app);
     usersTestHelper = new UsersTestHelper(app);
     authTestHelper = new AuthTestHelper(app, usersTestHelper);
     commentsTestHelper = new CommentsTestHelper(app);
@@ -74,7 +73,7 @@ describe('get comment by id', () => {
   });
 
   it(`should return NOT FOUND status if comment not exist`, async () => {
-    const unexistedCommentId = faker.database.mongodbObjectId().toString();
+    const unexistedCommentId = crypto.randomUUID();
     await commentsTestHelper.getCommentById(unexistedCommentId, {
       status: HttpStatus.NOT_FOUND,
     });

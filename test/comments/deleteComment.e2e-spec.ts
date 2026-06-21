@@ -6,15 +6,15 @@ import { UsersTestHelper } from '../utils/UsersTestHelper';
 import { faker } from '@faker-js/faker';
 import { CommentsTestHelper } from '../utils/CommentsTestHelper';
 import { AuthTestHelper } from '../utils/AuthTestHelper';
-import { BlogsTestHelper } from '../utils/BlogsTestHelper';
-import { PostsTestHelper } from '../utils/PostsTestHelper';
+import { SA_BlogsTestHelper } from '../utils/SA_BlogsTestHelper';
+import { SA_PostsTestHelper } from '../utils/SA_PostsTestHelper';
 import { overrideAccessTokenJwtService } from '../utils/overrideAccessTokenJwtService';
 
 describe('delete comment', () => {
   let app: INestApplication;
 
-  let blogsTestHelper: BlogsTestHelper;
-  let postsTestHelper: PostsTestHelper;
+  let blogsTestHelper: SA_BlogsTestHelper;
+  let postsTestHelper: SA_PostsTestHelper;
   let usersTestHelper: UsersTestHelper;
   let authTestHelper: AuthTestHelper;
   let commentsTestHelper: CommentsTestHelper;
@@ -33,8 +33,8 @@ describe('delete comment', () => {
     await app.init();
     await cleanDatabase(app);
 
-    blogsTestHelper = new BlogsTestHelper(app);
-    postsTestHelper = new PostsTestHelper(app);
+    blogsTestHelper = new SA_BlogsTestHelper(app);
+    postsTestHelper = new SA_PostsTestHelper(app);
     usersTestHelper = new UsersTestHelper(app);
     authTestHelper = new AuthTestHelper(app, usersTestHelper);
     commentsTestHelper = new CommentsTestHelper(app);
@@ -71,7 +71,7 @@ describe('delete comment', () => {
   });
 
   it(`shouldn't delete comment. Return NOT FOUND status if comment not exist`, async () => {
-    const notExistCommentId = faker.database.mongodbObjectId().toString();
+    const notExistCommentId = crypto.randomUUID();
     await commentsTestHelper.deleteComment(notExistCommentId, accessToken, {
       status: HttpStatus.NOT_FOUND,
     });

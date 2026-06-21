@@ -6,7 +6,7 @@ import { DomainUpdatePostDto } from '../../domain/dto/DomainUpdatePost.dto';
 export class UpdatePostCommand extends Command<void> {
   constructor(
     public postId: string,
-    public blogId: string,
+    public paramsBlogId: string,
     public title: string,
     public shortDescription: string,
     public content: string,
@@ -26,24 +26,15 @@ export class UpdatePostUseCase implements ICommandHandler<
   ) {}
 
   async execute(command: UpdatePostCommand): Promise<void> {
-    const postDocument = await this.postsRepository.findByIdOrThrow(
-      command.postId,
-    );
-
-    const blogDocument = await this.blogsRepository.findByIdOrThrow(
-      command.blogId,
-    );
+    await this.blogsRepository.findByIdOrThrow(command.paramsBlogId);
+    await this.postsRepository.findByIdOrThrow(command.postId);
 
     const updatePostDto = new DomainUpdatePostDto(
       command.title,
       command.shortDescription,
       command.content,
-      command.blogId,
-      blogDocument.name,
     );
 
-    postDocument.update(updatePostDto);
-
-    await this.postsRepository.save(postDocument);
+    await this.postsRepository.update(command.postId, updatePostDto);
   }
 }

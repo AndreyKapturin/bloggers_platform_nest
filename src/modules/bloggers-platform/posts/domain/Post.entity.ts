@@ -1,6 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
-import { DomainUpdatePostDto } from './dto/DomainUpdatePost.dto';
+import { LikeStatus } from '../../dto/HttpLikeStatus.dto';
 
 export const DB_POST_CONSTRAINTS = {
   TITLE_MAX_LENGTH: 30,
@@ -8,127 +6,61 @@ export const DB_POST_CONSTRAINTS = {
   CONTENT_MAX_LENGTH: 1000,
 };
 
-@Schema({ _id: false })
-export class NewestLike {
-  @Prop({ type: Date, required: true })
-  addedAt!: Date;
+export type TPostModel = {
+  id: string;
+  title: string;
+  shortDescription: string;
+  content: string;
+  blogId: string;
+  createdAt: Date;
+};
 
-  @Prop({ type: String, required: true })
-  userId!: string;
+export type TPostReactionModel = {
+  postId: string;
+  userId: string;
+  status: LikeStatus;
+  addedAt: Date;
+};
 
-  @Prop({ type: String, required: true })
-  login!: string;
-}
+export type TExtendedPost = {
+  id: string;
+  title: string;
+  shortDescription: string;
+  content: string;
+  blogId: string;
+  blogName: string;
+  likesCount: number;
+  dislikesCount: number;
+  myStatus: LikeStatus;
+  createdAt: Date;
+};
 
-@Schema({ _id: false })
-export class ExtendedLikesInfo {
-  @Prop({ type: Number, default: 0 })
-  likesCount!: number;
+export type TExtendedPostWithLikes = TExtendedPost & {
+  newestLikes: TViewNewestLike[];
+};
 
-  @Prop({ type: Number, default: 0 })
-  dislikesCount!: number;
+export type TPostUserReactionModel = {
+  userId: string;
+  commentId: string;
+  status: LikeStatus;
+  addedAt: Date;
+};
 
-  @Prop({ type: () => [NewestLike], default: [] })
-  newestLikes!: NewestLike[];
-}
+export type TNewestLike = {
+  postId: string;
+  userId: string;
+  login: string;
+  addedAt: Date;
+};
 
-@Schema({ timestamps: true })
-export class Post {
-  @Prop({
-    type: String,
-    required: true,
-    maxLength: DB_POST_CONSTRAINTS.TITLE_MAX_LENGTH,
-  })
-  title!: string;
+export type TViewNewestLike = {
+  userId: string;
+  login: string;
+  addedAt: string;
+};
 
-  @Prop({
-    type: String,
-    required: true,
-    maxLength: DB_POST_CONSTRAINTS.SHORT_DESCRIPTION_MAX_LENGTH,
-  })
-  shortDescription!: string;
-
-  @Prop({
-    type: String,
-    required: true,
-    maxLength: DB_POST_CONSTRAINTS.CONTENT_MAX_LENGTH,
-  })
-  content!: string;
-
-  @Prop({ type: String, required: true })
-  blogId!: string;
-
-  @Prop({ type: String, required: true })
-  blogName!: string;
-
-  @Prop({ type: () => ExtendedLikesInfo, default: {} })
-  extendedLikesInfo!: ExtendedLikesInfo;
-
-  createdAt!: Date;
-  updatedAt!: Date;
-
-  static makeInstance(
-    title: string,
-    content: string,
-    shortDescription: string,
-    blogId: string,
-    blogName: string,
-  ): TPostDocument {
-    const postDocument = new this();
-    postDocument.title = title;
-    postDocument.content = content;
-    postDocument.shortDescription = shortDescription;
-    postDocument.blogId = blogId;
-    postDocument.blogName = blogName;
-    postDocument.extendedLikesInfo = {
-      likesCount: 0,
-      dislikesCount: 0,
-      newestLikes: [],
-    };
-
-    return postDocument as TPostDocument;
-  }
-
-  update(dto: DomainUpdatePostDto): void {
-    this.title = dto.title;
-    this.shortDescription = dto.shortDescription;
-    this.content = dto.content;
-    this.blogId = dto.blogId;
-    this.blogName = dto.blogName;
-  }
-
-  addLike() {
-    this.extendedLikesInfo.likesCount += 1;
-  }
-
-  addDislike() {
-    this.extendedLikesInfo.dislikesCount += 1;
-  }
-
-  removeLike() {
-    this.extendedLikesInfo.likesCount -= 1;
-  }
-
-  removeDislike() {
-    this.extendedLikesInfo.dislikesCount -= 1;
-  }
-
-  likeToDislike() {
-    this.removeLike();
-    this.addDislike();
-  }
-
-  dislikeToLike() {
-    this.removeDislike();
-    this.addLike();
-  }
-
-  setNewestLikes(newestLikes: NewestLike[]) {
-    this.extendedLikesInfo.newestLikes = newestLikes;
-  }
-}
-
-export const PostSchema = SchemaFactory.createForClass(Post);
-PostSchema.loadClass(Post);
-export type TPostDocument = HydratedDocument<Post>;
-export type TPostModel = Model<Post> & typeof Post;
+export type TExtendedLikesInfo = {
+  likesCount: number;
+  dislikesCount: number;
+  newestLikes: TViewNewestLike[];
+};

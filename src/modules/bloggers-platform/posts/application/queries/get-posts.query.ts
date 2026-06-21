@@ -1,8 +1,6 @@
 import { QueryHandler, Query, IQueryHandler } from '@nestjs/cqrs';
 import { ViewPostDto } from '../../api/dto/VIewPost.dto';
 import { PostsQueryRepository } from '../../infrastructure/Post.query-repository';
-import { PostReactionsRepository } from '../../infrastructure/PostReactions.repository';
-import { LikeStatus } from '../../../dto/HttpLikeStatus.dto';
 import { PostsQueryParamsDto } from '../../api/dto/PostQueryParams.dto';
 import { PaginatedView } from '../../../../../core/dto/PaginatedView.dto';
 import { BlogsQueryRepository } from '../../../blogs/infrastructure/blogs.query-repository';
@@ -25,7 +23,6 @@ export class GetPostsQueryHandler implements IQueryHandler<
   constructor(
     private blogsQueryRepository: BlogsQueryRepository,
     private postsQueryRepository: PostsQueryRepository,
-    private postsReactionRepository: PostReactionsRepository,
   ) {}
 
   async execute(query: GetPostsQuery) {
@@ -37,35 +34,15 @@ export class GetPostsQueryHandler implements IQueryHandler<
       paginatedViewPosts = await this.postsQueryRepository.findForBlog(
         blogId,
         queryParams,
+        userId,
       );
     } else {
-      paginatedViewPosts = await this.postsQueryRepository.find(queryParams);
-    }
-
-    await this.postsQueryRepository.find(queryParams);
-
-    if (userId) {
-      await this._setUserReactions(paginatedViewPosts, userId);
+      paginatedViewPosts = await this.postsQueryRepository.find(
+        queryParams,
+        userId,
+      );
     }
 
     return paginatedViewPosts;
-  }
-
-  private async _setUserReactions(
-    paginatedViewPosts: PaginatedView<ViewPostDto>,
-    userId: string,
-  ) {
-    const postIds = paginatedViewPosts.items.map((post) => post.id);
-    const reactionDocuments =
-      await this.postsReactionRepository.getUserReactions(userId, postIds);
-
-    paginatedViewPosts.items.forEach((postDocument) => {
-      const reactionDocument = reactionDocuments.find(
-        (r) => r.postId === postDocument.id,
-      );
-      postDocument.extendedLikesInfo.myStatus = reactionDocument
-        ? reactionDocument.status
-        : LikeStatus.None;
-    });
   }
 }

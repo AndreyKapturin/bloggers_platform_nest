@@ -51,6 +51,6 @@ export class DeleteSecurityDeviceUseCase implements ICommandHandler<
       );
     }
 
-    await this.deviceSessionRepository.delete(foundDeviceSession);
+    await this.deviceSessionRepository.delete(deviceId);
   }
 }

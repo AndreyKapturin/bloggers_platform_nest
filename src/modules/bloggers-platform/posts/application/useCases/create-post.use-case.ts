@@ -1,8 +1,7 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { InjectModel } from '@nestjs/mongoose';
-import { Post, type TPostModel } from '../../domain/Post.entity';
 import { BlogsRepository } from '../../../blogs/infrastructure/blogs.repository';
 import { PostsRepository } from '../../infrastructure/Post.repository';
+import { DomainCreatePostDto } from '../../domain/dto/DomainCreatePost.dto';
 
 export class CreatePostCommand extends Command<string> {
   constructor(
@@ -21,27 +20,21 @@ export class CreatePostUseCase implements ICommandHandler<
   string
 > {
   constructor(
-    @InjectModel(Post.name)
-    private PostModel: TPostModel,
     private blogsRepository: BlogsRepository,
     private postsRepository: PostsRepository,
   ) {}
 
   async execute(command: CreatePostCommand): Promise<string> {
-    const blogDocument = await this.blogsRepository.findByIdOrThrow(
-      command.blogId,
-    );
+    await this.blogsRepository.findByIdOrThrow(command.blogId);
 
-    const newPostDocument = this.PostModel.makeInstance(
+    const createPostDto = new DomainCreatePostDto(
       command.title,
-      command.content,
       command.shortDescription,
+      command.content,
       command.blogId,
-      blogDocument.name,
     );
 
-    await this.postsRepository.save(newPostDocument);
-
-    return newPostDocument.id;
+    const postId = await this.postsRepository.create(createPostDto);
+    return postId;
   }
 }

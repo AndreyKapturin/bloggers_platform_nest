@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -16,7 +15,6 @@ import { PostsQueryParamsDto } from './dto/PostQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { CommentsQueryParamsDto } from '../../comments/api/dto/CommentsQueryParams.dto';
 import { ViewCommentDto } from '../../comments/api/dto/ViewComment.dto';
-import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
 import { JwtAuthGuard } from '../../../user-accounts/auth/strategies/jwt/Jwt.guard';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreateCommentCommand } from '../../comments/application/useCases/create-comment.use-case';
@@ -30,12 +28,7 @@ import { HttpLikeStatusDto } from '../../dto/HttpLikeStatus.dto';
 import { LikePostCommand } from '../application/useCases/like-post.use-case';
 import { GetPostQuery } from '../application/queries/get-post.query';
 import { GetPostsQuery } from '../application/queries/get-posts.query';
-import { HttpCreatePostDto } from './dto/HttpCreatePost.dto';
-import { HttpUpdatePostDto } from './dto/HttpUpdatePost.dto';
-import { CreatePostCommand } from '../application/useCases/create-post.use-case';
 import { GetCommentQuery } from '../../comments/application/queries/get-comment-by-id.query';
-import { UpdatePostCommand } from '../application/useCases/update-post.use-case';
-import { DeletePostCommand } from '../application/useCases/delete-post.use-case';
 
 @Controller('posts')
 export class PostsController {
@@ -111,43 +104,5 @@ export class PostsController {
   ): Promise<PaginatedView<ViewPostDto>> {
     const query = new GetPostsQuery(queryParams, dto?.userId ?? null);
     return this.queryBus.execute(query);
-  }
-
-  @Post()
-  @UseGuards(BasicAuthGuard)
-  async createPost(@Body() dto: HttpCreatePostDto): Promise<ViewPostDto> {
-    const command = new CreatePostCommand(
-      dto.blogId,
-      dto.title,
-      dto.shortDescription,
-      dto.content,
-    );
-    const postId = await this.commandBus.execute(command);
-    const query = new GetPostQuery(postId, null);
-    return this.queryBus.execute(query);
-  }
-
-  @Put(':postId')
-  @UseGuards(BasicAuthGuard)
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async updatePost(
-    @Param('postId') postId: string,
-    @Body() dto: HttpUpdatePostDto,
-  ): Promise<void> {
-    const command = new UpdatePostCommand(
-      postId,
-      dto.blogId,
-      dto.title,
-      dto.shortDescription,
-      dto.content,
-    );
-    await this.commandBus.execute(command);
-  }
-
-  @Delete(':id')
-  @UseGuards(BasicAuthGuard)
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deletePost(@Param('id') id: string): Promise<void> {
-    await this.commandBus.execute(new DeletePostCommand(id));
   }
 }

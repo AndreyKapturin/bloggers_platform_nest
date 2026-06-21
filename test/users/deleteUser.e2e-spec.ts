@@ -4,7 +4,6 @@ import { cleanDatabase } from '../utils/cleanDatabase';
 import { initApp } from '../utils/initApp';
 import { UsersTestHelper } from '../utils/UsersTestHelper';
 import { ViewUserDto } from '../../src/modules/user-accounts/users/api/dto/ViewUser.dto';
-import { faker } from '@faker-js/faker';
 
 describe('delete user', () => {
   let app: INestApplication;
@@ -33,7 +32,7 @@ describe('delete user', () => {
   });
 
   it(`shouldn't delete user. Return NOT FOUND if user not exist`, async () => {
-    const unexistedUserId = faker.database.mongodbObjectId().toString();
+    const unexistedUserId = crypto.randomUUID();
     await usersTestHelper.deleteUser(unexistedUserId, {
       status: HttpStatus.NOT_FOUND,
     });

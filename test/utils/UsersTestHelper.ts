@@ -64,7 +64,7 @@ export class UsersTestHelper {
     };
 
     const createUserRequest = request(this.app.getHttpServer())
-      .post('/users')
+      .post('/sa/users')
       .send(dto)
       .expect(innerOptions.status);
 
@@ -104,7 +104,7 @@ export class UsersTestHelper {
     };
 
     const getUsersRequest = request(this.app.getHttpServer())
-      .get('/users')
+      .get('/sa/users')
       .expect(innerOptions.status);
 
     if (innerOptions.auth) {
@@ -129,7 +129,7 @@ export class UsersTestHelper {
     };
 
     const deleteUserRequest = request(this.app.getHttpServer())
-      .delete(`/users/${userId}`)
+      .delete(`/sa/users/${userId}`)
       .expect(innerOptions.status);
 
     if (innerOptions.auth) {
