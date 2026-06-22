@@ -28,6 +28,8 @@ import { CreatePostUseCase } from './posts/application/useCases/create-post.use-
 import { UpdatePostUseCase } from './posts/application/useCases/update-post.use-case';
 import { DeletePostUseCase } from './posts/application/useCases/delete-post.use-case';
 import { SA_BlogsController } from './blogs/api/blogs.sa-controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Blog } from './blogs/domain/blog.entity';
 
 const useCases = [
   CreateBlogUseCase,
@@ -53,7 +55,10 @@ const queries = [
 ];
 
 @Module({
-  imports: [UserAccountsModule],
+  imports: [
+    UserAccountsModule,
+    TypeOrmModule.forFeature([Blog])
+  ],
   controllers: [
     BlogsController,
     SA_BlogsController,
