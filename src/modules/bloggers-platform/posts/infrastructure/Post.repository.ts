@@ -3,16 +3,23 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { TPostModel, TPostUserReactionModel } from '../domain/Post.entity';
-import { DomainCreatePostDto } from '../domain/dto/DomainCreatePost.dto';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import {
+  Post,
+  TPostModel,
+  TPostUserReactionModel,
+} from '../domain/Post.entity';
 import { DomainUpdatePostDto } from '../domain/dto/DomainUpdatePost.dto';
 import { LikeStatus } from '../../dto/HttpLikeStatus.dto';
 
 @Injectable()
 export class PostsRepository {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectDataSource() private dataSource: DataSource,
+    @InjectRepository(Post)
+    private readonly postsEntityRepository: Repository<Post>,
+  ) {}
 
   async findUserReaction(
     postId: string,
@@ -33,26 +40,13 @@ export class PostsRepository {
   }
 
   async findById(id: string): Promise<TPostModel | null> {
-    const rows = await this.dataSource.query<TPostModel>(
-      `SELECT 
-	      "id",
-	      "title",
-	      "shortDescription",
-	      "content",
-	      "blogId",
-	      "createdAt"
-      FROM "posts"
-      WHERE "id" = $1
-      LIMIT 1;`,
-      [id],
-    );
-    return rows[0] ?? null;
+    return this.postsEntityRepository.findOneBy({ id });
   }
 
   async findByIdOrThrow(id: string): Promise<TPostModel> {
-    const postDocument = await this.findById(id);
+    const post = await this.findById(id);
 
-    if (!postDocument) {
+    if (!post) {
       throw new DomainException(
         DomainExceptionStatus.NotFound,
         `Post with id ${id} not found`,
@@ -60,18 +54,11 @@ export class PostsRepository {
       );
     }
 
-    return postDocument;
+    return post;
   }
 
-  async create(dto: DomainCreatePostDto): Promise<string> {
-    const rows = await this.dataSource.query<{ id: string }[]>(
-      `INSERT INTO "posts"
-	      ("title", "shortDescription", "content", "blogId")
-      VALUES ($1, $2, $3, $4)
-      RETURNING "id";`,
-      [dto.title, dto.shortDescription, dto.content, dto.blogId],
-    );
-    return rows[0].id;
+  async save(post: Post): Promise<void> {
+    await this.postsEntityRepository.save(post);
   }
 
   async createReaction(

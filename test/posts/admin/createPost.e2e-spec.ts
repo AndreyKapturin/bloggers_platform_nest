@@ -8,7 +8,7 @@ import { ViewBlogDto } from '../../../src/modules/bloggers-platform/blogs/api/dt
 import { LikeStatus } from '../../../src/modules/bloggers-platform/dto/HttpLikeStatus.dto';
 import { ViewPostDto } from '../../../src/modules/bloggers-platform/posts/api/dto/VIewPost.dto';
 import { DB_POST_CONSTRAINTS } from '../../../src/modules/bloggers-platform/posts/domain/Post.entity';
-import { HttpCreatePostDto } from '../../../src/modules/bloggers-platform/posts/api/dto/HttpCreatePost.dto';
+import { HttpCreateBlogPostDto } from '../../../src/modules/bloggers-platform/posts/api/dto/HttpCreateBlogPost.dto';
 
 describe('create post', () => {
   let app: INestApplication;
@@ -78,7 +78,7 @@ describe('create post', () => {
     const dto = sa_postsTestHelper.createBlogPostInputDto();
     await sa_postsTestHelper.createBlogPost(
       blog.id,
-      { ...dto, title: 123 } as unknown as HttpCreatePostDto,
+      { ...dto, title: 123 } as unknown as HttpCreateBlogPostDto,
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -118,7 +118,7 @@ describe('create post', () => {
     const dto = sa_postsTestHelper.createBlogPostInputDto();
     await sa_postsTestHelper.createBlogPost(
       blog.id,
-      { ...dto, shortDescription: true } as unknown as HttpCreatePostDto,
+      { ...dto, shortDescription: true } as unknown as HttpCreateBlogPostDto,
       { status: HttpStatus.BAD_REQUEST },
     );
   });
@@ -157,7 +157,7 @@ describe('create post', () => {
     const dto = sa_postsTestHelper.createBlogPostInputDto();
     await sa_postsTestHelper.createBlogPost(
       blog.id,
-      { ...dto, content: {} } as unknown as HttpCreatePostDto,
+      { ...dto, content: {} } as unknown as HttpCreateBlogPostDto,
       { status: HttpStatus.BAD_REQUEST },
     );
   });

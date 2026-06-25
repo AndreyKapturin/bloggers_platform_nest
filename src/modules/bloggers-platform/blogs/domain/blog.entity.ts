@@ -1,7 +1,8 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseDbEntity } from '../../../../core/BaseDbEntity';
 import { DomainCreateBlogDto } from './dto/DomainCreateBlog.dto';
 import { DomainUpdateBlogDto } from './dto/DomainUpdateBlog.dto';
+import { Post } from '../../posts/domain/Post.entity';
 
 export const DB_BLOG_CONSTRAINTS = {
   NAME_MAX_LENGTH: 15,
@@ -27,6 +28,9 @@ export class Blog extends BaseDbEntity {
     nullable: false,
   })
   websiteUrl!: string;
+
+  @OneToMany(() => Post, (post) => post.blog)
+  posts!: Post[]
 
   update(dto: DomainUpdateBlogDto): void {
     this.name = dto.name;
