@@ -5,10 +5,7 @@ import {
 } from '../../../../core/exceptions/DomainException';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import {
-  Post,
-  TPostUserReactionModel,
-} from '../domain/Post.entity';
+import { Post, TPostUserReactionModel } from '../domain/Post.entity';
 import { LikeStatus } from '../../dto/HttpLikeStatus.dto';
 
 @Injectable()
@@ -85,7 +82,7 @@ export class PostsRepository {
     );
   }
 
-  async delete(id: string): Promise<void> {
-    await this.dataSource.query(`DELETE FROM "posts" WHERE "id" = $1;`, [id]);
+  async delete(post: Post): Promise<void> {
+    await this.postsEntityRepository.remove(post);
   }
 }
