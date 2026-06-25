@@ -1,29 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
-import { DomainCreateUserDto } from '../domain/dto/DomainCreateUser.dto';
-import { TUserModel } from '../domain/user.entity';
+import { TUserModel, User } from '../domain/user.entity';
 
 @Injectable()
 export class UsersRepository {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectRepository(User)
+    private readonly usersEntityRepository: Repository<User>,
+    @InjectDataSource() private dataSource: DataSource,
+  ) {}
 
-  async findById(id: string): Promise<TUserModel | null> {
-    const rows = await this.dataSource.query<TUserModel[]>(
-      `SELECT * FROM "users" WHERE "id" = $1 LIMIT 1;`,
-      [id],
-    );
-    return rows[0] ?? null;
+  async findById(id: string): Promise<User | null> {
+    return this.usersEntityRepository.findOneBy({ id });
   }
 
-  async findByIdOrThrow(id: string): Promise<TUserModel> {
-    const userDocument = await this.findById(id);
+  async findByIdOrThrow(id: string): Promise<User> {
+    const user = await this.findById(id);
 
-    if (!userDocument) {
+    if (!user) {
       throw new DomainException(
         DomainExceptionStatus.NotFound,
         `User with id ${id} not found`,
@@ -31,21 +30,17 @@ export class UsersRepository {
       );
     }
 
-    return userDocument;
+    return user;
   }
 
-  async findByEmail(email: string): Promise<TUserModel | null> {
-    const rows = await this.dataSource.query<TUserModel[]>(
-      `SELECT * FROM "users" WHERE "email" = $1 LIMIT 1;`,
-      [email],
-    );
-    return rows[0] ?? null;
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersEntityRepository.findOneBy({ email });
   }
 
-  async findByEmailOrThrow(email: string): Promise<TUserModel> {
-    const userDocument = await this.findByEmail(email);
+  async findByEmailOrThrow(email: string): Promise<User> {
+    const user = await this.findByEmail(email);
 
-    if (!userDocument) {
+    if (!user) {
       throw new DomainException(
         DomainExceptionStatus.NotFound,
         `User with email ${email} not found`,
@@ -53,23 +48,22 @@ export class UsersRepository {
       );
     }
 
-    return userDocument;
+    return user;
   }
 
-  async findByLogin(login: string): Promise<TUserModel | null> {
-    const rows = await this.dataSource.query<TUserModel[]>(
-      `SELECT * FROM "users" WHERE "login" = $1 LIMIT 1;`,
-      [login],
-    );
-    return rows[0] ?? null;
+  async findByLogin(login: string): Promise<User | null> {
+    return this.usersEntityRepository.findOneBy({ login });
   }
 
-  async findByLoginOrEmail(loginOrEmail: string): Promise<TUserModel | null> {
-    const rows = await this.dataSource.query<TUserModel[]>(
-      `SELECT * FROM "users" WHERE "login" = $1 OR "email" = $1 LIMIT 1;`,
-      [loginOrEmail],
-    );
-    return rows[0] ?? null;
+  async findByLoginOrEmail(loginOrEmail: string): Promise<User | null> {
+    return this.usersEntityRepository.findOneBy([
+      { login: loginOrEmail },
+      { email: loginOrEmail },
+    ]);
+  }
+
+  async save(user: User): Promise<void> {
+    await this.usersEntityRepository.save(user);
   }
 
   async findByConfirmationCode(
@@ -102,17 +96,6 @@ export class UsersRepository {
       [recoveryCode],
     );
     return rows[0] ?? null;
-  }
-
-  async create(dto: DomainCreateUserDto): Promise<string> {
-    const { login, email, passwordHash } = dto;
-    const res = await this.dataSource.query(
-      `INSERT INTO "users"
-        ("login", "email", "passwordHash")
-        VALUES ($1, $2, $3) RETURNING "id";`,
-      [login, email, passwordHash],
-    );
-    return res[0].id;
   }
 
   async updatePasswordHash(
