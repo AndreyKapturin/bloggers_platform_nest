@@ -7,10 +7,8 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import {
   Post,
-  TPostModel,
   TPostUserReactionModel,
 } from '../domain/Post.entity';
-import { DomainUpdatePostDto } from '../domain/dto/DomainUpdatePost.dto';
 import { LikeStatus } from '../../dto/HttpLikeStatus.dto';
 
 @Injectable()
@@ -39,11 +37,11 @@ export class PostsRepository {
     return rows[0] ?? null;
   }
 
-  async findById(id: string): Promise<TPostModel | null> {
+  async findById(id: string): Promise<Post | null> {
     return this.postsEntityRepository.findOneBy({ id });
   }
 
-  async findByIdOrThrow(id: string): Promise<TPostModel> {
+  async findByIdOrThrow(id: string): Promise<Post> {
     const post = await this.findById(id);
 
     if (!post) {
@@ -71,18 +69,6 @@ export class PostsRepository {
           "postReactions" ("postId", "userId", "status")
         VALUES ($1, $2, $3);`,
       [postId, userId, newLikeStatus],
-    );
-  }
-
-  async update(postId: string, dto: DomainUpdatePostDto): Promise<void> {
-    await this.dataSource.query(
-      `UPDATE "posts"
-      SET
-        "title" = $1,
-        "shortDescription" = $2,
-        "content" = $3
-      WHERE "id" = $4;`,
-      [dto.title, dto.shortDescription, dto.content, postId],
     );
   }
 
