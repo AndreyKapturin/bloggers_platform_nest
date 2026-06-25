@@ -118,11 +118,7 @@ export class UsersRepository {
     );
   }
 
-  async delete(id: string): Promise<boolean> {
-    const [_, deletedCount] = await this.dataSource.query(
-      `DELETE FROM "users" WHERE "id" = $1;`,
-      [id],
-    );
-    return deletedCount !== 0;
+  async delete(user: User): Promise<void> {
+    await this.usersEntityRepository.remove(user);
   }
 }
