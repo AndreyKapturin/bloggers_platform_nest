@@ -1,6 +1,7 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToOne } from 'typeorm';
 import { BaseDbEntity } from '../../../../core/BaseDbEntity';
 import { DomainCreateUserDto } from './dto/DomainCreateUser.dto';
+import { EmailConfirmationCode } from './email-confirmation-code.entity';
 
 export const USER_CONSTRAINTS = {
   LOGIN_MIN_LENGTH: 3,
@@ -31,6 +32,22 @@ export class User extends BaseDbEntity {
 
   @Column({ type: 'boolean', default: false })
   isConfirmed!: boolean;
+
+  @OneToOne(
+    () => EmailConfirmationCode,
+    (emailConfirmationCode) => emailConfirmationCode.user,
+    { cascade: true },
+  )
+  confirmationCode!: EmailConfirmationCode | null;
+
+  setConfirmationCode(code: string, codeExpirationDate: Date): void {
+    if (this.confirmationCode) {
+      this.confirmationCode.code = code;
+      this.confirmationCode.codeExpirationDate = codeExpirationDate;
+    } else {
+      this.confirmationCode = EmailConfirmationCode.create(code, codeExpirationDate, this)
+    }
+  }
 
   static create(dto: DomainCreateUserDto) {
     const user = new this();

@@ -34,7 +34,16 @@ export class UsersRepository {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.usersEntityRepository.findOneBy({ email });
+    return this.usersEntityRepository.findOne({
+      where: { email },
+    });
+  }
+
+  async findByEmailWithCode(email: string): Promise<User | null> {
+    return this.usersEntityRepository.findOne({
+      where: { email },
+      relations: ['confirmationCode'],
+    });
   }
 
   async findByEmailOrThrow(email: string): Promise<User> {
@@ -69,18 +78,9 @@ export class UsersRepository {
   async findByConfirmationCode(
     confirmationCode: string,
   ): Promise<TUserModel | null> {
-    const rows = await this.dataSource.query<TUserModel[]>(
-      `SELECT "u".*
-        FROM
-	        "emailConfirmationCodes" "ecc"
-	      LEFT JOIN
-          "users" "u" ON "u"."id" = "ecc"."userId"
-        WHERE
-	        "ecc"."code" = $1
-        LIMIT 1;`,
-      [confirmationCode],
-    );
-    return rows[0] ?? null;
+    return this.usersEntityRepository.findOne({
+      where: { confirmationCode: { code: confirmationCode } },
+    });
   }
 
   async findByRecoveryCode(recoveryCode: string): Promise<TUserModel | null> {

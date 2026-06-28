@@ -42,6 +42,7 @@ import { RecoveryCodesRepository } from './users/infrastructure/recovery-codes.r
 import { EmailConfirmationCodesRepository } from './users/infrastructure/email-confirmation-codes.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/domain/user.entity';
+import { EmailConfirmationCode } from './users/domain/email-confirmation-code.entity';
 
 const useCases = [
   CreateUserUseCase,
@@ -70,7 +71,7 @@ const queryHandlers = [
     PassportModule,
     JwtModule,
     NotificationModule,
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, EmailConfirmationCode]),
   ],
   controllers: [UsersController, AuthController, SecurityDevicesController],
   providers: [
