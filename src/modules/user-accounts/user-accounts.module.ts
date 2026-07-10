@@ -18,7 +18,6 @@ import {
 import { UserAccountsConfig } from './user-accounts.config';
 import { DeviceSessionsRepository } from './auth/infrastructure/DeviceSessions.repository';
 import { JwtRefreshStrategy } from './auth/strategies/jwt/JwtRefresh.strategy';
-import { SecurityDevicesQueryRepository } from './security/infrastructure/SecurityDevices.query-repository';
 import { SecurityDevicesController } from './security/api/security.controller';
 import { GetSecurityDevicesQueryHandler } from './security/application/queries/get-security-devices.query';
 import { DeleteSecurityDeviceUseCase } from './security/application/usecases/delete-security-device.command';
@@ -44,6 +43,7 @@ import { User } from './users/domain/user.entity';
 import { EmailConfirmationCode } from './users/domain/email-confirmation-code.entity';
 import { PasswordRecoveryCode } from './users/domain/password-recovery-code.entity';
 import { DeviceSession } from './auth/domain/DeviceSession.entity';
+import { DeviceSessionsQueryRepository } from './auth/infrastructure/DeviceSessions.query-repository';
 
 const useCases = [
   CreateUserUseCase,
@@ -91,7 +91,6 @@ const queryHandlers = [
     LocalStrategy,
     JwtStrategy,
     JwtRefreshStrategy,
-    SecurityDevicesQueryRepository,
     {
       provide: JWT_AT_SERVICE,
       useFactory: (userAccountsConfig: UserAccountsConfig) => {
@@ -115,6 +114,7 @@ const queryHandlers = [
     JwtTokensService,
     BasicStrategy,
     DeviceSessionsRepository,
+    DeviceSessionsQueryRepository,
     ...useCases,
     ...queryHandlers,
   ],

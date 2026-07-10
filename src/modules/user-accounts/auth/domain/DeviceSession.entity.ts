@@ -2,15 +2,6 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { User } from '../../users/domain/user.entity';
 import { DomainCreateDeviceSessionDto } from './dto/DomainCreateDeviceSession.dto';
 
-export type TDeviceSessionModel = {
-  userId: string;
-  deviceId: string;
-  deviceName: string;
-  ip: string;
-  tokenIat: Date;
-  tokenExp: Date;
-};
-
 @Entity({ name: 'deviceSessions' })
 export class DeviceSession {
   @PrimaryColumn('uuid')

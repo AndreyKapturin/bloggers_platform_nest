@@ -1,6 +1,6 @@
 import { IQueryHandler, Query, QueryHandler } from '@nestjs/cqrs';
 import { ViewSecurityDevice } from '../../api/dto/ViewSecurityDevice.dto';
-import { SecurityDevicesQueryRepository } from '../../infrastructure/SecurityDevices.query-repository';
+import { DeviceSessionsQueryRepository } from '../../../auth/infrastructure/DeviceSessions.query-repository';
 
 export class GetSecurityDevicesQuery extends Query<ViewSecurityDevice[]> {
   constructor(public userId: string) {
@@ -14,10 +14,10 @@ export class GetSecurityDevicesQueryHandler implements IQueryHandler<
   ViewSecurityDevice[]
 > {
   constructor(
-    private securityDevicesQueryRepository: SecurityDevicesQueryRepository,
+    private deviceSessionsQueryRepository: DeviceSessionsQueryRepository,
   ) {}
   execute(query: GetSecurityDevicesQuery): Promise<ViewSecurityDevice[]> {
-    return this.securityDevicesQueryRepository.findActiveDevicesForUser(
+    return this.deviceSessionsQueryRepository.findAllActiveForUser(
       query.userId,
     );
   }
