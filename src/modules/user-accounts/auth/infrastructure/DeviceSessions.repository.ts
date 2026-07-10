@@ -1,15 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import {
-  DeviceSession,
-  TDeviceSessionModel,
-} from '../domain/DeviceSession.entity';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DeviceSession } from '../domain/DeviceSession.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class DeviceSessionsRepository {
   constructor(
-    @InjectDataSource() private dataSource: DataSource,
     @InjectRepository(DeviceSession)
     private readonly deviceSessionEntityRepo: Repository<DeviceSession>,
   ) {}
@@ -25,11 +21,7 @@ export class DeviceSessionsRepository {
     return this.deviceSessionEntityRepo.findOneBy({ deviceId, userId });
   }
 
-  async delete(deviceId: string): Promise<void> {
-    await this.dataSource.query<TDeviceSessionModel[]>(
-      `DELETE FROM "deviceSessions" 
-      WHERE "deviceId" = $1`,
-      [deviceId],
-    );
+  async delete(deviceSession: DeviceSession): Promise<void> {
+    await this.deviceSessionEntityRepo.remove(deviceSession);
   }
 }

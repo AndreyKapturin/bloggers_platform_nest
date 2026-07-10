@@ -39,6 +39,6 @@ export class LogoutUseCase implements ICommandHandler<LogoutCommand, void> {
       );
     }
 
-    await this.deviceSessionRepository.delete(deviceId);
+    await this.deviceSessionRepository.delete(deviceSession);
   }
 }
