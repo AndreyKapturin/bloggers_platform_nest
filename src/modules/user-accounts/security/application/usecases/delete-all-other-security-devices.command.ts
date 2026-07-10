@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { SecurityDevicesRepository } from '../../infrastructure/SecurityDevices.repository';
+import { DeviceSessionsRepository } from '../../../auth/infrastructure/DeviceSessions.repository';
 
 export class DeleteAllOtherSecurityDevicesCommand {
   constructor(
@@ -13,7 +13,7 @@ export class DeleteAllOtherSecurityDeviceUseCase implements ICommandHandler<
   DeleteAllOtherSecurityDevicesCommand,
   void
 > {
-  constructor(private deviceSessionRepository: SecurityDevicesRepository) {}
+  constructor(private deviceSessionRepository: DeviceSessionsRepository) {}
 
   async execute(command: DeleteAllOtherSecurityDevicesCommand): Promise<void> {
     const { deviceId, userId } = command;
