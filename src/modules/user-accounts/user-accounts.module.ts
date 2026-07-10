@@ -44,6 +44,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/domain/user.entity';
 import { EmailConfirmationCode } from './users/domain/email-confirmation-code.entity';
 import { PasswordRecoveryCode } from './users/domain/password-recovery-code.entity';
+import { DeviceSession } from './auth/domain/DeviceSession.entity';
 
 const useCases = [
   CreateUserUseCase,
@@ -76,6 +77,7 @@ const queryHandlers = [
       User,
       EmailConfirmationCode,
       PasswordRecoveryCode,
+      DeviceSession,
     ]),
   ],
   controllers: [UsersController, AuthController, SecurityDevicesController],
