@@ -4,6 +4,7 @@ import { UsersRepository } from '../../../users/infrastructure/users.repository'
 import { UserAccountsConfig } from '../../../user-accounts.config';
 import { EmailService } from '../../../../notification/email.service';
 import { RecoveryCodesRepository } from '../../../users/infrastructure/recovery-codes.repository';
+import { PasswordRecoveryCode } from '../../../users/domain/password-recovery-code.entity';
 
 export class PasswordRecoveryCommand extends Command<void> {
   constructor(public email: string) {
@@ -27,19 +28,17 @@ export class PasswordRecoveryUseCase implements ICommandHandler<
     const user = await this.usersRepository.findByEmail(command.email);
     if (!user) return;
 
-    const recoveryCode = crypto.randomUUID();
+    const code = crypto.randomUUID();
     const codeExpirationDate = DateUtils.getDatePlusMinutes(
       this.userAccountsConfig.recoveryCodeTtlMinutes,
     );
 
-    await this.recoveryCodesRepository.create(
-      user.id,
-      recoveryCode,
-      codeExpirationDate,
-    );
+    const passwordRecoveryCode = PasswordRecoveryCode.create(code, codeExpirationDate, user);
+
+    await this.recoveryCodesRepository.save(passwordRecoveryCode);
 
     this.emailService
-      .sendRecoveryCode(user.email, recoveryCode)
+      .sendRecoveryCode(user.email, code)
       .catch((error) => console.log('Send recovery code error: ', error));
   }
 }

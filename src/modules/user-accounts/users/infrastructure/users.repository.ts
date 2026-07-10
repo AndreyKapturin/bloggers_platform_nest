@@ -5,7 +5,7 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
-import { TUserModel, User } from '../domain/user.entity';
+import { User } from '../domain/user.entity';
 
 @Injectable()
 export class UsersRepository {
@@ -82,39 +82,11 @@ export class UsersRepository {
     });
   }
 
-  async findByRecoveryCode(recoveryCode: string): Promise<TUserModel | null> {
-    const rows = await this.dataSource.query<TUserModel[]>(
-      `SELECT "u".*
-        FROM
-	        "passwordRecoveryCodes" "prc"
-	      LEFT JOIN
-          "users" "u" ON "u"."id" = "prc"."userId"
-        WHERE
-	        "prc"."code" = $1
-        LIMIT 1;`,
-      [recoveryCode],
-    );
-    return rows[0] ?? null;
-  }
-
-  async updatePasswordHash(
-    userId: string,
-    newPasswordHash: string,
-  ): Promise<void> {
-    await this.dataSource.query(
-      `UPDATE "users" SET "passwordHash" = $1 WHERE "id" = $2`,
-      [newPasswordHash, userId],
-    );
-  }
-
-  async updateConfirmationStatus(
-    userId: string,
-    status: boolean,
-  ): Promise<void> {
-    await this.dataSource.query(
-      `UPDATE "users" SET "isConfirmed" = $1 WHERE "id" = $2`,
-      [status, userId],
-    );
+  async findByRecoveryCode(recoveryCode: string): Promise<User | null> {
+     return this.usersEntityRepository.findOne({
+      where: { passwordRecoveryCode: { code: recoveryCode } },
+      relations: { passwordRecoveryCode: true },
+    });
   }
 
   async delete(user: User): Promise<void> {

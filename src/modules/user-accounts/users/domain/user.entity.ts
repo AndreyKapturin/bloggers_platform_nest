@@ -2,6 +2,7 @@ import { Column, Entity, OneToOne } from 'typeorm';
 import { BaseDbEntity } from '../../../../core/BaseDbEntity';
 import { DomainCreateUserDto } from './dto/DomainCreateUser.dto';
 import { EmailConfirmationCode } from './email-confirmation-code.entity';
+import { PasswordRecoveryCode } from './password-recovery-code.entity';
 
 export const USER_CONSTRAINTS = {
   LOGIN_MIN_LENGTH: 3,
@@ -39,6 +40,12 @@ export class User extends BaseDbEntity {
   })
   confirmationCode!: EmailConfirmationCode | null;
 
+  @OneToOne(() => PasswordRecoveryCode, (code) => code.user, {
+    nullable: true,
+    cascade: true,
+  })
+  passwordRecoveryCode!: PasswordRecoveryCode | null;
+
   setConfirmationCode(code: string, codeExpirationDate: Date): void {
     if (this.confirmationCode) {
       this.confirmationCode.code = code;
@@ -58,6 +65,14 @@ export class User extends BaseDbEntity {
 
   deleteConfirmationCode() {
     this.confirmationCode = null;
+  }
+
+  setNewPasswordHash(passwordHash: string): void {
+    this.passwordHash = passwordHash;
+  }
+
+  deletePasswordRecoveryCode() {
+    this.passwordRecoveryCode = null;
   }
 
   static create(dto: DomainCreateUserDto) {
