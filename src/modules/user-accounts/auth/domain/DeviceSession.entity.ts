@@ -35,6 +35,11 @@ export class DeviceSession {
   @Column({ type: 'uuid', nullable: false })
   userId!: string;
 
+  updateTokenIatAndExpDates(tokenIat: Date, tokenExp: Date) {
+    this.tokenExp = tokenExp;
+    this.tokenIat = tokenIat;
+  }
+
   static create(dto: DomainCreateDeviceSessionDto): DeviceSession {
     const deviceSession = new this();
     deviceSession.deviceId = dto.deviceId;

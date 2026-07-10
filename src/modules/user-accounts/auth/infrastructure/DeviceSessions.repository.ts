@@ -25,20 +25,6 @@ export class DeviceSessionsRepository {
     return this.deviceSessionEntityRepo.findOneBy({ deviceId, userId });
   }
 
-  async updateTokenIatAndExp(
-    deviceId: string,
-    userId: string,
-    tokenIat: Date,
-    tokenExp: Date,
-  ): Promise<void> {
-    await this.dataSource.query<TDeviceSessionModel[]>(
-      `UPDATE "deviceSessions" 
-      SET "tokenIat" = $1, "tokenExp" = $2
-      WHERE "deviceId" = $3 AND "userId" = $4`,
-      [tokenIat, tokenExp, deviceId, userId],
-    );
-  }
-
   async delete(deviceId: string): Promise<void> {
     await this.dataSource.query<TDeviceSessionModel[]>(
       `DELETE FROM "deviceSessions" 
