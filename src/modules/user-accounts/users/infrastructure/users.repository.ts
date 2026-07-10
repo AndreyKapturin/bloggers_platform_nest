@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import {
   DomainException,
   DomainExceptionStatus,
@@ -12,7 +12,6 @@ export class UsersRepository {
   constructor(
     @InjectRepository(User)
     private readonly usersEntityRepository: Repository<User>,
-    @InjectDataSource() private dataSource: DataSource,
   ) {}
 
   async findById(id: string): Promise<User | null> {
@@ -83,7 +82,7 @@ export class UsersRepository {
   }
 
   async findByRecoveryCode(recoveryCode: string): Promise<User | null> {
-     return this.usersEntityRepository.findOne({
+    return this.usersEntityRepository.findOne({
       where: { passwordRecoveryCode: { code: recoveryCode } },
       relations: { passwordRecoveryCode: true },
     });

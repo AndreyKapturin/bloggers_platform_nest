@@ -11,15 +11,6 @@ export const USER_CONSTRAINTS = {
   PASSWORD_MAX_LENGTH: 20,
 };
 
-export type TUserModel = {
-  id: string;
-  login: string;
-  email: string;
-  passwordHash: string;
-  createdAt: Date;
-  isConfirmed: boolean;
-};
-
 @Entity('users')
 export class User extends BaseDbEntity {
   @Column({ type: 'varchar', nullable: false, unique: true })
