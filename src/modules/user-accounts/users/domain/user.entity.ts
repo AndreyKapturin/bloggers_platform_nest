@@ -33,11 +33,10 @@ export class User extends BaseDbEntity {
   @Column({ type: 'boolean', default: false })
   isConfirmed!: boolean;
 
-  @OneToOne(
-    () => EmailConfirmationCode,
-    (emailConfirmationCode) => emailConfirmationCode.user,
-    { cascade: true },
-  )
+  @OneToOne(() => EmailConfirmationCode, (code) => code.user, {
+    nullable: true,
+    cascade: true,
+  })
   confirmationCode!: EmailConfirmationCode | null;
 
   setConfirmationCode(code: string, codeExpirationDate: Date): void {
@@ -45,12 +44,25 @@ export class User extends BaseDbEntity {
       this.confirmationCode.code = code;
       this.confirmationCode.codeExpirationDate = codeExpirationDate;
     } else {
-      this.confirmationCode = EmailConfirmationCode.create(code, codeExpirationDate, this)
+      this.confirmationCode = EmailConfirmationCode.create(
+        code,
+        codeExpirationDate,
+        this,
+      );
     }
+  }
+
+  confirmRegistration() {
+    this.isConfirmed = true;
+  }
+
+  deleteConfirmationCode() {
+    this.confirmationCode = null;
   }
 
   static create(dto: DomainCreateUserDto) {
     const user = new this();
+    user.confirmationCode = null;
     user.login = dto.login;
     user.email = dto.email;
     user.passwordHash = dto.passwordHash;

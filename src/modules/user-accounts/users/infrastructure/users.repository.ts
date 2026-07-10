@@ -75,11 +75,10 @@ export class UsersRepository {
     await this.usersEntityRepository.save(user);
   }
 
-  async findByConfirmationCode(
-    confirmationCode: string,
-  ): Promise<TUserModel | null> {
+  async findByConfirmationCode(confirmationCode: string): Promise<User | null> {
     return this.usersEntityRepository.findOne({
       where: { confirmationCode: { code: confirmationCode } },
+      relations: { confirmationCode: true },
     });
   }
 

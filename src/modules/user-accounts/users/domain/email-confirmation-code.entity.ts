@@ -15,8 +15,11 @@ export class EmailConfirmationCode {
 
   @OneToOne(() => User, (user) => user.confirmationCode, { nullable: false })
   @Index({ unique: true })
-  @JoinColumn()
+  @JoinColumn({ name: 'userId' })
   user!: User;
+
+  @Column({ type: 'uuid' })
+  userId!: string;
 
   @Column({ type: 'varchar', nullable: false })
   code!: string;
