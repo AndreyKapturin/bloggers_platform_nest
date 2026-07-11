@@ -1,59 +1,73 @@
 import { Injectable } from '@nestjs/common';
 import {
+  Post,
   TExtendedPost,
   TExtendedPostWithLikes,
   TNewestLike,
   TViewNewestLike,
   type TPostModel,
 } from '../domain/Post.entity';
-import { ViewPostDto } from '../api/dto/VIewPost.dto';
+import { ViewPostDto } from '../api/dto/ViewPost.dto';
 import { PostsQueryParamsDto } from '../api/dto/PostQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
+import { PostReaction } from '../domain/PostReaction.entity';
 
 @Injectable()
 export class PostsQueryRepository {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectDataSource() private dataSource: DataSource,
+    @InjectRepository(Post)
+    private readonly postEntityRepo: Repository<Post>,
+    @InjectRepository(PostReaction)
+    private readonly postReactionsEntityRepo: Repository<PostReaction>,
+  ) {}
 
   async findById(postId: string, userId: string | null): Promise<ViewPostDto> {
-    const rows = await this.dataSource.query<TExtendedPost>(
-      `SELECT 
-        "p"."id",
-        "p"."title",
-        "p"."shortDescription",
-        "p"."content",
-        "p"."blogId",
-        "b"."name" AS "blogName",
-        "p"."createdAt",
-        COUNT(CASE WHEN "pr"."status" = 'Like' THEN 1 END)::integer AS "likesCount",
-        COUNT(CASE WHEN "pr"."status" = 'Dislike' THEN 1 END)::integer AS "dislikesCount",
-        CASE WHEN "ur"."status" IS NULL THEN 'None' ELSE "ur"."status" END AS "myStatus"
-      FROM "posts" "p"
-      LEFT JOIN "blogs" "b" ON "b"."id" = "p"."blogId"
-      LEFT JOIN "postReactions" "pr" ON "pr"."postId" = "p"."id"
-      LEFT JOIN "postReactions" "ur" ON
-        "ur"."postId" = "p"."id" AND
-        "ur"."userId" = $2
-      WHERE "p"."id" = $1
-      GROUP BY
-        "p"."id",
+    const post = await this.postEntityRepo
+      .createQueryBuilder('p')
+      .leftJoin('p.blog', 'b')
+      .leftJoin('p.reactions', 'pr')
+      .leftJoin('p.reactions', 'ur', 'ur.userId = :userId', { userId })
+      .select('p.id', 'id')
+      .addSelect('p.title', 'title')
+      .addSelect('p.shortDescription', 'shortDescription')
+      .addSelect('p.content', 'content')
+      .addSelect('p.blogId', 'blogId')
+      .addSelect('p.createdAt', 'createdAt')
+      .addSelect('b.name', 'blogName')
+      .addSelect(
+        `COUNT(CASE WHEN "pr"."status" = 'Like' THEN 1 END)::int`,
+        'likesCount',
+      )
+      .addSelect(
+        `COUNT(CASE WHEN "pr"."status" = 'Dislike' THEN 1 END)::int`,
+        'dislikesCount',
+      )
+      .addSelect(
+        `CASE WHEN "ur"."status" IS NULL THEN 'None' ELSE "ur"."status" END`,
+        'myStatus',
+      )
+      .where('p.id = :postId', { postId })
+      .limit(1)
+      .groupBy(
+        `"p"."id",
         "p"."title",
         "p"."shortDescription",
         "p"."content",
         "p"."blogId",
         "b"."name",
         "p"."createdAt",
-        "ur"."status"
-      LIMIT 1;`,
-      [postId, userId],
-    );
+        "ur"."status"`,
+      )
+      .getRawOne<TExtendedPost>();
 
-    if (!rows[0]) {
+    if (!post) {
       throw new DomainException(
         DomainExceptionStatus.NotFound,
         `Post with id ${postId} not found`,
@@ -64,7 +78,7 @@ export class PostsQueryRepository {
     const newestLikes = await this._findNewestLikesForPost(postId);
 
     const postWithLikes: TExtendedPostWithLikes = {
-      ...rows[0],
+      ...post,
       newestLikes,
     };
 
@@ -195,7 +209,7 @@ export class PostsQueryRepository {
   private async _findNewestLikesForPost(
     postId: string,
   ): Promise<TViewNewestLike[]> {
-    return this.dataSource.query<TViewNewestLike[]>(
+    return this.postReactionsEntityRepo.query<TViewNewestLike[]>(
       `SELECT
         "pr"."userId",
         "u"."login",

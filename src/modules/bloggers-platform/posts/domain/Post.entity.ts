@@ -1,9 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { LikeStatus } from '../../dto/HttpLikeStatus.dto';
 import { BaseDbEntity } from '../../../../core/BaseDbEntity';
 import { Blog } from '../../blogs/domain/blog.entity';
 import { DomainCreatePostDto } from './dto/DomainCreatePost.dto';
 import { DomainUpdatePostDto } from './dto/DomainUpdatePost.dto';
+import { PostReaction } from './PostReaction.entity';
 
 export const DB_POST_CONSTRAINTS = {
   TITLE_MAX_LENGTH: 30,
@@ -44,13 +45,6 @@ export type TExtendedPostWithLikes = TExtendedPost & {
   newestLikes: TViewNewestLike[];
 };
 
-export type TPostUserReactionModel = {
-  userId: string;
-  commentId: string;
-  status: LikeStatus;
-  addedAt: Date;
-};
-
 export type TNewestLike = {
   postId: string;
   userId: string;
@@ -86,6 +80,9 @@ export class Post extends BaseDbEntity {
 
   @JoinColumn()
   blogId!: string;
+
+  @OneToMany(() => PostReaction, (reaction) => reaction.post)
+  reactions!: PostReaction[];
 
   update(dto: DomainUpdatePostDto): void {
     this.title = dto.title;

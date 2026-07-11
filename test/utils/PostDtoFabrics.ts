@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { HttpCreateBlogPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreateBlogPost.dto';
 import { HttpCreatePostDto } from '../../src/modules/bloggers-platform/posts/api/dto/HttpCreatePost.dto';
-import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/VIewPost.dto';
+import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/ViewPost.dto';
 import { LIKE_STATUSES_REG_EXP } from './reg-exp';
 import { expectedNewestLike } from './SA_PostsTestHelper';
 

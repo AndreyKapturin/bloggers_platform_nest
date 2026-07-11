@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ViewPostDto } from './dto/VIewPost.dto';
+import { ViewPostDto } from './dto/ViewPost.dto';
 import { PostsQueryParamsDto } from './dto/PostQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { CommentsQueryParamsDto } from '../../comments/api/dto/CommentsQueryParams.dto';

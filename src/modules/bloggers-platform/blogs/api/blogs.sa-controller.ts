@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { PostsQueryParamsDto } from '../../posts/api/dto/PostQueryParams.dto';
-import { ViewPostDto } from '../../posts/api/dto/VIewPost.dto';
+import { ViewPostDto } from '../../posts/api/dto/ViewPost.dto';
 import { BasicAuthGuard } from '../../../user-accounts/auth/strategies/basic/Basic.guard';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetPostsQuery } from '../../posts/application/queries/get-posts.query';
