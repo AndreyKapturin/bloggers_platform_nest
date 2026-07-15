@@ -1,8 +1,4 @@
-import {
-  Comment,
-  TCommentModel,
-  TCommentUserReactionModel,
-} from '../domain/comment.entity';
+import { Comment, TCommentUserReactionModel } from '../domain/comment.entity';
 import { Injectable } from '@nestjs/common';
 import {
   DomainException,
@@ -17,29 +13,17 @@ export class CommentsRepository {
   constructor(
     @InjectDataSource() private dataSource: DataSource,
     @InjectRepository(Comment)
-    private readonly commentEntityRepo: Repository<Comment>
+    private readonly commentEntityRepo: Repository<Comment>,
   ) {}
 
-  async findById(id: string): Promise<TCommentModel | null> {
-    const rows = await this.dataSource.query<TCommentModel>(
-      `SELECT
-        "id",
-        "content",
-        "postId",
-        "createdAt",
-        "userId"
-      FROM "comments"
-      WHERE "id" = $1
-      LIMIT 1;`,
-      [id],
-    );
-    return rows[0] ?? null;
+  async findById(id: string): Promise<Comment | null> {
+    return this.commentEntityRepo.findOneBy({ id });
   }
 
-  async findByIdOrThrow(id: string): Promise<TCommentModel> {
-    const commentDocument = await this.findById(id);
+  async findByIdOrThrow(id: string): Promise<Comment> {
+    const comment = await this.findById(id);
 
-    if (!commentDocument) {
+    if (!comment) {
       throw new DomainException(
         DomainExceptionStatus.NotFound,
         `Comment with id ${id} not found`,
@@ -47,7 +31,7 @@ export class CommentsRepository {
       );
     }
 
-    return commentDocument;
+    return comment;
   }
 
   async findUserReaction(
@@ -105,9 +89,7 @@ export class CommentsRepository {
     );
   }
 
-  async delete(id: string): Promise<void> {
-    await this.dataSource.query(`DELETE FROM "comments" WHERE "id" = $1;`, [
-      id,
-    ]);
+  async delete(comment: Comment): Promise<void> {
+    await this.commentEntityRepo.remove(comment);
   }
 }

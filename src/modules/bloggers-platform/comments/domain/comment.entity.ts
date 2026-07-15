@@ -10,14 +10,6 @@ export const COMMENT_CONTENT_CONSTRAINTS = {
   MAX_LENGTH: 300,
 };
 
-export type TCommentModel = {
-  id: string;
-  content: string;
-  postId: string;
-  userId: string;
-  createdAt: Date;
-};
-
 @Entity({ name: 'comments'})
 export class Comment extends BaseDbEntity {
   @Column({ type: 'text', nullable: false })
