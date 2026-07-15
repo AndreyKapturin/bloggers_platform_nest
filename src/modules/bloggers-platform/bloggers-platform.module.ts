@@ -33,6 +33,7 @@ import { Blog } from './blogs/domain/blog.entity';
 import { Post } from './posts/domain/Post.entity';
 import { PostReaction } from './posts/domain/PostReaction.entity';
 import { PostReactionRepository } from './posts/infrastructure/PostReaction.repository';
+import { Comment } from './comments/domain/comment.entity';
 
 const useCases = [
   CreateBlogUseCase,
@@ -60,7 +61,7 @@ const queries = [
 @Module({
   imports: [
     UserAccountsModule,
-    TypeOrmModule.forFeature([Blog, Post, PostReaction])
+    TypeOrmModule.forFeature([Blog, Post, PostReaction, Comment])
   ],
   controllers: [
     BlogsController,

@@ -1,4 +1,5 @@
 import {
+  Comment,
   TCommentModel,
   TCommentUserReactionModel,
 } from '../domain/comment.entity';
@@ -7,14 +8,17 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { DomainCreateCommentDto } from '../domain/dto/DomainCreateComment.dto';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { LikeStatus } from '../../dto/HttpLikeStatus.dto';
 
 @Injectable()
 export class CommentsRepository {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectDataSource() private dataSource: DataSource,
+    @InjectRepository(Comment)
+    private readonly commentEntityRepo: Repository<Comment>
+  ) {}
 
   async findById(id: string): Promise<TCommentModel | null> {
     const rows = await this.dataSource.query<TCommentModel>(
@@ -90,16 +94,8 @@ export class CommentsRepository {
     );
   }
 
-  async create(dto: DomainCreateCommentDto): Promise<string> {
-    const rows = await this.dataSource.query<{ id: string }[]>(
-      `INSERT INTO "comments"
-	      ("content", "postId", "userId")
-      VALUES ($1, $2, $3)
-      RETURNING "id";`,
-      [dto.content, dto.postId, dto.userId],
-    );
-
-    return rows[0].id;
+  async save(comment: Comment): Promise<void> {
+    await this.commentEntityRepo.save(comment);
   }
 
   async update(commentId: string, newContent: string): Promise<void> {
