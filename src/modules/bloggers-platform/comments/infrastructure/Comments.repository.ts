@@ -82,13 +82,6 @@ export class CommentsRepository {
     await this.commentEntityRepo.save(comment);
   }
 
-  async update(commentId: string, newContent: string): Promise<void> {
-    await this.dataSource.query(
-      `UPDATE "comments" SET "content" = $1 WHERE "id" = $2;`,
-      [newContent, commentId],
-    );
-  }
-
   async delete(comment: Comment): Promise<void> {
     await this.commentEntityRepo.remove(comment);
   }

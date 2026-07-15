@@ -10,7 +10,7 @@ export const COMMENT_CONTENT_CONSTRAINTS = {
   MAX_LENGTH: 300,
 };
 
-@Entity({ name: 'comments'})
+@Entity({ name: 'comments' })
 export class Comment extends BaseDbEntity {
   @Column({ type: 'text', nullable: false })
   content!: string;
@@ -20,7 +20,7 @@ export class Comment extends BaseDbEntity {
 
   @Column({ type: 'uuid', nullable: false })
   postId!: string;
-  
+
   @ManyToOne(() => User, { nullable: false })
   user!: User;
 
@@ -33,6 +33,10 @@ export class Comment extends BaseDbEntity {
     comment.post = dto.post;
     comment.user = dto.user;
     return comment;
+  }
+
+  updateContent(content: string) {
+    this.content = content;
   }
 }
 
