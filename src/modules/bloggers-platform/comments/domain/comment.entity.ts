@@ -51,10 +51,3 @@ export type TExtendedCommentModel = {
   dislikesCount: number;
   myStatus: LikeStatus;
 };
-
-export type TCommentUserReactionModel = {
-  userId: string;
-  commentId: string;
-  status: LikeStatus;
-  createdAt: Date;
-};

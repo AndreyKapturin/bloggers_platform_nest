@@ -1,17 +1,15 @@
-import { Comment, TCommentUserReactionModel } from '../domain/comment.entity';
+import { Comment } from '../domain/comment.entity';
 import { Injectable } from '@nestjs/common';
 import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { LikeStatus } from '../../dto/HttpLikeStatus.dto';
+import {  InjectRepository } from '@nestjs/typeorm';
+import {  Repository } from 'typeorm';
 
 @Injectable()
 export class CommentsRepository {
   constructor(
-    @InjectDataSource() private dataSource: DataSource,
     @InjectRepository(Comment)
     private readonly commentEntityRepo: Repository<Comment>,
   ) {}
@@ -32,50 +30,6 @@ export class CommentsRepository {
     }
 
     return comment;
-  }
-
-  async findUserReaction(
-    commentId: string,
-    userId: string,
-  ): Promise<TCommentUserReactionModel | null> {
-    const rows = await this.dataSource.query<TCommentUserReactionModel[]>(
-      `SELECT
-        "userId",
-        "commentId",
-        "status",
-        "createdAt"
-      FROM "commentReactions"
-      WHERE "commentId" = $1 AND "userId" = $2
-      LIMIT 1;`,
-      [commentId, userId],
-    );
-    return rows[0] ?? null;
-  }
-
-  async createReaction(
-    commentId: string,
-    userId: string,
-    newLikeStatus: LikeStatus,
-  ): Promise<void> {
-    await this.dataSource.query(
-      `INSERT INTO "commentReactions"
-        ("commentId", "userId", "status")
-      VALUES ($1, $2, $3);`,
-      [commentId, userId, newLikeStatus],
-    );
-  }
-
-  async changeReactionStatus(
-    commentId: string,
-    userId: string,
-    newLikeStatus: LikeStatus,
-  ): Promise<void> {
-    await this.dataSource.query(
-      `UPDATE "commentReactions"
-        SET "status" = $1
-      WHERE "commentId" = $2 AND "userId" = $3;`,
-      [newLikeStatus, commentId, userId],
-    );
   }
 
   async save(comment: Comment): Promise<void> {
