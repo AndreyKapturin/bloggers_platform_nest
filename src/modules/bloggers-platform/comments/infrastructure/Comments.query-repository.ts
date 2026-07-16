@@ -3,13 +3,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ViewCommentDto } from '../api/dto/ViewComment.dto';
 import { CommentsQueryParamsDto } from '../api/dto/CommentsQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { SortDirection } from '../../../../core/dto/BaseQueryParams.dto';
 
 @Injectable()
 export class CommentsQueryRepository {
   constructor(
-    @InjectDataSource() private dataSource: DataSource,
     @InjectRepository(Comment)
     private readonly commentEntityRepo: Repository<Comment>,
   ) {}
@@ -22,7 +22,12 @@ export class CommentsQueryRepository {
       .createQueryBuilder('c')
       .leftJoin('users', 'u', '"u"."id" = "c"."userId"')
       .leftJoin('commentReactions', 'cr', '"cr"."commentId" = "c"."id"')
-      .leftJoin('commentReactions', 'ur', `"ur"."commentId" = "c"."id" AND "ur"."userId" = :userId`, { userId })
+      .leftJoin(
+        'commentReactions',
+        'ur',
+        `"ur"."commentId" = "c"."id" AND "ur"."userId" = :userId`,
+        { userId },
+      )
       .select([
         '"c"."id"',
         '"c"."content"',
@@ -31,9 +36,15 @@ export class CommentsQueryRepository {
         '"c"."userId"',
         '"u"."login" AS "userLogin"',
       ])
-      .addSelect(`COUNT(CASE WHEN "cr"."status" = 'Like' THEN 1 END)::integer AS "likesCount"`)
-      .addSelect(`COUNT(CASE WHEN "cr"."status" = 'Dislike' THEN 1 END)::integer AS "dislikesCount"`)
-      .addSelect(`CASE WHEN "ur"."status" IS NULL THEN 'None' ELSE "ur"."status" END AS "myStatus"`)
+      .addSelect(
+        `COUNT(CASE WHEN "cr"."status" = 'Like' THEN 1 END)::integer AS "likesCount"`,
+      )
+      .addSelect(
+        `COUNT(CASE WHEN "cr"."status" = 'Dislike' THEN 1 END)::integer AS "dislikesCount"`,
+      )
+      .addSelect(
+        `CASE WHEN "ur"."status" IS NULL THEN 'None' ELSE "ur"."status" END AS "myStatus"`,
+      )
       .where(`"c"."id" = :commentId`, { commentId: id })
       .groupBy(
         `"c"."id",
@@ -67,41 +78,53 @@ export class CommentsQueryRepository {
   ): Promise<PaginatedView<ViewCommentDto>> {
     const { pageNumber, pageSize, skip, sortBy, sortDirection } = query;
 
-    const getPostCommentsSql = `
-      SELECT
-        "c"."id",
+    const queryBuilder = this.commentEntityRepo
+      .createQueryBuilder('c')
+      .leftJoin('users', 'u', '"u"."id" = "c"."userId"')
+      .leftJoin('commentReactions', 'cr', '"cr"."commentId" = "c"."id"')
+      .leftJoin(
+        'commentReactions',
+        'ur',
+        `"ur"."commentId" = "c"."id" AND "ur"."userId" = :userId`,
+        { userId },
+      )
+      .select([
+        '"c"."id"',
+        '"c"."content"',
+        '"c"."postId"',
+        '"c"."createdAt"',
+        '"c"."userId"',
+        '"u"."login" AS "userLogin"',
+      ])
+      .addSelect(
+        `COUNT(CASE WHEN "cr"."status" = 'Like' THEN 1 END)::integer AS "likesCount"`,
+      )
+      .addSelect(
+        `COUNT(CASE WHEN "cr"."status" = 'Dislike' THEN 1 END)::integer AS "dislikesCount"`,
+      )
+      .addSelect(
+        `CASE WHEN "ur"."status" IS NULL THEN 'None' ELSE "ur"."status" END AS "myStatus"`,
+      )
+      .where(`"c"."postId" = :postId`, { postId })
+      .groupBy(
+        `"c"."id",
         "c"."content",
         "c"."postId",
         "c"."createdAt",
         "c"."userId",
-        "u"."login" AS "userLogin",
-        COUNT(CASE WHEN "cr"."status" = 'Like' THEN 1 END)::integer AS "likesCount",
-        COUNT(CASE WHEN "cr"."status" = 'Dislike' THEN 1 END)::integer AS "dislikesCount",
-        CASE WHEN "ur"."status" IS NULL THEN 'None' ELSE "ur"."status" END AS "myStatus"
-      FROM "comments" "c"
-      LEFT JOIN "users" "u" ON "u"."id" = "c"."userId"
-      LEFT JOIN "commentReactions" "cr" ON "cr"."commentId" = "c"."id"
-      LEFT JOIN "commentReactions" "ur" ON
-        "ur"."userId" = $4 AND
-        "ur"."commentId" = "c"."id"
-      WHERE "c"."postId" = $1
-      GROUP BY "c"."id", "c"."content", "c"."postId", "c"."createdAt", "c"."userId", "u"."login", "ur"."status"
-      ORDER BY "c"."${sortBy}" ${sortDirection}
-      LIMIT $2 OFFSET $3;`;
+        "u"."login",
+        "ur"."status"`,
+      )
+      .limit(pageSize)
+      .offset(skip)
+      .orderBy(
+        `"${sortBy}"`,
+        sortDirection === SortDirection.Asc ? 'ASC' : 'DESC',
+      );
 
-    const extendedComments = await this.dataSource.query<
-      TExtendedCommentModel[]
-    >(getPostCommentsSql, [postId, pageSize, skip, userId]);
-
-    const getTotalCountSql = `
-      SELECT
-        COUNT(*)::integer as "totalCount"
-      FROM "comments"
-      WHERE "postId" = $1;`;
-
-    const [{ totalCount }] = await this.dataSource.query<
-      { totalCount: number }[]
-    >(getTotalCountSql, [postId]);
+    const extendedComments =
+      await queryBuilder.getRawMany<TExtendedCommentModel>();
+    const totalCount = await queryBuilder.getCount();
 
     const viewComments = extendedComments.map((extendedComment) =>
       ViewCommentDto.toView(extendedComment),
