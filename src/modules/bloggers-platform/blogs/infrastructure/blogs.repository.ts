@@ -6,7 +6,6 @@ import {
 } from '../../../../core/exceptions/DomainException';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DomainCreateBlogDto } from '../domain/dto/DomainCreateBlog.dto';
 
 @Injectable()
 export class BlogsRepository {
@@ -35,10 +34,6 @@ export class BlogsRepository {
     }
 
     return foundBlog;
-  }
-
-  async create(dto: DomainCreateBlogDto): Promise<Blog> {
-    return this.blogEntityRepository.create(dto);
   }
 
   async save(blog: Blog): Promise<void> {

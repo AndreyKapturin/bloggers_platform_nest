@@ -2,6 +2,7 @@ import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BlogsRepository } from '../../infrastructure/blogs.repository';
 import { plainToClass } from 'class-transformer';
 import { DomainCreateBlogDto } from '../../domain/dto/DomainCreateBlog.dto';
+import { Blog } from '../../domain/blog.entity';
 
 export class CreateBlogCommand extends Command<string> {
   constructor(
@@ -24,7 +25,7 @@ export class CreateBlogUseCase implements ICommandHandler<
 
   async execute(command: CreateBlogCommand): Promise<string> {
     const createBlogDto = plainToClass(DomainCreateBlogDto, command);
-    const blog = await this.blogsRepository.create(createBlogDto);
+    const blog = Blog.create(createBlogDto);
     await this.blogsRepository.save(blog);
     return blog.id;
   }
