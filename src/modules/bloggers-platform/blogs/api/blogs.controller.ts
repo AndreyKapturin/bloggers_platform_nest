@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { PostsQueryParamsDto } from '../../posts/api/dto/PostQueryParams.dto';
-import { ViewPostDto } from '../../posts/api/dto/VIewPost.dto';
+import { ViewPostDto } from '../../posts/api/dto/ViewPost.dto';
 import { QueryBus } from '@nestjs/cqrs';
 import { GetPostsQuery } from '../../posts/application/queries/get-posts.query';
 import { OptionalUserFromRequest } from '../../../../core/decorators/optional-user-in-request.decorator';

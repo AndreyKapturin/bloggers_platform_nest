@@ -7,7 +7,6 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../../core/exceptions/DomainException';
-import { EmailConfirmationCodesRepository } from '../../../users/infrastructure/email-confirmation-codes.repository';
 
 export class SendConfirmationCodeCommand extends Command<void> {
   constructor(public email: string) {
@@ -23,12 +22,11 @@ export class SendConfirmationCodeUseCase implements ICommandHandler<
   constructor(
     private userAccountsConfig: UserAccountsConfig,
     private usersRepository: UsersRepository,
-    private emailConfirmationCodesRepository: EmailConfirmationCodesRepository,
     private emailService: EmailService,
   ) {}
 
   async execute(command: SendConfirmationCodeCommand): Promise<void> {
-    const user = await this.usersRepository.findByEmail(command.email);
+    const user = await this.usersRepository.findByEmailWithCode(command.email);
 
     if (!user) {
       throw new DomainException(
@@ -41,8 +39,8 @@ export class SendConfirmationCodeUseCase implements ICommandHandler<
           },
         ],
       );
-    };
-    
+    }
+
     if (user.isConfirmed) {
       throw new DomainException(
         DomainExceptionStatus.InvalidData,
@@ -56,19 +54,17 @@ export class SendConfirmationCodeUseCase implements ICommandHandler<
       );
     }
 
-    const confirmationCode = crypto.randomUUID();
+    const code = crypto.randomUUID();
     const codeExpirationDate = DateUtils.getDatePlusHours(
       this.userAccountsConfig.confirmationCodeTtlHourse,
     );
 
-    await this.emailConfirmationCodesRepository.saveOrUpdate(
-      user.id,
-      confirmationCode,
-      codeExpirationDate
-    ) 
-    
+    user.setConfirmationCode(code, codeExpirationDate);
+
+    await this.usersRepository.save(user);
+
     this.emailService
-      .sendConfirmationCode(user.email, confirmationCode)
+      .sendConfirmationCode(user.email, code)
       .catch((error) => console.log('Send confirmation code error: ', error));
   }
 }

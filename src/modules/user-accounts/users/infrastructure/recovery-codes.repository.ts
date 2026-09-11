@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { PasswordRecoveryCode } from '../domain/password-recovery-code.entity';
 
 export type TRecoveryCodeModel = {
   userId: string;
@@ -10,41 +11,16 @@ export type TRecoveryCodeModel = {
 
 @Injectable()
 export class RecoveryCodesRepository {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectRepository(PasswordRecoveryCode)
+    private readonly passwordRecoveryCodeEntityRepo: Repository<PasswordRecoveryCode>,
+  ) {}
 
-  async findByCode(code: string): Promise<TRecoveryCodeModel | null> {
-    const rows = await this.dataSource.query<TRecoveryCodeModel[]>(
-      `SELECT
-        "prc"."userId",
-        "prc"."code",
-        "prc"."codeExpirationDate",
-      FROM "passwordRecoveryCodes" "prc"
-      WHERE "prc"."code" = $1
-      LIMIT 1`,
-      [code],
-    );
-
-    return rows[0] ?? null;
+  async save(passwordRecoveryCode: PasswordRecoveryCode): Promise<void> {
+    await this.passwordRecoveryCodeEntityRepo.save(passwordRecoveryCode);
   }
 
-  async create(
-    userId: string,
-    code: string,
-    codeExpirationDate: Date,
-  ): Promise<void> {
-    await this.dataSource.query(
-      `INSERT INTO "passwordRecoveryCodes"
-        ("userId", "code", "codeExpirationDate")
-      VALUES ($1, $2, $3)`,
-      [userId, code, codeExpirationDate],
-    );
-  }
-
-  async delete(code: string): Promise<boolean> {
-    const [_, deletedCount] = await this.dataSource.query(
-      `DELETE FROM "passwordRecoveryCodes" WHERE "code" = $1;`,
-      [code],
-    );
-    return deletedCount !== 0;
+  async delete(passwordRecoveryCode: PasswordRecoveryCode): Promise<void> {
+    await this.passwordRecoveryCodeEntityRepo.remove(passwordRecoveryCode);
   }
 }

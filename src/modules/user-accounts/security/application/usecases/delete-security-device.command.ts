@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { SecurityDevicesRepository } from '../../infrastructure/SecurityDevices.repository';
+import { DeviceSessionsRepository } from '../../../auth/infrastructure/DeviceSessions.repository';
 import {
   DomainException,
   DomainExceptionStatus,
@@ -17,15 +17,15 @@ export class DeleteSecurityDeviceUseCase implements ICommandHandler<
   DeleteSecurityDeviceCommand,
   void
 > {
-  constructor(private deviceSessionRepository: SecurityDevicesRepository) {}
+  constructor(private deviceSessionRepository: DeviceSessionsRepository) {}
 
   async execute(command: DeleteSecurityDeviceCommand): Promise<void> {
     const { deviceId, userId } = command;
 
-    const foundDeviceSession =
+    const deviceSession =
       await this.deviceSessionRepository.findDeviceById(deviceId);
 
-    if (!foundDeviceSession) {
+    if (!deviceSession) {
       throw new DomainException(
         DomainExceptionStatus.NotFound,
         'Device not found',
@@ -38,7 +38,7 @@ export class DeleteSecurityDeviceUseCase implements ICommandHandler<
       );
     }
 
-    if (foundDeviceSession.userId !== userId) {
+    if (deviceSession.userId !== userId) {
       throw new DomainException(
         DomainExceptionStatus.PermissionError,
         'User does not have permission to delete device',
@@ -51,6 +51,6 @@ export class DeleteSecurityDeviceUseCase implements ICommandHandler<
       );
     }
 
-    await this.deviceSessionRepository.delete(deviceId);
+    await this.deviceSessionRepository.delete(deviceSession);
   }
 }

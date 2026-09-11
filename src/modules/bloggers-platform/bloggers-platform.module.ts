@@ -28,6 +28,14 @@ import { CreatePostUseCase } from './posts/application/useCases/create-post.use-
 import { UpdatePostUseCase } from './posts/application/useCases/update-post.use-case';
 import { DeletePostUseCase } from './posts/application/useCases/delete-post.use-case';
 import { SA_BlogsController } from './blogs/api/blogs.sa-controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Blog } from './blogs/domain/blog.entity';
+import { Post } from './posts/domain/Post.entity';
+import { PostReaction } from './posts/domain/PostReaction.entity';
+import { PostReactionRepository } from './posts/infrastructure/PostReaction.repository';
+import { Comment } from './comments/domain/comment.entity';
+import { CommentReactionsRepository } from './comments/infrastructure/CommentReactions.repository';
+import { CommentReaction } from './comments/domain/CommentReaction.entity';
 
 const useCases = [
   CreateBlogUseCase,
@@ -53,7 +61,16 @@ const queries = [
 ];
 
 @Module({
-  imports: [UserAccountsModule],
+  imports: [
+    UserAccountsModule,
+    TypeOrmModule.forFeature([
+      Blog,
+      Post,
+      PostReaction,
+      Comment,
+      CommentReaction,
+    ]),
+  ],
   controllers: [
     BlogsController,
     SA_BlogsController,
@@ -65,7 +82,9 @@ const queries = [
     BlogsQueryRepository,
     PostsRepository,
     PostsQueryRepository,
+    PostReactionRepository,
     CommentsService,
+    CommentReactionsRepository,
     CommentsRepository,
     CommentsQueryRepository,
     ...useCases,

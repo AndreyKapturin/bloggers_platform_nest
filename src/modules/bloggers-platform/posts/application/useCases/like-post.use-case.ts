@@ -1,6 +1,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { LikeStatus } from '../../../dto/HttpLikeStatus.dto';
 import { PostsRepository } from '../../infrastructure/Post.repository';
+import { PostReactionRepository } from '../../infrastructure/PostReaction.repository';
+import { PostReaction } from '../../domain/PostReaction.entity';
 
 export class LikePostCommand {
   constructor(
@@ -12,24 +14,32 @@ export class LikePostCommand {
 
 @CommandHandler(LikePostCommand)
 export class LikePostUseCase implements ICommandHandler<LikePostCommand> {
-  constructor(private postsRepository: PostsRepository) {}
+  constructor(
+    private readonly postsRepository: PostsRepository,
+    private readonly postReactionRepository: PostReactionRepository,
+  ) {}
 
   async execute(command: LikePostCommand): Promise<void> {
     const { postId, userId, status: newLikeStatus } = command;
 
     await this.postsRepository.findByIdOrThrow(postId);
 
-    const oldReaction = await this.postsRepository.findUserReaction(
+    let reaction = await this.postReactionRepository.findUserReaction(
       postId,
       userId,
     );
 
-    if (oldReaction) {
-      if (oldReaction.status === newLikeStatus) return;
-      this.postsRepository.changeReactionStatus(postId, userId, newLikeStatus);
+    if (reaction) {
+      if (reaction.status === newLikeStatus) return;
+      reaction.changeStatus(newLikeStatus);
     } else {
       if (newLikeStatus === LikeStatus.None) return;
-      this.postsRepository.createReaction(postId, userId, newLikeStatus);
+      reaction = PostReaction.create({
+        status: newLikeStatus,
+        postId,
+        userId,
+      });
     }
+    await this.postReactionRepository.save(reaction);
   }
 }

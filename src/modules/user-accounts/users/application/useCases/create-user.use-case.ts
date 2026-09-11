@@ -5,6 +5,7 @@ import {
 } from '../../../../../core/exceptions/DomainException';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { CryptoService } from '../../../../../services/CryptoService';
+import { User } from '../../domain/user.entity';
 
 export class CreateUserCommand extends Command<string> {
   constructor(
@@ -61,12 +62,14 @@ export class CreateUserUseCase implements ICommandHandler<
 
     const passwordHash = await this.cryptoService.hash(password);
 
-    const userId = await this.usersRepository.create({
+    const user = User.create({
       login,
       email,
-      passwordHash,
-    });
+      passwordHash
+    })
 
-    return userId;
+    await this.usersRepository.save(user);
+
+    return user.id;
   }
 }

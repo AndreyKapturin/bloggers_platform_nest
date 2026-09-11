@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BaseConfig } from '../../core/BaseConfig';
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber } from 'class-validator';
 
 @Injectable()
 export class PgConfig extends BaseConfig {
@@ -13,6 +13,9 @@ export class PgConfig extends BaseConfig {
     this.database = configService.get('PG_DATABASE') as string;
     this.user = configService.get('PG_USER') as string;
     this.password = configService.get('PG_PASSWORD') as string;
+    this.synchronize = this.convertToBoolean(
+      configService.get('PG_SYNCHRONIZE') as string,
+    ) as boolean;
 
     this.validate();
   }
@@ -39,4 +42,9 @@ export class PgConfig extends BaseConfig {
     message: 'PG_PASSWORD is required',
   })
   password: string;
+
+  @IsBoolean({
+    message: 'PG_SYNCHRONIZE must be boolean (true/false)',
+  })
+  synchronize: boolean;
 }

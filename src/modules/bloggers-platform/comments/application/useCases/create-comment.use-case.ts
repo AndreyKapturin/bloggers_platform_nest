@@ -3,6 +3,7 @@ import { CommentsRepository } from '../../infrastructure/Comments.repository';
 import { UsersRepository } from '../../../../user-accounts/users/infrastructure/users.repository';
 import { PostsRepository } from '../../../posts/infrastructure/Post.repository';
 import { DomainCreateCommentDto } from '../../domain/dto/DomainCreateComment.dto';
+import { Comment } from '../../domain/comment.entity';
 
 export class CreateCommentCommand extends Command<string> {
   constructor(
@@ -28,15 +29,16 @@ export class CreateCommentUseCase implements ICommandHandler<
   async execute(command: CreateCommentCommand): Promise<string> {
     const { userId, postId, content } = command;
     const user = await this.usersRepository.findByIdOrThrow(userId);
-    await this.postsRepository.findByIdOrThrow(postId);
+    const post = await this.postsRepository.findByIdOrThrow(postId);
 
     const createCommentDto = new DomainCreateCommentDto(
-      postId,
       content,
-      userId,
+      post,
+      user,
     );
 
-    const commentId = await this.commentsRepository.create(createCommentDto);
-    return commentId;
+    const comment = Comment.create(createCommentDto);
+    await this.commentsRepository.save(comment);
+    return comment.id;
   }
 }

@@ -4,7 +4,6 @@ import { cleanDatabase } from '../../utils/cleanDatabase';
 import { initApp } from '../../utils/initApp';
 import { SA_BlogsTestHelper } from '../../utils/SA_BlogsTestHelper';
 import { SA_PostsTestHelper } from '../../utils/SA_PostsTestHelper';
-import { faker } from '@faker-js/faker';
 import { ViewBlogDto } from '../../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
 import { HttpCreateBlogPostDto } from '../../../src/modules/bloggers-platform/posts/api/dto/HttpCreateBlogPost.dto';
 import { Public_PostsTestHelper } from '../../utils/Public_PostsTestHelper';

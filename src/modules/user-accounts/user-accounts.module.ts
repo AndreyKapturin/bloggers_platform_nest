@@ -18,11 +18,9 @@ import {
 import { UserAccountsConfig } from './user-accounts.config';
 import { DeviceSessionsRepository } from './auth/infrastructure/DeviceSessions.repository';
 import { JwtRefreshStrategy } from './auth/strategies/jwt/JwtRefresh.strategy';
-import { SecurityDevicesQueryRepository } from './security/infrastructure/SecurityDevices.query-repository';
 import { SecurityDevicesController } from './security/api/security.controller';
 import { GetSecurityDevicesQueryHandler } from './security/application/queries/get-security-devices.query';
 import { DeleteSecurityDeviceUseCase } from './security/application/usecases/delete-security-device.command';
-import { SecurityDevicesRepository } from './security/infrastructure/SecurityDevices.repository';
 import { DeleteAllOtherSecurityDeviceUseCase } from './security/application/usecases/delete-all-other-security-devices.command';
 import { CreateUserUseCase } from './users/application/useCases/create-user.use-case';
 import { GetUserQueryHandler } from './users/application/queries/get-user.query';
@@ -40,6 +38,12 @@ import { LogoutUseCase } from './auth/application/useCases/logout.use-case';
 import { JwtTokensService } from './auth/application/JwtTokens.service';
 import { RecoveryCodesRepository } from './users/infrastructure/recovery-codes.repository';
 import { EmailConfirmationCodesRepository } from './users/infrastructure/email-confirmation-codes.repository';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './users/domain/user.entity';
+import { EmailConfirmationCode } from './users/domain/email-confirmation-code.entity';
+import { PasswordRecoveryCode } from './users/domain/password-recovery-code.entity';
+import { DeviceSession } from './auth/domain/DeviceSession.entity';
+import { DeviceSessionsQueryRepository } from './auth/infrastructure/DeviceSessions.query-repository';
 
 const useCases = [
   CreateUserUseCase,
@@ -54,20 +58,26 @@ const useCases = [
   RegistrationConfirmationUseCase,
   DeleteSecurityDeviceUseCase,
   DeleteAllOtherSecurityDeviceUseCase,
-]
+];
 
 const queryHandlers = [
   GetUserQueryHandler,
   GetUsersQueryHandler,
   GetMeQueryHandler,
   GetSecurityDevicesQueryHandler,
-]
+];
 
 @Module({
   imports: [
     PassportModule,
     JwtModule,
     NotificationModule,
+    TypeOrmModule.forFeature([
+      User,
+      EmailConfirmationCode,
+      PasswordRecoveryCode,
+      DeviceSession,
+    ]),
   ],
   controllers: [UsersController, AuthController, SecurityDevicesController],
   providers: [
@@ -81,8 +91,6 @@ const queryHandlers = [
     LocalStrategy,
     JwtStrategy,
     JwtRefreshStrategy,
-    SecurityDevicesRepository,
-    SecurityDevicesQueryRepository,
     {
       provide: JWT_AT_SERVICE,
       useFactory: (userAccountsConfig: UserAccountsConfig) => {
@@ -106,6 +114,7 @@ const queryHandlers = [
     JwtTokensService,
     BasicStrategy,
     DeviceSessionsRepository,
+    DeviceSessionsQueryRepository,
     ...useCases,
     ...queryHandlers,
   ],

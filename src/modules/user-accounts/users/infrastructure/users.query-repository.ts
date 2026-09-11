@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ViewUserDto } from '../api/dto/ViewUser.dto';
-import { TUserModel } from '../domain/user.entity';
+import { User } from '../domain/user.entity';
 import { UserQueryParamsDto } from '../api/dto/UserQueryParams.dto';
 import { PaginatedView } from '../../../../core/dto/PaginatedView.dto';
 import { ViewMeDto } from '../api/dto/ViewMe.dto';
@@ -8,21 +8,20 @@ import {
   DomainException,
   DomainExceptionStatus,
 } from '../../../../core/exceptions/DomainException';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ILike, Repository } from 'typeorm';
 
 @Injectable()
 export class UsersQueryRepository {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectRepository(User)
+    private readonly userEntityRepo: Repository<User>,
+  ) {}
 
   async findById(id: string): Promise<ViewUserDto | null> {
-    const rows = await this.dataSource.query<TUserModel[]>(
-      `SELECT * FROM "users" WHERE "id" = $1 LIMIT 1;`,
-      [id],
-    );
-    if (!rows[0]) return null;
-
-    return ViewUserDto.toView(rows[0]);
+    const user = await this.userEntityRepo.findOne({ where: { id } });
+    if (!user) return null;
+    return ViewUserDto.toView(user);
   }
 
   async findByIdOrThrow(id: string): Promise<ViewUserDto> {
@@ -57,62 +56,17 @@ export class UsersQueryRepository {
       searchLoginTerm,
     } = usersQueryDto;
 
-    const whereParams: (string | number)[] = [];
-    const conditions: string[] = [];
+    const [users, totalCount] = await this.userEntityRepo.findAndCount({
+      where: [
+        { email: searchEmailTerm ? ILike(`%${searchEmailTerm}%`) : undefined },
+        { login: searchLoginTerm ? ILike(`%${searchLoginTerm}%`) : undefined },
+      ],
+      order: { [sortBy]: sortDirection },
+      take: pageSize,
+      skip,
+    });
 
-    const fromPart = `FROM "users"`;
-    let wherePart = '';
-
-    if (searchLoginTerm) {
-      whereParams.push(`%${searchLoginTerm}%`);
-      conditions.push(`"login" ILIKE $${whereParams.length}`);
-    }
-
-    if (searchEmailTerm) {
-      whereParams.push(`%${searchEmailTerm}%`);
-      conditions.push(`"email" ILIKE $${whereParams.length}`);
-    }
-
-    if (conditions.length > 0) {
-      wherePart += 'WHERE ' + conditions.join(' OR ');
-    }
-
-    const params = [...whereParams];
-    
-    const orderPath = `ORDER BY "${sortBy}" ${sortDirection}`;
-
-    params.push(pageSize);
-    const limitPart = `LIMIT $${params.length}`;
-
-    params.push(skip);
-    const offsetPart = `OFFSET $${params.length}`;
-
-    const getUsersSql = `
-      SELECT
-        "id",
-        "login",
-        "email",
-        "createdAt",
-        "isConfirmed"
-      ${fromPart}
-      ${wherePart}
-      ${orderPath}
-      ${limitPart}
-      ${offsetPart}`;
-
-    const rows = await this.dataSource.query<TUserModel[]>(getUsersSql, params);
-
-    const getTotalCountSql = `
-      SELECT
-        COUNT(*)::integer as "totalCount"
-      ${fromPart}
-      ${wherePart};`;
-
-    const [{ totalCount }] = await this.dataSource.query<
-      { totalCount: number }[]
-    >(getTotalCountSql, whereParams);
-
-    const viewUserDocuments = rows.map((user) => ViewUserDto.toView(user));
+    const viewUserDocuments = users.map((user) => ViewUserDto.toView(user));
     const paginatedViewUserDocuments = PaginatedView.toView(
       pageNumber,
       pageSize,
@@ -123,11 +77,8 @@ export class UsersQueryRepository {
   }
 
   async getMe(id: string): Promise<ViewMeDto> {
-    const rows = await this.dataSource.query<TUserModel[]>(
-      `SELECT * FROM "users" WHERE "id" = $1 LIMIT 1;`,
-      [id],
-    );
-    if (!rows[0]) throw new Error('User not found. Check JwtAuthGuard!');
-    return ViewMeDto.toView(rows[0]);
+    const user = await this.userEntityRepo.findOneBy({ id });
+    if (!user) throw new Error('User not found. Check JwtAuthGuard!');
+    return ViewMeDto.toView(user);
   }
 }

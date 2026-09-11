@@ -1,7 +1,7 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
 import request from 'supertest';
 import { ADMIN_LOGIN, ADMIN_PASSWORD } from '../../src/core/constants';
-import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/VIewPost.dto';
+import { ViewPostDto } from '../../src/modules/bloggers-platform/posts/api/dto/ViewPost.dto';
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
 import { ViewBlogDto } from '../../src/modules/bloggers-platform/blogs/api/dto/Blog.view-dto';
 import { ResponseWithBody } from './generics';

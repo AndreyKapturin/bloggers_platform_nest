@@ -1,15 +1,15 @@
-import { TUserModel } from '../../domain/user.entity';
+import { User } from '../../domain/user.entity';
 
 export class ViewMeDto {
   email!: string;
   login!: string;
   userId!: string;
 
-  static toView(userModel: TUserModel): ViewMeDto {
+  static toView(user: User): ViewMeDto {
     return {
-      email: userModel.email,
-      login: userModel.login,
-      userId: userModel.id,
+      email: user.email,
+      login: user.login,
+      userId: user.id,
     };
   }
 }
