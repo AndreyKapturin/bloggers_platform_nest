@@ -1,4 +1,4 @@
-import { TDeviceSessionModel } from '../../../auth/domain/DeviceSession.entity';
+import { DeviceSession } from '../../../auth/domain/DeviceSession.entity';
 
 export class ViewSecurityDevice {
   private constructor(
@@ -9,13 +9,13 @@ export class ViewSecurityDevice {
   ) {}
 
   static toView(
-    deviceSessionDocument: TDeviceSessionModel,
+    deviceSession: DeviceSession,
   ): ViewSecurityDevice {
     return new this(
-      deviceSessionDocument.ip,
-      deviceSessionDocument.deviceName,
-      deviceSessionDocument.tokenIat.toISOString(),
-      deviceSessionDocument.deviceId,
+      deviceSession.ip,
+      deviceSession.deviceName,
+      deviceSession.tokenIat.toISOString(),
+      deviceSession.deviceId,
     );
   }
 }

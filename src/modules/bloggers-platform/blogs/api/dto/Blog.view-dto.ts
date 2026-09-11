@@ -1,4 +1,4 @@
-import { TBlogModel } from '../../domain/blog.entity';
+import { Blog } from '../../domain/blog.entity';
 
 export class ViewBlogDto {
   private constructor(
@@ -10,13 +10,13 @@ export class ViewBlogDto {
     public isMembership: boolean,
   ) {}
 
-  static toView(blogModel: TBlogModel): ViewBlogDto {
+  static toView(blog: Blog): ViewBlogDto {
     return new ViewBlogDto(
-      blogModel.id,
-      blogModel.name,
-      blogModel.description,
-      blogModel.websiteUrl,
-      blogModel.createdAt.toISOString(),
+      blog.id,
+      blog.name,
+      blog.description,
+      blog.websiteUrl,
+      blog.createdAt.toISOString(),
       false,
     );
   }

@@ -27,7 +27,7 @@ export class UpdatePostUseCase implements ICommandHandler<
 
   async execute(command: UpdatePostCommand): Promise<void> {
     await this.blogsRepository.findByIdOrThrow(command.paramsBlogId);
-    await this.postsRepository.findByIdOrThrow(command.postId);
+    const post = await this.postsRepository.findByIdOrThrow(command.postId);
 
     const updatePostDto = new DomainUpdatePostDto(
       command.title,
@@ -35,6 +35,7 @@ export class UpdatePostUseCase implements ICommandHandler<
       command.content,
     );
 
-    await this.postsRepository.update(command.postId, updatePostDto);
+    post.update(updatePostDto);
+    await this.postsRepository.save(post);
   }
 }

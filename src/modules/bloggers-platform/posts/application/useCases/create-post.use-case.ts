@@ -2,6 +2,7 @@ import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BlogsRepository } from '../../../blogs/infrastructure/blogs.repository';
 import { PostsRepository } from '../../infrastructure/Post.repository';
 import { DomainCreatePostDto } from '../../domain/dto/DomainCreatePost.dto';
+import { Post } from '../../domain/Post.entity';
 
 export class CreatePostCommand extends Command<string> {
   constructor(
@@ -25,16 +26,17 @@ export class CreatePostUseCase implements ICommandHandler<
   ) {}
 
   async execute(command: CreatePostCommand): Promise<string> {
-    await this.blogsRepository.findByIdOrThrow(command.blogId);
+    const blog = await this.blogsRepository.findByIdOrThrow(command.blogId);
 
     const createPostDto = new DomainCreatePostDto(
       command.title,
       command.shortDescription,
       command.content,
-      command.blogId,
+      blog,
     );
 
-    const postId = await this.postsRepository.create(createPostDto);
-    return postId;
+    const post = Post.create(createPostDto);
+    await this.postsRepository.save(post);
+    return post.id;
   }
 }

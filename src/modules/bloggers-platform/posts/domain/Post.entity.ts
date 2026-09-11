@@ -1,4 +1,10 @@
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { LikeStatus } from '../../dto/HttpLikeStatus.dto';
+import { BaseDbEntity } from '../../../../core/BaseDbEntity';
+import { Blog } from '../../blogs/domain/blog.entity';
+import { DomainCreatePostDto } from './dto/DomainCreatePost.dto';
+import { DomainUpdatePostDto } from './dto/DomainUpdatePost.dto';
+import { PostReaction } from './PostReaction.entity';
 
 export const DB_POST_CONSTRAINTS = {
   TITLE_MAX_LENGTH: 30,
@@ -39,13 +45,6 @@ export type TExtendedPostWithLikes = TExtendedPost & {
   newestLikes: TViewNewestLike[];
 };
 
-export type TPostUserReactionModel = {
-  userId: string;
-  commentId: string;
-  status: LikeStatus;
-  addedAt: Date;
-};
-
 export type TNewestLike = {
   postId: string;
   userId: string;
@@ -64,3 +63,39 @@ export type TExtendedLikesInfo = {
   dislikesCount: number;
   newestLikes: TViewNewestLike[];
 };
+
+@Entity('posts')
+export class Post extends BaseDbEntity {
+  @Column({ type: 'varchar', nullable: false })
+  title!: string;
+
+  @Column({ type: 'varchar', nullable: false })
+  shortDescription!: string;
+
+  @Column({ type: 'text', nullable: false })
+  content!: string;
+
+  @ManyToOne(() => Blog, (blog) => blog.posts, { nullable: false })
+  blog!: Blog;
+
+  @JoinColumn()
+  blogId!: string;
+
+  @OneToMany(() => PostReaction, (reaction) => reaction.post)
+  reactions!: PostReaction[];
+
+  update(dto: DomainUpdatePostDto): void {
+    this.title = dto.title;
+    this.shortDescription = dto.shortDescription;
+    this.content = dto.content;
+  }
+
+  static create(dto: DomainCreatePostDto) {
+    const post = new this();
+    post.title = dto.title;
+    post.content = dto.content;
+    post.shortDescription = dto.shortDescription;
+    post.blog = dto.blog;
+    return post;
+  }
+}

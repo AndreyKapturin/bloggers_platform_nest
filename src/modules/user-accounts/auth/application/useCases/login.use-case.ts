@@ -6,7 +6,8 @@ import {
 import { JwtTokensPair } from './types';
 import { JwtTokensService } from '../JwtTokens.service';
 import { DeviceSessionsRepository } from '../../infrastructure/DeviceSessions.repository';
-import { DomainCreateDeviceSessionDto } from '../../domain/dto/DomainCreateDeviceSession.dto';
+import { DeviceSession } from '../../domain/DeviceSession.entity';
+import { User } from '../../../users/domain/user.entity';
 
 export class LoginCommand extends Command<JwtTokensPair> {
   constructor(
@@ -30,10 +31,11 @@ export class LoginUseCase implements ICommandHandler<
 
   async execute(command: LoginCommand): Promise<JwtTokensPair> {
     const { userId, ip, deviceName } = command;
+    const deviceId = crypto.randomUUID();
     const accessTokenPayload: JwtAccessTokenSignPayload = { userId };
     const refreshTokenPayload: JwtRefreshTokenSignPayload = {
       userId,
-      deviceId: crypto.randomUUID(),
+      deviceId,
     };
 
     const tokensPair = await this.jwtTokensService.createTokensPair(
@@ -45,14 +47,14 @@ export class LoginUseCase implements ICommandHandler<
       tokensPair.refreshToken,
     );
 
-    const deviceSession = new DomainCreateDeviceSessionDto(
-      refreshTokenPayload.userId,
-      refreshTokenPayload.deviceId,
+    const deviceSession = DeviceSession.create({
+      deviceId,
       deviceName,
       ip,
-      iat,
-      exp,
-    );
+      tokenExp: exp,
+      tokenIat: iat,
+      user: { id: userId } as User,
+    });
 
     await this.deviceSessionRepository.save(deviceSession);
     return tokensPair;

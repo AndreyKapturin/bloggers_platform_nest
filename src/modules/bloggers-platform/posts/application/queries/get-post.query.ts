@@ -1,5 +1,5 @@
 import { QueryHandler, Query, IQueryHandler } from '@nestjs/cqrs';
-import { ViewPostDto } from '../../api/dto/VIewPost.dto';
+import { ViewPostDto } from '../../api/dto/ViewPost.dto';
 import { PostsQueryRepository } from '../../infrastructure/Post.query-repository';
 
 export class GetPostQuery extends Query<ViewPostDto> {

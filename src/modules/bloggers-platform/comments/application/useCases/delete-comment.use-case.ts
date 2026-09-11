@@ -43,6 +43,6 @@ export class DeleteCommentUseCase implements ICommandHandler<
       );
     }
 
-    await this.commentsRepository.delete(commentId);
+    await this.commentsRepository.delete(comment);
   }
 }

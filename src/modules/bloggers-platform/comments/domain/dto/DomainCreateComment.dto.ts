@@ -1,7 +1,10 @@
+import { User } from "../../../../user-accounts/users/domain/user.entity";
+import { Post } from "../../../posts/domain/Post.entity";
+
 export class DomainCreateCommentDto {
   constructor(
-    public postId: string,
     public content: string,
-    public userId: string,
+    public post: Post,
+    public user: User,
   ) {}
 }

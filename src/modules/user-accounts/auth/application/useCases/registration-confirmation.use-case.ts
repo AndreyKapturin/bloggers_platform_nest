@@ -5,6 +5,8 @@ import {
 } from '../../../../../core/exceptions/DomainException';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { EmailConfirmationCodesRepository } from '../../../users/infrastructure/email-confirmation-codes.repository';
+import { EntityManager } from 'typeorm';
+import { InjectEntityManager } from '@nestjs/typeorm';
 
 export class RegistrationConfirmationCommand extends Command<void> {
   constructor(public confirmationCode: string) {
@@ -18,8 +20,10 @@ export class RegistrationConfirmationUseCase implements ICommandHandler<
   void
 > {
   constructor(
-    private usersRepository: UsersRepository,
-    private emailConfirmationCodesRepository: EmailConfirmationCodesRepository,
+    private readonly usersRepository: UsersRepository,
+    private readonly emailConfirmationCodesRepository: EmailConfirmationCodesRepository,
+    @InjectEntityManager()
+    private readonly em: EntityManager,
   ) {}
 
   async execute(command: RegistrationConfirmationCommand): Promise<void> {
@@ -53,7 +57,9 @@ export class RegistrationConfirmationUseCase implements ICommandHandler<
       );
     }
 
-    await this.usersRepository.updateConfirmationStatus(user.id, true);
-    await this.emailConfirmationCodesRepository.delete(command.confirmationCode);
+    await this.emailConfirmationCodesRepository.delete(user.confirmationCode!);
+    user.deleteConfirmationCode();
+    user.confirmRegistration();
+    await this.usersRepository.save(user);
   }
 }

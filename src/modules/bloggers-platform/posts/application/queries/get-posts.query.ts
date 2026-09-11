@@ -1,5 +1,5 @@
 import { QueryHandler, Query, IQueryHandler } from '@nestjs/cqrs';
-import { ViewPostDto } from '../../api/dto/VIewPost.dto';
+import { ViewPostDto } from '../../api/dto/ViewPost.dto';
 import { PostsQueryRepository } from '../../infrastructure/Post.query-repository';
 import { PostsQueryParamsDto } from '../../api/dto/PostQueryParams.dto';
 import { PaginatedView } from '../../../../../core/dto/PaginatedView.dto';

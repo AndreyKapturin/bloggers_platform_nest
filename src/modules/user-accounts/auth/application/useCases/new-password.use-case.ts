@@ -47,7 +47,9 @@ export class NewPasswordUseCase implements ICommandHandler<
 
     const passwordHash = await this.cryptoService.hash(newPassword);
 
-    await this.usersRepository.updatePasswordHash(user.id, passwordHash);
-    await this.recoveryCodesRepository.delete(recoveryCode);
+    user.setNewPasswordHash(passwordHash);
+    await this.recoveryCodesRepository.delete(user.passwordRecoveryCode!);
+    user.deletePasswordRecoveryCode();
+    await this.usersRepository.save(user);
   }
 }
