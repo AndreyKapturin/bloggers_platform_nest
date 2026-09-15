@@ -9,26 +9,18 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { CoreConfig } from './core/core.config';
 import { CoreModule } from './core/core.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PgConfig } from './modules/postgre/postgre.config';
+import { AppDataSource } from './database/data.source';
 
 @Module({
   imports: [
     configModule,
     CoreModule,
     TypeOrmModule.forRootAsync({
-      extraProviders: [PgConfig],
-      inject: [PgConfig],
-      useFactory: (config: PgConfig) => {
-        return {
-          type: 'postgres',
-          host: config.host,
-          port: config.port,
-          database: config.database,
-          username: config.user,
-          password: config.password,
-          autoLoadEntities: true,
-          synchronize: config.synchronize,
-        };
+      useFactory: async () => {
+        if (!AppDataSource.isInitialized) {
+          await AppDataSource.initialize();
+        }
+        return AppDataSource.options;
       },
     }),
 
