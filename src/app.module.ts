@@ -10,6 +10,7 @@ import { CoreConfig } from './core/core.config';
 import { CoreModule } from './core/core.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppDataSource } from './database/data.source';
+import { TypeormShutdownService } from './database/typeorm-shutdown.service';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { AppDataSource } from './database/data.source';
     BloggersPlatformModule,
   ],
   controllers: [TestingController],
+  providers: [TypeormShutdownService],
 })
 export class AppModule {
   static async forRootAsync(coreConfig: CoreConfig): Promise<DynamicModule> {
