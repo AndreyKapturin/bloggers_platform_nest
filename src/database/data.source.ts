@@ -1,6 +1,6 @@
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
-import { join, resolve } from 'path';
+import { join } from 'path';
 import { loadPgEnv } from './pg-env.validator';
 
 const NODE_ENV = process.env.NODE_ENV;
@@ -10,10 +10,10 @@ if (!NODE_ENV)
     'Environment variable "NODE_ENV" is requeired. (production|staging|development|testing)',
   );
 
-const envFilesFolderPath = resolve(__dirname, '..', 'modules', 'config', 'env');
+const envFilesFolderPath = process.cwd();
 config({ path: join(envFilesFolderPath, `.env.${NODE_ENV}.local`) });
 config({ path: join(envFilesFolderPath, `.env.${NODE_ENV}`) });
-config({ path: join(envFilesFolderPath, '.env.production') }); 
+config({ path: join(envFilesFolderPath, '.env.production') });
 
 const pgConfig = loadPgEnv();
 export const AppDataSource = new DataSource({
