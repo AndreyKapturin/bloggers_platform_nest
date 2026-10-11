@@ -10,10 +10,10 @@ if (!NODE_ENV)
     'Environment variable "NODE_ENV" is requeired. (production|staging|development|testing)',
   );
 
-const envFilesFolderPath = resolve('src', 'modules', 'config', 'env');
+const envFilesFolderPath = resolve(__dirname, '..', 'modules', 'config', 'env');
 config({ path: join(envFilesFolderPath, `.env.${NODE_ENV}.local`) });
 config({ path: join(envFilesFolderPath, `.env.${NODE_ENV}`) });
-config({ path: join(envFilesFolderPath, '.env') });
+config({ path: join(envFilesFolderPath, '.env.production') }); 
 
 const pgConfig = loadPgEnv();
 export const AppDataSource = new DataSource({
