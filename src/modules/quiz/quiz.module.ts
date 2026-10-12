@@ -6,9 +6,10 @@ import { QuestionsRepository } from './infrastructure/questions.repository';
 import { QuestionsQueryRepository } from './infrastructure/questions.query-repository';
 import { GetQuestionQueryHandler } from './application/queries/get-question.query';
 import { CreateQuestionUseCase } from './application/useCases/create-question.use-case';
+import { GetQuestionsQueryHandler } from './application/queries/get-questions.query';
 
 const useCases = [CreateQuestionUseCase];
-const queries = [GetQuestionQueryHandler];
+const queries = [GetQuestionQueryHandler, GetQuestionsQueryHandler];
 
 @Module({
   imports: [TypeOrmModule.forFeature([Question])],
