@@ -4,9 +4,7 @@ import { DataSource } from 'typeorm';
 
 @Controller('testing')
 export class TestingController {
-  constructor(
-    @InjectDataSource() private dataSource: DataSource,
-  ) {}
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
 
   @Delete('all-data')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -20,7 +18,8 @@ export class TestingController {
       "blogs",
       "posts",
       "comments",
-      "commentReactions"
+      "commentReactions",
+      "questions"
       RESTART IDENTITY CASCADE;
     `,
     );

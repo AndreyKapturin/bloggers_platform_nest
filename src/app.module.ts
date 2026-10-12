@@ -11,6 +11,7 @@ import { CoreModule } from './core/core.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppDataSource } from './database/data.source';
 import { TypeormShutdownService } from './database/typeorm-shutdown.service';
+import { QuizModule } from './modules/quiz/quiz.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { TypeormShutdownService } from './database/typeorm-shutdown.service';
     }),
     UserAccountsModule,
     BloggersPlatformModule,
+    QuizModule,
   ],
   controllers: [TestingController],
   providers: [TypeormShutdownService],
