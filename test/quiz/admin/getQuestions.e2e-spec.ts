@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { setupApp } from '../../../src/core/setupApp';
 import {
   DEFAULT_PAGE_SIZE,
@@ -37,7 +37,7 @@ describe('get questions for admin', () => {
       pageSize: DEFAULT_PAGE_SIZE,
       totalCount: totalQuestionsCount,
     });
-    
+
     expect(response.body.items).toEqual(
       expect.arrayContaining([questionsTestHelper.createExpectedQuestion()]),
     );
@@ -124,5 +124,12 @@ describe('get questions for admin', () => {
     expect(descResponse.body.items.map((question) => question.body)).toEqual(
       [...bodies].reverse(),
     );
+  });
+
+  it(`should return UNAUTHORIZED if not auth`, async () => {
+    await questionsTestHelper.getQuestionsWithQuery({
+      auth: false,
+      status: HttpStatus.UNAUTHORIZED,
+    });
   });
 });
