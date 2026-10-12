@@ -1,6 +1,7 @@
 import { Entity, Column, UpdateDateColumn } from 'typeorm';
 import { BaseDbEntity } from '../../../core/BaseDbEntity';
 import { DomainCreateQuestionDto } from './dto/DomainCreateQuestion.dto';
+import { DomainUpdateQuestionDto } from './dto/DomainUpdateQuestion.dto';
 
 @Entity('questions')
 export class Question extends BaseDbEntity {
@@ -25,6 +26,11 @@ export class Question extends BaseDbEntity {
 
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  update(dto: DomainUpdateQuestionDto): void {
+    this.body = dto.body;
+    this.correctAnswers = dto.correctAnswers;
+  }
 
   static create(dto: DomainCreateQuestionDto): Question {
     const question = new this();

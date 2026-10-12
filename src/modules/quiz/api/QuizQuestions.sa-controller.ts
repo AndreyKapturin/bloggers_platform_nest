@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -20,6 +21,8 @@ import { QuestionsQueryParamsDto } from './dto/QuestionsQueryParams.dto';
 import { PaginatedView } from '../../../core/dto/PaginatedView.dto';
 import { ViewQuestionDto } from './dto/ViewQuestion.view-dto';
 import { GetQuestionsQuery } from '../application/queries/get-questions.query';
+import { HttpUpdateQuestionDto } from './dto/HttpUpdateQuestion.dto';
+import { UpdateQuestionCommand } from '../application/useCases/update-question.use-case';
 
 @UseGuards(BasicAuthGuard)
 @Controller('/sa/quiz/questions')
@@ -47,6 +50,16 @@ export class SA_QuizQuestionsController {
       new GetQuestionQuery(questionId),
     );
     return question;
+  }
+
+  @Put(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateQuestion(
+    @Param('id') id: string,
+    @Body() dto: HttpUpdateQuestionDto,
+  ) {
+    const command = new UpdateQuestionCommand(id, dto.body, dto.correctAnswers);
+    await this.commandBus.execute(command);
   }
 
   @Delete(':id')
