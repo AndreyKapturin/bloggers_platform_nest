@@ -7,6 +7,7 @@ import { QuestionDtoFabrics } from './QuestionDtoFabrics';
 import { ViewQuestionDto } from '../../src/modules/quiz/api/dto/ViewQuestion.view-dto';
 import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
 import { QuestionsQueryParamsDto } from '../../src/modules/quiz/api/dto/QuestionsQueryParams.dto';
+import { HttpUpdateQuestionDto } from '../../src/modules/quiz/api/dto/HttpUpdateQuestion.dto';
 
 export class SA_QuestionsTestHelper {
   private BASE_URL = '/sa/quiz/questions';
@@ -94,6 +95,31 @@ export class SA_QuestionsTestHelper {
     }
 
     return deleteQuestionRequest;
+  }
+
+  async updateQuestion(
+    id: string,
+    dto: HttpUpdateQuestionDto,
+    options?: { status?: HttpStatus; auth?: boolean },
+  ) {
+    const innerOptions = {
+      status: HttpStatus.NO_CONTENT,
+      auth: true,
+      ...options,
+    };
+
+    const updateQuestionRequest = request(this.app.getHttpServer())
+      .put(`${this.BASE_URL}/${id}`)
+      .send(dto)
+      .expect(innerOptions.status);
+
+    if (innerOptions.auth) {
+      updateQuestionRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, {
+        type: 'basic',
+      });
+    }
+
+    return updateQuestionRequest;
   }
 
   async createRandomQuestion(): Promise<ViewQuestionDto> {
