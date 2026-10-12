@@ -1,8 +1,20 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { HttpCreateQuestionDto } from './dto/HttpCreateQuestion.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreateQuestionCommand } from '../application/useCases/create-question.use-case';
 import { GetQuestionQuery } from '../application/queries/get-question.query';
+import { DeleteQuestionCommand } from '../application/useCases/delete-question.use-case';
 import { BasicAuthGuard } from '../../user-accounts/auth/strategies/basic/Basic.guard';
 import { QuestionsQueryParamsDto } from './dto/QuestionsQueryParams.dto';
 import { PaginatedView } from '../../../core/dto/PaginatedView.dto';
@@ -35,5 +47,11 @@ export class SA_QuizQuestionsController {
       new GetQuestionQuery(questionId),
     );
     return question;
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteQuestion(@Param('id') id: string): Promise<void> {
+    await this.commandBus.execute(new DeleteQuestionCommand(id));
   }
 }

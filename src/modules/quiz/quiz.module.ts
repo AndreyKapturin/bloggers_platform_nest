@@ -7,8 +7,9 @@ import { QuestionsQueryRepository } from './infrastructure/questions.query-repos
 import { GetQuestionQueryHandler } from './application/queries/get-question.query';
 import { CreateQuestionUseCase } from './application/useCases/create-question.use-case';
 import { GetQuestionsQueryHandler } from './application/queries/get-questions.query';
+import { DeleteQuestionUseCase } from './application/useCases/delete-question.use-case';
 
-const useCases = [CreateQuestionUseCase];
+const useCases = [CreateQuestionUseCase, DeleteQuestionUseCase];
 const queries = [GetQuestionQueryHandler, GetQuestionsQueryHandler];
 
 @Module({
