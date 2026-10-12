@@ -5,6 +5,8 @@ import { ResponseWithBody } from './generics';
 import { HttpCreateQuestionDto } from '../../src/modules/quiz/api/dto/HttpCreateQuestion.dto';
 import { QuestionDtoFabrics } from './QuestionDtoFabrics';
 import { ViewQuestionDto } from '../../src/modules/quiz/api/dto/ViewQuestion.view-dto';
+import { PaginatedView } from '../../src/core/dto/PaginatedView.dto';
+import { QuestionsQueryParamsDto } from '../../src/modules/quiz/api/dto/QuestionsQueryParams.dto';
 
 export class SA_QuestionsTestHelper {
   private BASE_URL = '/sa/quiz/questions';
@@ -19,6 +21,32 @@ export class SA_QuestionsTestHelper {
     overrideFields: Partial<ViewQuestionDto> = {},
   ): ViewQuestionDto {
     return QuestionDtoFabrics.createExpectedQuestion(overrideFields);
+  }
+
+  async getQuestionsWithQuery(options?: {
+    status?: HttpStatus;
+    auth?: boolean;
+    filter?: Partial<QuestionsQueryParamsDto>;
+  }): Promise<ResponseWithBody<PaginatedView<ViewQuestionDto>>> {
+    const innerOptions = {
+      status: HttpStatus.OK,
+      auth: true,
+      ...options,
+    };
+
+    const getQuestionsRequest = request(this.app.getHttpServer()).get(
+      this.BASE_URL,
+    );
+
+    if (innerOptions.filter) {
+      getQuestionsRequest.query(innerOptions.filter);
+    }
+
+    if (innerOptions.auth) {
+      getQuestionsRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, { type: 'basic' });
+    }
+
+    return getQuestionsRequest.expect(innerOptions.status);
   }
 
   async createQuestion(
@@ -43,5 +71,21 @@ export class SA_QuestionsTestHelper {
     }
 
     return createQuestionRequest;
+  }
+
+  async createRandomQuestion(): Promise<ViewQuestionDto> {
+    const dto = this.createInputDto();
+    const createQuestionResponse = await this.createQuestion(dto);
+    return createQuestionResponse.body;
+  }
+
+  async createRandomQuestions(count: number): Promise<ViewQuestionDto[]> {
+    const questions = new Array<ViewQuestionDto>(count);
+
+    for (let i = 0; i < count; i++) {
+      questions[i] = await this.createRandomQuestion();
+    }
+
+    return questions;
   }
 }
