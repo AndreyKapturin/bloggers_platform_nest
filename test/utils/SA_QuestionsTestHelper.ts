@@ -73,6 +73,29 @@ export class SA_QuestionsTestHelper {
     return createQuestionRequest;
   }
 
+  async deleteQuestion(
+    id: string,
+    options?: { status?: HttpStatus; auth?: boolean },
+  ) {
+    const innerOptions = {
+      status: HttpStatus.NO_CONTENT,
+      auth: true,
+      ...options,
+    };
+
+    const deleteQuestionRequest = request(this.app.getHttpServer())
+      .delete(`${this.BASE_URL}/${id}`)
+      .expect(innerOptions.status);
+
+    if (innerOptions.auth) {
+      deleteQuestionRequest.auth(ADMIN_LOGIN, ADMIN_PASSWORD, {
+        type: 'basic',
+      });
+    }
+
+    return deleteQuestionRequest;
+  }
+
   async createRandomQuestion(): Promise<ViewQuestionDto> {
     const dto = this.createInputDto();
     const createQuestionResponse = await this.createQuestion(dto);
