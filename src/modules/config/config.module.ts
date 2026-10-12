@@ -1,5 +1,5 @@
 import { ConfigModule } from '@nestjs/config';
-import { resolve, join } from 'path';
+import { join } from 'path';
 
 export enum Environments {
   Testing = 'testing',
@@ -18,13 +18,13 @@ if (!environments.includes(envName)) {
   );
 }
 
-const envFilesFilderPath = resolve(__dirname, 'env');
+const envFilesFolderPath = process.cwd();
 
 export const configModule = ConfigModule.forRoot({
   envFilePath: [
-    join(envFilesFilderPath, `.env.${envName}.local`),
-    join(envFilesFilderPath, `.env.${envName}`),
-    join(envFilesFilderPath, '.env.production'),
+    join(envFilesFolderPath, `.env.${envName}.local`),
+    join(envFilesFolderPath, `.env.${envName}`),
+    join(envFilesFolderPath, '.env.production'),
   ],
   isGlobal: true,
 });

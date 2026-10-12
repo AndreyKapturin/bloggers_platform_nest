@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { IsBoolean, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsBoolean, IsNumber } from 'class-validator';
 import { BaseConfig } from './BaseConfig';
 
 @Injectable()
@@ -9,8 +9,6 @@ export class CoreConfig extends BaseConfig {
     super();
 
     this.port = Number(this.configService.get('PORT'));
-
-    this.mongoUri = this.configService.get('MONGO_URI') as string;
 
     this.rateLimitTtlInMs = Number(
       this.configService.get('RATE_LIMIT_TTL_IN_MS'),
@@ -29,12 +27,6 @@ export class CoreConfig extends BaseConfig {
 
   @IsNumber({}, { message: 'PORT must be a number. Example: 3000' })
   port: number;
-
-  @IsNotEmpty({
-    message:
-      'MONGO_URI is required. Example: mongodb://localhost:27017/your_database_name',
-  })
-  mongoUri: string;
 
   @IsNumber(
     { allowNaN: false },
