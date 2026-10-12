@@ -1,9 +1,11 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Post, UseGuards } from "@nestjs/common";
 import { HttpCreateQuestionDto } from "./dto/HttpCreateQuestion.dto";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { CreateQuestionCommand } from "../application/useCases/create-question.use-case";
 import { GetQuestionQuery } from "../application/queries/get-question.query";
+import { BasicAuthGuard } from "../../user-accounts/auth/strategies/basic/Basic.guard";
 
+@UseGuards(BasicAuthGuard)
 @Controller('/sa/quiz/questions')
 export class SA_QuizQuestionsController {
   constructor(
