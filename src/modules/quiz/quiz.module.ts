@@ -9,9 +9,11 @@ import { CreateQuestionUseCase } from './application/useCases/create-question.us
 import { GetQuestionsQueryHandler } from './application/queries/get-questions.query';
 import { DeleteQuestionUseCase } from './application/useCases/delete-question.use-case';
 import { UpdateQuestionUseCase } from './application/useCases/update-question.use-case';
+import { PublishQuestionUseCase } from './application/useCases/publish-question.use-case';
 
 const useCases = [
   CreateQuestionUseCase,
+  PublishQuestionUseCase,
   UpdateQuestionUseCase,
   DeleteQuestionUseCase,
 ];

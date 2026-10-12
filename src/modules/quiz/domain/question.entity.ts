@@ -32,6 +32,10 @@ export class Question extends BaseDbEntity {
     this.correctAnswers = dto.correctAnswers;
   }
 
+  publish(): void {
+    this.published = true;
+  }
+
   static create(dto: DomainCreateQuestionDto): Question {
     const question = new this();
     question.body = dto.body;

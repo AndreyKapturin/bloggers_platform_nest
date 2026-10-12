@@ -23,6 +23,8 @@ import { ViewQuestionDto } from './dto/ViewQuestion.view-dto';
 import { GetQuestionsQuery } from '../application/queries/get-questions.query';
 import { HttpUpdateQuestionDto } from './dto/HttpUpdateQuestion.dto';
 import { UpdateQuestionCommand } from '../application/useCases/update-question.use-case';
+import { HttpPublishQuestionDto } from './dto/HttpPublishQuestion.dto';
+import { PublishQuestionCommand } from '../application/useCases/publish-question.use-case';
 
 @UseGuards(BasicAuthGuard)
 @Controller('/sa/quiz/questions')
@@ -59,6 +61,16 @@ export class SA_QuizQuestionsController {
     @Body() dto: HttpUpdateQuestionDto,
   ) {
     const command = new UpdateQuestionCommand(id, dto.body, dto.correctAnswers);
+    await this.commandBus.execute(command);
+  }
+
+  @Put(':id/publish')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async publishQuestion(
+    @Param('id') id: string,
+    @Body() dto: HttpPublishQuestionDto,
+  ) {
+    const command = new PublishQuestionCommand(id);
     await this.commandBus.execute(command);
   }
 
