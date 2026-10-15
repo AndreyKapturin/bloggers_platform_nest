@@ -44,4 +44,13 @@ export class QuestionsRepository {
   async save(question: Question): Promise<Question> {
     return this.questionEntityRepository.save(question);
   }
+
+  async getRandomQuestions(count: number): Promise<Question[]> {
+    return this.questionEntityRepository
+      .createQueryBuilder('q')
+      .where('q.published = TRUE')
+      .orderBy('RANDOM()')
+      .limit(count)
+      .getMany();
+  }
 }

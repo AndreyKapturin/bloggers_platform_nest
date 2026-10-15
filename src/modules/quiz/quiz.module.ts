@@ -14,12 +14,18 @@ import { Game } from './domain/game.entity';
 import { Player } from './domain/player.entity';
 import { GameQuestion } from './domain/gameQuestion.entity';
 import { PlayerAnswer } from './domain/playerAnswer.entity';
+import { QuizGamePairsController } from './api/QuizGamePairs.controller';
+import { ConnectGamePairUseCase } from './application/useCases/connect-game-pair.use-case';
+import { GamesRepository } from './infrastructure/games.repository';
+import { GameQuestionsRepository } from './infrastructure/gameQuestions.repository';
+import { PlayersRepository } from './infrastructure/players.repository';
 
 const useCases = [
   CreateQuestionUseCase,
   PublishQuestionUseCase,
   UpdateQuestionUseCase,
   DeleteQuestionUseCase,
+  ConnectGamePairUseCase
 ];
 
 const queries = [GetQuestionQueryHandler, GetQuestionsQueryHandler];
@@ -34,10 +40,13 @@ const queries = [GetQuestionQueryHandler, GetQuestionsQueryHandler];
       PlayerAnswer,
     ]),
   ],
-  controllers: [SA_QuizQuestionsController],
+  controllers: [SA_QuizQuestionsController, QuizGamePairsController],
   providers: [
     QuestionsRepository,
     QuestionsQueryRepository,
+    GamesRepository,
+    GameQuestionsRepository,
+    PlayersRepository,
     ...useCases,
     ...queries,
   ],

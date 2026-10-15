@@ -19,7 +19,11 @@ export class TestingController {
       "posts",
       "comments",
       "commentReactions",
-      "questions"
+      "questions",
+      "games",
+      "players",
+      "gameQuestions",
+      "playerAnswers"
       RESTART IDENTITY CASCADE;
     `,
     );

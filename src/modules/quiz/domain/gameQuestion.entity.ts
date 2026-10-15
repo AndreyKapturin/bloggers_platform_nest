@@ -7,9 +7,10 @@ import { DomainCreateGameQuestionDto } from './dto/DomainCreateGameQuestion.dto'
 @Entity('gameQuestions')
 export class GameQuestion extends BaseDbEntity {
   @ManyToOne(() => Question, { nullable: false })
+  @JoinColumn({ name: 'questionId' })
   question!: Question;
 
-  @JoinColumn({ name: 'questionId' })
+  @Column({ type: 'varchar', name: 'questionId', nullable: false })
   questionId!: string;
 
   @ManyToOne(() => Game, (game) => game.questions)

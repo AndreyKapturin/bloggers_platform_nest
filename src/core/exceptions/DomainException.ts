@@ -3,6 +3,7 @@ export enum DomainExceptionStatus {
   InvalidCredentials = 'InvalidCredentials',
   PermissionError = 'PermissionError',
   InvalidData = 'InvalidData',
+  Conflict = "Conflict",
 }
 
 type Extension = {

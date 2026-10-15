@@ -37,6 +37,11 @@ export class Game {
   @OneToMany(() => GameQuestion, (gameQuestion) => gameQuestion.game)
   questions!: GameQuestion[];
 
+  start() {
+    this.status = GameStatus.Active;
+    this.startGameDate = new Date();
+  }
+
   static create(): Game {
     const game = new this();
     game.status = GameStatus.PendingSecondPlayer;

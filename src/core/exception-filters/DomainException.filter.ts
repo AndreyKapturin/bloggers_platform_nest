@@ -33,6 +33,8 @@ export class DomainHttpExceptionsFilter implements ExceptionFilter {
         return HttpStatus.NOT_FOUND;
       case DomainExceptionStatus.InvalidData:
         return HttpStatus.BAD_REQUEST;
+      case DomainExceptionStatus.Conflict:
+        return HttpStatus.CONFLICT;
       default:
         return HttpStatus.INTERNAL_SERVER_ERROR;
     }
