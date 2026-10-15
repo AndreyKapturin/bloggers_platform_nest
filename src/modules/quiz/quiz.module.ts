@@ -10,6 +10,10 @@ import { GetQuestionsQueryHandler } from './application/queries/get-questions.qu
 import { DeleteQuestionUseCase } from './application/useCases/delete-question.use-case';
 import { UpdateQuestionUseCase } from './application/useCases/update-question.use-case';
 import { PublishQuestionUseCase } from './application/useCases/publish-question.use-case';
+import { Game } from './domain/game.entity';
+import { Player } from './domain/player.entity';
+import { GameQuestion } from './domain/gameQuestion.entity';
+import { PlayerAnswer } from './domain/playerAnswer.entity';
 
 const useCases = [
   CreateQuestionUseCase,
@@ -18,13 +22,18 @@ const useCases = [
   DeleteQuestionUseCase,
 ];
 
-const queries = [
-  GetQuestionQueryHandler,
-  GetQuestionsQueryHandler
-];
+const queries = [GetQuestionQueryHandler, GetQuestionsQueryHandler];
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Question])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Question,
+      Game,
+      Player,
+      GameQuestion,
+      PlayerAnswer,
+    ]),
+  ],
   controllers: [SA_QuizQuestionsController],
   providers: [
     QuestionsRepository,
