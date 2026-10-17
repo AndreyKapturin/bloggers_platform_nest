@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { GameQuestion } from '../domain/gameQuestion.entity';
 
 @Injectable()
@@ -17,7 +17,12 @@ export class GameQuestionsRepository {
   // async saveMany(gameQuestions: GameQuestion[]): Promise<void> {
   //   await Promise.all(gameQuestions.map((gq) => this.save(gq)));
   // }
-  async saveMany(gameQuestions: GameQuestion[]): Promise<void> {
-    await this.gameQuestionEntityRepository.save(gameQuestions);
+  async saveMany(
+    gameQuestions: GameQuestion[],
+    manager?: EntityManager,
+  ): Promise<void> {
+    await (
+      manager?.getRepository(GameQuestion) ?? this.gameQuestionEntityRepository
+    ).save(gameQuestions);
   }
 }

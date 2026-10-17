@@ -91,7 +91,7 @@ describe('quiz game pair connection', () => {
       .auth(user1, { type: 'bearer' })
       .send();
 
-    const connect2 = await request(app.getHttpServer())
+    const connect2 = request(app.getHttpServer())
       .post('/pair-game-quiz/pairs/connection')
       .auth(user2, { type: 'bearer' })
       .send();
@@ -103,10 +103,11 @@ describe('quiz game pair connection', () => {
 
     const [res1, res2] = await Promise.all([connect2, connect3]);
 
-    expect(res1.body.gameId).toBe(res2.body.gameId);
     console.log('user 1', connect1.body.gameId);
     console.log('user 2', res1.body.gameId);
     console.log('user 3', res2.body.gameId);
+    expect(res1.body.gameId).toBe(res2.body.gameId);
+
   }, 500000);
 
   it('should return FORBIDDEN if user already participating in active pair', async () => {

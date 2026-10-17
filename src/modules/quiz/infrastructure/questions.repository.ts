@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Question } from '../domain/question.entity';
 import {
   DomainException,
@@ -45,8 +45,14 @@ export class QuestionsRepository {
     return this.questionEntityRepository.save(question);
   }
 
-  async getRandomQuestions(count: number): Promise<Question[]> {
-    return this.questionEntityRepository
+  async getRandomQuestions(
+    count: number,
+    manager?: EntityManager,
+  ): Promise<Question[]> {
+    const repository =
+      manager?.getRepository(Question) ?? this.questionEntityRepository;
+
+    return repository
       .createQueryBuilder('q')
       .where('q.published = TRUE')
       .orderBy('RANDOM()')

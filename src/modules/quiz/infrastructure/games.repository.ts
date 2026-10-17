@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Question } from '../domain/question.entity';
-import {
-  DomainException,
-  DomainExceptionStatus,
-} from '../../../core/exceptions/DomainException';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Game, GameStatus } from '../domain/game.entity';
 import { Player } from '../domain/player.entity';
 
@@ -16,14 +11,33 @@ export class GamesRepository {
     private readonly gamesEntityRepository: Repository<Game>,
   ) {}
 
-  async findPendingGame(): Promise<Game | null> {
-    return this.gamesEntityRepository.findOne({
-      where: { status: GameStatus.PendingSecondPlayer },
-    });
+  async lockMatchmakingQueue(manager: EntityManager): Promise<void> {
+    await manager.query('SELECT pg_advisory_xact_lock($1::bigint)', [
+      0x5155495a,
+    ]);
   }
 
-  async findActiveByUserId(userId: string): Promise<Game | null> {
-    return this.gamesEntityRepository
+  async findPendingGame(manager?: EntityManager): Promise<Game | null> {
+    const repository =
+      manager?.getRepository(Game) ?? this.gamesEntityRepository;
+
+    return repository
+      .createQueryBuilder('game')
+      .where('game.status = :status', {
+        status: GameStatus.PendingSecondPlayer,
+      })
+      .setLock('pessimistic_write')
+      .getOne();
+  }
+
+  async findActiveByUserId(
+    userId: string,
+    manager?: EntityManager,
+  ): Promise<Game | null> {
+    const repository =
+      manager?.getRepository(Game) ?? this.gamesEntityRepository;
+
+    return repository
       .createQueryBuilder('g')
       .innerJoin(Player, 'p', 'p.gameId = g.id')
       .where('p.userId = :userId', { userId })
@@ -58,7 +72,9 @@ export class GamesRepository {
   //   await this.questionEntityRepository.remove(question);
   // }
 
-  async save(game: Game): Promise<void> {
-    await this.gamesEntityRepository.save(game);
+  async save(game: Game, manager?: EntityManager): Promise<void> {
+    await (manager?.getRepository(Game) ?? this.gamesEntityRepository).save(
+      game,
+    );
   }
 }

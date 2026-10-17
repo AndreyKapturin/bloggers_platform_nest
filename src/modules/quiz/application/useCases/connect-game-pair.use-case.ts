@@ -1,10 +1,12 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { GamesRepository } from '../../infrastructure/games.repository';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { Game } from '../../domain/game.entity';
 import { Player } from '../../domain/player.entity';
+import { GameQuestion } from '../../domain/gameQuestion.entity';
+import { GamesRepository } from '../../infrastructure/games.repository';
 import { PlayersRepository } from '../../infrastructure/players.repository';
 import { QuestionsRepository } from '../../infrastructure/questions.repository';
-import { GameQuestion } from '../../domain/gameQuestion.entity';
 import { GameQuestionsRepository } from '../../infrastructure/gameQuestions.repository';
 import {
   DomainException,
@@ -29,68 +31,76 @@ export class ConnectGamePairUseCase implements ICommandHandler<
     private readonly playersRepository: PlayersRepository,
     private readonly questionsRepository: QuestionsRepository,
     private readonly gameQuestionsRepository: GameQuestionsRepository,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   async execute(command: ConnectGamePairCommand): Promise<string> {
     const { userId } = command;
 
-    const activeGame = await this.gamesRepository.findActiveByUserId(userId);
+    return this.dataSource.transaction(async (manager) => {
+      await this.gamesRepository.lockMatchmakingQueue(manager);
 
-    if (activeGame) {
-      throw new DomainException(
-        DomainExceptionStatus.PermissionError,
-        'User is already participating in active pair',
-        [
-          {
-            field: null,
-            message: 'User is already participating in active pair',
-          },
-        ],
+      const activeGame = await this.gamesRepository.findActiveByUserId(
+        userId,
+        manager,
       );
-    }
 
-    const pendingGame = await this.gamesRepository.findPendingGame();
-    let game: Game;
-
-    if (!pendingGame) {
-      game = Game.create();
-      await this.gamesRepository.save(game);
-      const player = Player.create({
-        userId: userId,
-        gameId: game.id,
-      });
-      await this.playersRepository.save(player);
-    } else {
-      game = pendingGame;
-      const player = Player.create({
-        userId: userId,
-        gameId: game.id,
-      });
-      await this.playersRepository.save(player);
-      game.start();
-      await this.gamesRepository.save(game);
-      const randomQuestions =
-        await this.questionsRepository.getRandomQuestions(QUIZ_QUESTIONS_COUNT);
-
-      if (randomQuestions.length < QUIZ_QUESTIONS_COUNT) {
+      if (activeGame) {
         throw new DomainException(
-          DomainExceptionStatus.Conflict,
-          'Not enough available questions for game',
+          DomainExceptionStatus.PermissionError,
+          'User is already participating in active pair',
           [
             {
               field: null,
-              message: 'Not enough available questions for game',
+              message: 'User is already participating in active pair',
             },
           ],
         );
       }
 
-      const gameQuestions = randomQuestions.map((rq) =>
-        GameQuestion.create({ gameId: game.id, questionId: rq.id }),
-      );
-      await this.gameQuestionsRepository.saveMany(gameQuestions);
-    }
+      const pendingGame = await this.gamesRepository.findPendingGame(manager);
+      let game: Game;
 
-    return game.id;
+      if (!pendingGame) {
+        game = Game.create();
+        await this.gamesRepository.save(game, manager);
+
+        const player = Player.create({ userId, gameId: game.id });
+        await this.playersRepository.save(player, manager);
+      } else {
+        game = pendingGame;
+        const player = Player.create({ userId, gameId: game.id });
+        await this.playersRepository.save(player, manager);
+        game.start();
+        await this.gamesRepository.save(game, manager);
+
+        const randomQuestions =
+          await this.questionsRepository.getRandomQuestions(
+            QUIZ_QUESTIONS_COUNT,
+            manager,
+          );
+
+        if (randomQuestions.length < QUIZ_QUESTIONS_COUNT) {
+          throw new DomainException(
+            DomainExceptionStatus.Conflict,
+            'Not enough available questions for game',
+            [
+              {
+                field: null,
+                message: 'Not enough available questions for game',
+              },
+            ],
+          );
+        }
+
+        const gameQuestions = randomQuestions.map((question) =>
+          GameQuestion.create({ gameId: game.id, questionId: question.id }),
+        );
+        await this.gameQuestionsRepository.saveMany(gameQuestions, manager);
+      }
+
+      return game.id;
+    });
   }
 }
